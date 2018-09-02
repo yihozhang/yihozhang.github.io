@@ -1,0 +1,68 @@
+#main {
+	padding-left: 25%;
+	padding-right: 25%;
+	font-size: 16px;
+}
+
+h1, h2, h3, h4, h5 {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+p, ul, ol {
+	margin-top: 0.2em;
+	margin-bottom: 0.2em;
+}
+
+ul, ol {
+	margin-left:0;
+	padding-left:0;
+}
+
+
+#left {
+	display: block;
+	width: 48%;
+	float: left;
+}
+
+img {
+	width: 100%;
+	padding: 5px;
+	/* max-width: */
+}
+
+#right {
+	display: block;
+	width: 48%;
+	float:right;
+}
+
+.description {
+	color: rgba(0, 0, 0, 0.6);
+	font-size: 14px;
+	text-align: center;
+	padding-top:0;
+	margin-top:0;
+	margin-bottom: 3px;
+}
+
+.experience {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.experience-title {
+	font-weight: bold;
+	font-style: oblique;
+}
+
+.experience-period {
+	font-style: italic;
+	font-size: 14px;
+}
+
+.experience-organization {
+	/* font-weight: bold;
+	font-style: oblique; */
+}
