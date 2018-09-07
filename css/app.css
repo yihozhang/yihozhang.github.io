@@ -33,7 +33,7 @@ ul, ol {
 	float: left;
 }
 
-img {
+.full-image {
 	width: 100%;
 	padding: 5px;
 	/* max-width: */
@@ -74,14 +74,9 @@ img {
 	font-style: oblique; */
 }
 
-.command {
-	background: rgba(0,0,0,0.2);
-	padding-left:0.2em;
-	padding-right:0.2em;
-	font-family: monospace;
-	font-size: 14px;
-	font-style: normal;
-	font-variant: normal;
-	font-weight: 700;
-	line-height: 15.4px;
+
+#footer {
+    position:fixed;
+    bottom:2em;
+    right:2em;
 }
