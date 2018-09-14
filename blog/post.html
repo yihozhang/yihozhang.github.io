@@ -59,6 +59,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var axios = axios.create({
+        headers: {
+            Pragma: 'no-cache',
+            'Cache-Control': 'no-cache',
+        }
+    });
+</script>
 <script src="/blog/js/post.js"></script>
 
 </html>
