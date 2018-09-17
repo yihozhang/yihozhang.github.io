@@ -1,0 +1,100 @@
+<h3>Definitions</h3>
+
+<p><b>flow network</b>: if for a directed graph $G=(V,E)$ every edge $(u,v)\in E$ there exists a non-negative capacity $c(u,v)\geq 0$ and for every $(u,v)\not\in E$ $c(u,v)=0$, G is a flow network (with two special nodes $s$ and $t$).</p>
+
+<p><b>flows in $G$</b>: the flows in a flow network $G$ is a real-valued function $f: V\times V\to R$, with following property:
+	<ul>
+		<li>$\forall u,v\in G, f(u,v)< c(u,v)$,</li>
+		<li>$\forall u,v\in G, f(u,v)=-f(v,u)$, and</li>
+		<li>$\forall u\in G-\{s,t\}, \sum_{v\in V}f(u,v)=0$.</li>
+	</ul>
+</p>
+
+<p><b>flow of $G$</b>: $\left|f\right|=\sum_{v\in V}f(s,v)$. Especially, the max flow is the maximum flow $|f|$ of $G$.</p>.
+
+<p><b>Lemma.</b><ul>
+	<li>$\forall X\subset V,f(X,X)=0$.</li>
+	<li>$\forall X,Y\subset V,f(X,Y)=-f(Y,X)$.</li>
+</ul></p>
+
+<p><b>residual network</b>: residual network of a network flow $G$, the residual network $G_f=(V,E_f)$, where $E_f=\{(u,v)\in V\times V| c_f(u,v)\ge 0\}|_{c_f(u,v)=c(u,v)-f(u,v)}$</p>
+
+<h3>Cut and Flow</h3>
+
+<p><b>Cut</b> of a network flow $G=(V,E)$ is a pair of node sets $\left[S,T\right]$, such that $T=V-S$, $s\in S$ and $t\in T$. The <b>net flow</b> of $[S,T]$ is $f(S,T)$. The <b>capacity</b> of $[S,T]$ is $c(S,T)$. The <b>minimum cut</b> is the cut with minimum capacity.</p>
+
+<p><b>Lemma.</b> For network flow $G$ with cut $[S,T]$, $f(S,T)=|f|$</p>
+
+<i>Proof.</i>
+$$\begin{align}
+f(S,T)&=f(S,V)-f(S,S)\\
+&=f(S,V)\\
+&=f(s,V)+f(S-\{s\},V)\\
+&=|f|+\sum_{u\in S-\{s\}}f(u,V)\\
+&=|f|+\sum_{u\in S-\{s\}}0\\
+&=|f|
+\end{align}$$
+
+<p><b>Corollary.</b> $|f|\leq c(S,T)$</p>, i.e., the net flow of network flow $G$ is less than the capacity of cut. <i>In fact, the minimum cut is the max flow.</i>
+
+<p><b>Theorem.</b> If f is a flow of the network flow $G=\{V,E\}$, the following is equivalent:
+	<ul>
+		<li>
+			$f$ is a max flow of $G$.
+		</li>
+		<li>
+			The residual flow $G_f$ has no augumented path.
+		</li>
+		<li>
+			for some $[S,T]$, $|f|=c(S,T)$.
+		</li>
+	</ul>
+</p>
+
+<h3>Application</h3>
+
+<h4>Network Wars</h4>
+
+<p>For a weighted graph $G=\{V,E\}$, every edge $e\in E$ has weight $w_e$. Find an edge set $C$ that makes node $s$ and $t$ unconnected, minimizing
+$$f(C)=\frac{\sum_{e\in C}w_e}{|C|}$$.</p>
+
+<p><b>Solution</b>: Let $x$ be an vector where $x_e=\begin{cases}1 \text{, if } e\in C\\0, \text{otherwise}\end{cases}$. Then the problem is equvilent to minimize
+	$$\begin{align}
+	\lambda&=\frac{\sum_{e\in E}w_e\cdot x_e}{\sum_{e\in E}1\cdot x_e}\\
+&=\frac{w\cdot x}{1\cdot x}\end{align}$$.</p>
+
+<p>Thus, $$\begin{align}w\cdot x-\lambda\cdot x&=0\\ (w-\lambda)\cdot x&=0\end{align}$$</p>.
+
+<p>Let $g(\lambda)=\min_{x}\{(w-\lambda)\cdot x\}$.</p>
+
+<p><i>Lemma. 1</i> $g$ should be stricty increasing.</p>
+
+<p><i>Proof.</i> let $\lambda$ and $\lambda'$ be two integers in the domain of $g$ and $\lambda< \lambda'$. $$\begin{align}g(\lambda)&=\min_{x}\{(w-\lambda)\cdot x\}\\&=(w-\lambda)\cdot x_1\\&<(w-\lambda')\cdot x_1\\&\leq g(\lambda')\end{align}$$</p>
+
+<p><i>Lemma. 2</i> $g(\lambda')=0\iff \lambda'=\min|\lambda|$</p>
+
+<p><i>Proof.</i> 
+	<ul>
+		<li>
+			$g(\lambda')=0\implies \lambda'=\min|\lambda|$: <br>
+			<p>Prove by contradiction. Assume $\lambda''<\lambda'$. Then, $$\lambda''=\frac{w\cdot x''}{x''}<\lambda'\text{.}$$ Therefore, $w\cdot x''-\lambda'\cdot x''< 0$, i.e., $g(x)< 0$. Contradiction.</p>
+		</li>
+		<li>
+			$\lambda'=\min|\lambda|\implies g(\lambda')=0$: <br>
+			<p>$$\lambda'=\min|\lambda|\leq \frac{w\cdot x}{1\cdot x}\implies (w-\lambda')\cdot x\geq 0$$</p>
+			<p>When $g(\lambda')=0$, the lower bound is fulfilled.</p>
+		</li>
+	</ul>
+</p>
+
+<p>According to Lemma. 1 and Lemma. 2, we could use binary search to find $\lambda$ where $g(\lambda)=0$. To calculate $g(\lambda)$ for some given $\lambda$, we need to calculate $\min_{x}\{(w-\lambda)\cdot x\}$. We could see $(w-\lambda)\cdot x$ is just a cut of the network flow $G$ with edge capacity vector $w'=w-\lambda$, except for edges with negative capacity. Therefore, $\min_{x}\{(w-\lambda)\cdot x\}$ is the set of the minimum cut of the network flow $G$ without every edges of negative capacity unions the set of all negative edges (since they are negative they must make the sum smaller). By calculating the $g$, we could find the correct $\lambda$. The time complexity is $O(k\cdot f)$, where $k$ is the time complexity for binary search and $f$ the time complexity of minimum cut.</p>
+
+<h4>Optimal Marks</h4>
+
+<p>Given a undirected graph $G$, every node $v$ on $G$ is labeled $l_u$. The weight of every edge $e=(u,v)$ is calculated as $l_u \mathrm{ xor } l_v$. Some labels has been known. Find the possible numbers for the remaining labels that minimize $$\sum_{e\in E} w_e=\sum_{(u,v)\in E}l_u\mathrm{ xor } l_v\text{.}$$</p>
+
+<p><b>Solution</b>: Let $l_u[i]$ be the $i$'th bit of $l_u$ and $k=\max_{u\in V}{[\log l_u]}$. Then $\sum_{e\in E} w_e=\sum_{i=0}^k2^i\cdot\sum_{(u,v)\in E}l_u[i]\mathrm{ xor } l_v[i]$, where $l_u[i],l_u[i]\in \{0,1\}$. Calculation for each $i$ is independent. For some $i$, to minimize $\sum_{(u,v)\in E}l_u[i]\mathrm{ xor } l_v[i]$, we want for some $i$, different $l_[i]$ and $l_v[i]$ be as less as possible. This is the minimum cut of network flow $G$ with $c_\{u,v\}=l_u[i]\mathrm{xor}l_v[i]$. The time complexity is $O(k\cdot f)$, where $f$ is the time complexity of minimum cut.</p>
+
+<h3>Closure</h3>
+
+<p><b>Closure</b> of a directed graph $G$ is a set of nodes $V'$ such that $\forall (u,v)\in E. u\in V'\implies v\in V'$</p>
