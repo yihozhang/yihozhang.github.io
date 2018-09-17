@@ -14,5 +14,13 @@
         "target":"/mathematical-formula-test",
         "date":"Sept 13, 2018",
         "tags":["sample","test"]
+    },
+    {
+        "id":3,
+        "title":"Notes On Max Flows",
+        "brief":"$$f(u,v)+f(v,u)=0$$",
+        "target":"/max-flow",
+        "date":"Sept 16, 2018",
+        "tags":["graph theory","computer science"]
     }
 ]
