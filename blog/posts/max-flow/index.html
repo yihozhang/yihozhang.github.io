@@ -98,3 +98,14 @@ $$f(C)=\frac{\sum_{e\in C}w_e}{|C|}$$.</p>
 <h3>Closure</h3>
 
 <p><b>Closure</b> of a directed graph $G$ is a set of nodes $V'$ such that $\forall (u,v)\in E. u\in V'\implies v\in V'$</p>
+
+<p>The <b>maximum weight closure</b> is the closure that maximize $\sum_{v\in V'}w_v$</p>
+
+<p><b>Simple cut</b> is a cut that every edge in the cut is either connected to $s$ or $t$</p>
+<p>Let $N=(V',E',C)$ be the network flow such that $V'=V+{s,t}$, $E'=E+\{(s,u)|w_u>0\}+\{(u,t)|w_u< 0\}$, and $C=\{c_{s,u}=w_u\}+\{c_{u,v}=\infty\}+\{c_{u,t}=-w_u\}$</p>
+
+<p><b>Lemma. 1</b> the minimum cut of $N$ is a simple cut.</p>
+
+<p><b>Lemma. 2</b> There is a one-to-one relation between a <b>simple cut</b> of $N$ and a closure of the graph.</p>
+
+Therefore, a closure of $G$ corresponds a simple cut of network $N$. The minimum cut of network $G$ is the maximum weight closure with total weight $\sum_{v\in V+} w_v-c[S,T]$.
