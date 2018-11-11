@@ -62,3 +62,9 @@ fmap f (Right b) = Right (f b)</pre>
 fmap f g = \x -> f (g x)</pre>
 
 <p>If you are unfamiliar of the notation <tt>\x -> f (g x)</tt>, it means a lambda function, which takes a parameter <tt>x</tt> and produce the expression follows (<tt>f (g x)</tt>). The expression of <tt>f (g x)</tt> is applies $x$ of type $c$ to $g:c\mapsto a$ and produce result of type $a$, and then applies $f:a\mapsto b$ to the result, which is of type $b$, therefore, the whole process is of type $c\mapsto b$. And we also find it's exact function composition! Therefore, in Haskell we can write <tt>fmap</tt> as <tt>fmap = .</tt>, where <tt>.</tt> is the annotation for type composition (since it's like its mathematical counterpart $\circ$)</p>
+
+<p>Exercise, we now build a list type:</p>
+
+<pre>data MyList a = Empty | Cons a (MyList a)</pre>
+
+This means <tt>MyList a</tt> is either <tt>Empty</tt>, or in the form of <tt>Cons x y</tt>, where $x\in a$ and $y\in \text{MyList a}$. So a list like $[1, 2, 3]$ will be like <tt>Cons 1 (Cons 2 (Cons 3 Empty))</tt>. Prove that the type constructor <tt>MyList</tt> can satisfy Functor.
