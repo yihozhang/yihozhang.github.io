@@ -1,8 +1,8 @@
-<h3>Basic definition</h3>
+<h3>Basics</h3>
 
-<p>A <i>catagory</i> is a (bogus) set of semigroups, elements in a catagory is called an object of the catagory. In haskell, we can think every type as an object, and the set of all types as the catagory.</p>
+<p>A <i>catagory</i> is a (bogus) set of semigroups, and elements in a catagory is called an object of the catagory. In haskell, we can think every type as an object, and the set of all types as the catagory. A functor can be thought as a mapping between catagories. Since we only have one catagory (the type system), all functors are endofunctors, functors mapping catagory to itself</p>
 
-<p>Typeclass is like interface in object oriented programming. If some types or type constructor declare itself satiefies a typeclass, then it can be manipulated by the operation defined by the typeclass. Functor, Applicative, Monad are all typeclass in Haskell, i.e., we can say some types satiefy Functor, Applicative, and/or Monad.</p>
+<p>Typeclass is like interface in object oriented programming. If some types or type constructor declare itself satiefies a typeclass, then it can be manipulated on the operation defined by the typeclass. Functor, Applicative, Monad are all typeclass in Haskell, i.e., we can say some types satiefy Functor, Applicative, and/or Monad.</p>
 
 <p>And some reminders for Haskell</p>
 
@@ -32,14 +32,27 @@ f x = (f (x - 1)) + (f (x - 2))
 
 <h3>Functor</h3>
 
-<p>If there is a mapping (or type constructor in fact) $f$ from the catagory to itself such that every mapping in the catagory (between groups) before $f$ can has a corresponding mapping after $f$, then the mapping satisfies functor. Symbolically, every mapping $a\mapsto b$ has a corresponding mapping $f(a)\mapsto f(b)$, then we say $f$ satisfies Functor (in Haskell) and we call the manipulation that turns a mapping into another mapping <tt>fmap</tt>, which however is exact the analogical definition of functor in catagory (instead of $f$). </p> The definition of Functor in Haskell:
+<h4>Definition</h4>
+
+<p>If there is a mapping (or type constructor in fact) $f$ from the catagory to itself such that every mapping in the catagory (between groups) before $f$ can has a corresponding mapping after $f$, then the mapping satisfies Functor. Symbolically, every mapping $a\mapsto b$ has a corresponding mapping $f(a)\mapsto f(b)$, then we say $f$ satisfies Functor (in Haskell) and we call the manipulation that turns a mapping into another mapping <tt>fmap</tt>, which however is exact the analogical definition of functor in catagory theory (instead of $f$). </p> The definition of Functor in Haskell:
 
 <pre>class Functor (f :: * -> *) where
     fmap :: (a -> b) -> f a -> f b</pre>
 
+<p>Also, Functors should obey two laws</p>
+
+<ul>
+    <li>Identity Element: <tt>fmap id = id</tt></li>
+    <li>Distributivity: <tt>fmap (f . g) = (fmap f) . (fmap g)</tt></li>
+</ul>
+
+<h4>Examples</h4>
+
 <p>We then see a few examples.</p>
 
-<p><tt>Maybe</tt> is a type constructor that takes in a type <tt>a</tt> and produce another type <tt>b</tt>. The element of <tt>b</tt> is either <tt>Nothing</tt> or <tt>Just v</tt>, where <tt>v</tt> is an element in <tt>a</tt>. We claim <tt>Maybe</tt> satiefy Functor by giving <tt>fmap</tt> as:</p>
+<h5>Maybe</h5>
+
+<p><tt>Maybe</tt> is a type constructor that takes in a type <tt>a</tt> and produces another type <tt>b</tt>. The element of <tt>b</tt> is either <tt>Nothing</tt> or <tt>Just v</tt>, where <tt>v</tt> is an element in <tt>a</tt>. We claim <tt>Maybe</tt> satiefies Functor by giving <tt>fmap</tt> as:</p>
 
 <pre>-- the type of fmap
 fmap :: (a -> b) -> (Maybe a) -> (Maybe b) 
@@ -48,23 +61,29 @@ fmap f Nothing = Nothing
 the case of Maybe a
 fmap f (Maybe a) = Maybe (f a)</pre>
 
-<p>Also, <tt>Either a b</tt> has elements either as <tt>Left v</tt> where <tt>v</tt> in <tt>a</tt> or <tt>Right v</tt> where <tt>v</tt> in <tt>b</tt>. Then <tt>Either a</tt> satiefy Functor, since Functors in order to produce a type only take one concrete type instead of two. <tt>Either a</tt> is a type constructor that takes a <tt>b</tt> and produce a concrete type <tt>Either a b</tt>. We call this as partial application of a function, or <i>currying</i>. We can give the <tt>fmap</tt> for <tt>Either a</tt>:</p>
+<h5>Either</h5>
+
+<p>Also, <tt>Either a b</tt> has elements either as <tt>Left v</tt> where <tt>v</tt> in <tt>a</tt> or <tt>Right v</tt> where <tt>v</tt> in <tt>b</tt>. Then <tt>Either a</tt> satiefy Functor, since Functors, in order to produce a type, should take one concrete type instead of two. <tt>Either a</tt> is a type constructor that takes a <tt>b</tt> and produce a concrete type <tt>Either a b</tt>. We call this as partial application of a function, or <i>currying</i>. We can give the <tt>fmap</tt> for <tt>Either a</tt>:</p>
 
 <pre>fmap :: (a -> b) -> (Either a b) -> (Either a c)
 fmap f (Left a) = Left a
 fmap f (Right b) = Right (f b)</pre>
 
-<p>It's a little weird since for <tt>Right b</tt>, <tt>fmap</tt> do nothing, but it makes senses since <tt>Either</tt> is likely to be used for restoring error message. If we store error message as <tt>Left a</tt>, then we don't need to do any manipulation on it.</p>
+<p>It's a little weird that for <tt>Right b</tt>, <tt>fmap</tt> do nothing, but it makes senses since <tt>Either</tt> is likely to be used for restoring error message for <tt>b</tt>. If we store error message as <tt>Left a</tt>, then we don't need to do any manipulation on it.</p>
 
-<p>A more weird example is <tt>-></tt>. We have seen <tt>-></tt> before, in the declation of a function type such as <tt>a -> b</tt>. This implies a function that takes <tt>a</tt> and produces <tt>b</tt>. But if we consider <tt>-></tt>, like <tt>+</tt>, as an type constructor, which takes two types on its left and right and then produce a function. Then we will find <tt>c -></tt>, the particial application of <tt>-></tt>, satiefy Functor (and this is exactly what Haskell do!):
+<ht>-></ht>
+
+<p>A more weird example is <tt>-></tt>. We have seen <tt>-></tt> before, in the declation of a function type such as <tt>a -> b</tt>. This implies a function that takes <tt>a</tt> and produces <tt>b</tt>. But if we consider <tt>-></tt>, like <tt>+</tt>, as a type constructor, which takes two types on its left and right and then produce a function, we will find <tt>c -></tt>, the partial application of <tt>-></tt>, satiefy Functor (and this is exactly what Haskell do!):
 
 <pre>fmap :: (a -> b) -> (c -> a) -> (c -> b)
 fmap f g = \x -> f (g x)</pre>
 
-<p>If you are unfamiliar of the notation <tt>\x -> f (g x)</tt>, it means a lambda function, which takes a parameter <tt>x</tt> and produce the expression follows (<tt>f (g x)</tt>). The expression of <tt>f (g x)</tt> is applies $x$ of type $c$ to $g:c\mapsto a$ and produce result of type $a$, and then applies $f:a\mapsto b$ to the result, which is of type $b$, therefore, the whole process is of type $c\mapsto b$. And we also find it's exact function composition! Therefore, in Haskell we can write <tt>fmap</tt> as <tt>fmap = .</tt>, where <tt>.</tt> is the annotation for type composition (since it's like its mathematical counterpart $\circ$)</p>
+<p>If you are unfamiliar of the notation <tt>\x -> f (g x)</tt>, it means a lambda function, which takes a parameter <tt>x</tt> and produce the expression after (<tt>f (g x)</tt>). <tt>f (g x)</tt> means to apply $x$ of type $c$ to $g:c\mapsto a$ and produce result of type $a$, and then applies $f:a\mapsto b$ to the result, which is of type $b$, therefore, the whole process is of type $c\mapsto b$. And we also find it's exact function composition! Therefore, in Haskell we can write <tt>fmap</tt> as <tt>fmap = .</tt>, where <tt>.</tt> is the annotation for type composition (since it's like its mathematical counterpart $\circ$)</p>
 
-<p>Exercise, we now build a list type:</p>
+<h4>Exercise</h4>
+We now build a list type:</p>
 
 <pre>data MyList a = Empty | Cons a (MyList a)</pre>
 
 This means <tt>MyList a</tt> is either <tt>Empty</tt>, or in the form of <tt>Cons x y</tt>, where $x\in a$ and $y\in \text{MyList a}$. So a list like $[1, 2, 3]$ will be like <tt>Cons 1 (Cons 2 (Cons 3 Empty))</tt>. Prove that the type constructor <tt>MyList</tt> can satisfy Functor.
+
