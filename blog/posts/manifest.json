@@ -22,5 +22,13 @@
         "target":"/max-flow",
         "date":"Sept 16, 2018",
         "tags":["graph theory","computer science"]
+    },
+    {
+        "id":4,
+        "title":"Notes on Haskell and Type Theory",
+        "brief":"A monad is just a monoid in the category of endofunctors, what's the problem?",
+        "target":"/notes-on-haskell",
+        "date":"Nov 11, 2018",
+        "tags":["functional programming","haskell","computer science"]
     }
 ]
