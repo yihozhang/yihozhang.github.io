@@ -28,17 +28,23 @@ new Vue({
                 posts.filter(post => post.id > this.post.id)
                     .reduce((next, now) => (!next || now.id < next.id ? now : next), undefined)
             this.postNext = getPostNext(this.posts);
-            console.log(this.postPrevious);
-            console.log(this.post);
-            console.log(this.postNext);
-            console.log(this.posts);
+        });
+    },
+    updated: () => {
+        renderMathInElement(document.body, {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
         });
     },
     data: {
         id: 0,
         params: {},
         posts: [],
-        post: undefined,
+        post: {id: 0},
         content: undefined,
         postPrevious: undefined,
         postNext: undefined,
@@ -48,4 +54,4 @@ new Vue({
             return id ? '/blog/post.html?id=' + id : undefined;
         }
     }
-})
+});

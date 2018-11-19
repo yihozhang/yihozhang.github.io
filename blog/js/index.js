@@ -5,6 +5,16 @@ new Vue({
             this.posts=response.data.sort((a,b)=>a.id<b.id);
         });
     },
+    updated: () => {
+        renderMathInElement(document.body, {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    },
     data: {
         posts:[],
     },

@@ -26,14 +26,14 @@
 <p><b>Lemma.</b> For network flow $G$ with cut $[S,T]$, $f(S,T)=|f|$</p>
 
 <i>Proof.</i>
-$$\begin{align}
+$$\begin{aligned}
 f(S,T)&=f(S,V)-f(S,S)\\
 &=f(S,V)\\
 &=f(s,V)+f(S-\{s\},V)\\
 &=|f|+\sum_{u\in S-\{s\}}f(u,V)\\
 &=|f|+\sum_{u\in S-\{s\}}0\\
 &=|f|
-\end{align}$$
+\end{aligned}$$
 
 <p><b>Corollary.</b> $|f|\leq c(S,T)$</p>, i.e., the net flow of network flow $G$ is less than the capacity of cut. <i>In fact, the minimum cut is the max flow.</i>
 
@@ -59,17 +59,17 @@ f(S,T)&=f(S,V)-f(S,S)\\
 $$f(C)=\frac{\sum_{e\in C}w_e}{|C|}$$.</p>
 
 <p><b>Solution</b>: Let $x$ be an vector where $x_e=\begin{cases}1 \text{, if } e\in C\\0, \text{otherwise}\end{cases}$. Then the problem is equvilent to minimize
-	$$\begin{align}
+	$$\begin{aligned}
 	\lambda&=\frac{\sum_{e\in E}w_e\cdot x_e}{\sum_{e\in E}1\cdot x_e}\\
-&=\frac{w\cdot x}{1\cdot x}\end{align}$$.</p>
+&=\frac{w\cdot x}{1\cdot x}\end{aligned}$$.</p>
 
-<p>Thus, $$\begin{align}w\cdot x-\lambda\cdot x&=0\\ (w-\lambda)\cdot x&=0\end{align}$$</p>.
+<p>Thus, $$\begin{aligned}w\cdot x-\lambda\cdot x&=0\\ (w-\lambda)\cdot x&=0\end{aligned}$$</p>.
 
 <p>Let $g(\lambda)=\min_{x}\{(w-\lambda)\cdot x\}$.</p>
 
 <p><i>Lemma. 1</i> $g$ should be stricty increasing.</p>
 
-<p><i>Proof.</i> let $\lambda$ and $\lambda'$ be two integers in the domain of $g$ and $\lambda< \lambda'$. $$\begin{align}g(\lambda)&=\min_{x}\{(w-\lambda)\cdot x\}\\&=(w-\lambda)\cdot x_1\\&<(w-\lambda')\cdot x_1\\&\leq g(\lambda')\end{align}$$</p>
+<p><i>Proof.</i> let $\lambda$ and $\lambda'$ be two integers in the domain of $g$ and $\lambda< \lambda'$. $$\begin{aligned}g(\lambda)&=\min_{x}\{(w-\lambda)\cdot x\}\\&=(w-\lambda)\cdot x_1\\&<(w-\lambda')\cdot x_1\\&\leq g(\lambda')\end{aligned}$$</p>
 
 <p><i>Lemma. 2</i> $g(\lambda')=0\iff \lambda'=\min|\lambda|$</p>
 
