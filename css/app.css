@@ -78,3 +78,16 @@ ul, ol {
     bottom:2em;
     right:2em;
 }
+
+#course-list {
+    font-size: large;
+    padding-top:70px;
+    padding-left: 15%;
+    padding-right: 15%;
+    margin-bottom: 3em;
+}
+
+body.mobile #course-list {
+	padding-left: 10%;
+    padding-right: 10%;
+}
