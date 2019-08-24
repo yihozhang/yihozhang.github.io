@@ -1,34 +1,10 @@
 [
     {
         "id":1,
-        "title":"Hello, world",
-        "brief":"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        "target":"/hello-world",
-        "date":"Sept 13, 2018",
-        "tags":["sample","test"]
-    },
-    {
-        "id":2,
-        "title":"Mathematical Formula Test",
-        "brief":"$$E=mc^2$$",
-        "target":"/mathematical-formula-test",
-        "date":"Sept 13, 2018",
-        "tags":["sample","test"]
-    },
-    {
-        "id":3,
         "title":"Notes On Max Flows",
         "brief":"$$f(u,v)+f(v,u)=0$$",
         "target":"/max-flow",
         "date":"Sept 16, 2018",
         "tags":["graph theory","computer science"]
     },
-    {
-        "id":4,
-        "title":"Notes on Haskell and Type Theory",
-        "brief":"A monad is just a monoid in the category of endofunctors, what's the problem?",
-        "target":"/notes-on-haskell",
-        "date":"Nov 11, 2018",
-        "tags":["functional programming","haskell","computer science"]
-    }
 ]
