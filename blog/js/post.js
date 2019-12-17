@@ -16,6 +16,7 @@ new Vue({
             this.params = parseQueryString(window.location.search);
             this.id = Number(this.params.id);
             this.post = this.posts.filter(post => post.id == this.id)[0];
+            console.log(this.post);
             axios.get('/blog/posts/' + this.post.target).then(response => {
                 this.content = response.data;
             });
@@ -44,7 +45,7 @@ new Vue({
         id: 0,
         params: {},
         posts: [],
-        post: {id: 0},
+        post: {},
         content: undefined,
         postPrevious: undefined,
         postNext: undefined,

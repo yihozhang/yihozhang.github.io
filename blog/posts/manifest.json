@@ -2,7 +2,7 @@
     {
         "id":1,
         "title":"Notes On Max Flows",
-        "brief":"$$f(u,v)+f(v,u)=0$$",
+        "brief":"",
         "target":"/max-flow",
         "date":"Sept 16, 2018",
         "tags":["graph theory","computer science"]

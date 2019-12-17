@@ -47,9 +47,7 @@
     <div id="main" v-cloak>
         <div class="post">
             <div class="post-title">
-                <a :href="id2link(post.id)">
-                    {{post.title}}
-                </a>
+                <a :href="id2link(post.id)" v-html="post.title"></a>
             </div>
             <div class="post-description" v-html="content">
             </div>
