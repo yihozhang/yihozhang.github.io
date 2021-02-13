@@ -9,7 +9,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="Cache" content="no-cache">
-    <link rel="stylesheet" type="text/css" href="/css/app.css?tag=feminis" />
+    <link rel="stylesheet" type="text/css" href="css/app.css?tag=feminis" />
 </head>
 
 <body>
@@ -22,211 +22,59 @@
     <div id="main">
         <div>
             <!-- <div id="left"> -->
-                <h3>Yihong Zhang</h3>
-                <h4>张 轶泓</h4>
-                <!-- <h4>Undergrad at
+                <h3>Yihong Zhang (张轶泓)</h3>
+                <!-- <h4></h4> -->
+                <b>Undergrad at
                     <a href="https://www.washington.edu">the University of Washington</a>
-                </h4> -->
-                <b>email: </b> <tt style="font-size: 18px">echo eXo0ODlAdXcuZWR1Cg== | base64 --decode</tt>
+                </b><br>
+                <tt style="font-size: 18px">$(firstname[0])$(lastname[0])489@cs.washington.edu</tt>
                 <!-- <a href="https://repl.it/repls/ExoticRowdyQuotient"></a> -->
 
                 <hr>
-                <!-- <img class="full-image" src="/img/phuket.jpeg" alt="photo shot at an island at Phuket, Thailand">
+                <!-- <img class="full-image" src="img/phuket.jpeg" alt="photo shot at an island at Phuket, Thailand">
                 <div class="description">photo shot when travelling at Phuket</div> -->
 
-                <h4>About me</h4>
+                <h3>About me</h3>
                 <p>
-                    I’m a junior at the University of Washington majoring in Computer Science. I'm interested in various topics in programming languages and database systems, like datalog, program synthesis, and staged programming. I used to participate in International Collegiate Programming Contest twice.
-                     <!-- I'm a dedicated feminist and want to do more feminist practice in China. I helped organize a summer camp on China's gender issues in 2017. -->
+                    I’m an undergrad studying Computer Science at UW Seattle. I'm broadly interested in the theories and applications of programming languages.
                 </p>
+                <a href="doc/Yihong_Zhang_Resume.pdf">Resume (outdated)</a>&ensp;|&ensp;<a href="course_list.html">Coursework</a>&ensp;|&ensp;<a href="blog">Blog</a>&ensp;|&ensp;<a href="https://github.com/yihozhang">GitHub</a>
 
-                <h4>Coursework</h4>
-                <!-- <h5>Programming Languages</h5>
+                <h3>Preprints</h3>
                 <ul>
-                    <li>CSE 503: Software Engineering</li>
-                    <li>CSE 505: Principles of Programming Languages</li>
-                    <li>CSE 507: Computer-Aided Reasoning for Software</li>
-                    <li>CSE 544: Principles of Database Management System</li>
-                    <li>CSE 402: Design and Implementation of DSL</li>
-                    <li>CSE 490: Advanced PL & Verification</li>
-                </ul>
-                <h5>Logic</h5>
-                <ul>
-                    <li>PHIL 472: Axiomatic Set Theory</li>
-                    <li>PHIL 470: Intermediate Logic</li>
-                </ul>
-                <h5>Theory</h5>
-                <ul>
-                    <li>CSE 421: Intro to Algorithms</li>
-                    <li>CSE 431: Intro to the Theory of Computation</li>
-                </ul>
-                <h5>Computational Linguistics</h5>
-                <ul>
-                    <li>LING 571: Deep Processing Techniques for NLP</li>
-                </ul> -->
-                For a list of my past courses indexed by quarters, see <a href="/course_list.html">here</a>.
-                <h4>Resume</h4>
-                <ul>
-                    <li>
-                        <a href="/doc/Yihong_Zhang_Resume.pdf">Resume (English)</a>
+                    <li><b>GeCo: Quality Counterfactual Explanations in Real Time</b> (submitted to VLDB 2021)<br>
+                    Maximilian Schleich, Zixuan Geng, Yihong Zhang, Dan Suciu<br>
+                    <a href="https://arxiv.org/abs/2101.01292">[arxiv]</a> <a href="https://github.com/mjschleich/GeCo.jl">[src]</a>
                     </li>
                 </ul>
+                <h3>Graduate course projects</h3>
+                <ul>
+                    <li><b>A Staged Datalog Compiler using Lightweight Modular Staging</b><br>
+                    In this project, I build a staged Datalog compiler using Lightweight Modular Staging (LMS). Experiments show that it achieves up to 10x speedup compared to Souffle Datalog tool. <a href="doc/sdl.pdf">[report]</a> <a href="https://github.com/zyh3838438zyh/sdl">[src]</a></li>
+                    <li><b>Cornelius: Killing equivalent and redundant mutants with E-graph</b><br>
+                    with Ben Kushigian, Ishan Chatterjee, and Gabrielle Strandquist. We propose to utilize E-graph to eliminate equivalent and redundant mutants for mutation testing. This addresses the phase-ordering problem faced by Trivial Compiler Equivalence (TCE), a known technique for eliminating equivalent mutants. Experiments on a pure Java subset show that it discovers much more equivalent and redundant mutants than TCE in less time.  <a href="doc/mutants.pdf">[report]</a> <a href="https://github.com/bkushigian/cornelius">[src]</a></li>
+                    <li><b>Sager: A Demonic Graph Synthesizer for Worst-Case Performance</b><br>
+                    with Mike He. We propose to use symbolic evaluations to synthesize input instances that determine the worst-case complexity of a given algorithm. We build a prototype implementation with Rosette and show that it makes Shortest-Path Faster Algorithm (SPFA) and its several variants asymptotically worse. <a href="https://github.com/AD1024/Sager">[src]</a></li>
+                    
+                </ul>
 
-                <h4>Some Projects</h4>
+                <h3>Programming for fun</h3>
                 <ul>
                     <li><b><a href="https://github.com/zyh3838438zyh/Hatafun">Hatafun</a>:</b> Embedding the type system of Datafun (ICFP 2016) in Haskell.</li>
-                    <li><b><a href="https://github.com/zyh3838438zyh/sdl">Sdl</a>:</b> Staged Datalog compiler using Lightweight Modular Staging (<a href="/doc/sdl.pdf">report</a>).</li>
-                    <li><b>Cornelius:</b> Killing equivalent and redundant mutants with E-graph (<a href="/doc/mutants.pdf">report</a>).</li>
-                    <li><b><a href="https://github.com/AD1024/Sager">Sager</a>:</b> Demonic Graph Synthesizer for Worst-Case Performance, built with <a href="http://emina.github.io/rosette/">Rosette</a>.</li>
                     <li><b><a href="https://github.com/zyh3838438zyh/2TBF">2TBF</a>:</b> A proof-of-concept compiler from (our favorite) Pascal to an extension of brainfuck lang with two tapes.</li>
-                </ul>
+                </ul>                
 
-                <h4>News</h4>
-                <ul>
-                    <li>2020 May: I'll be (virtually) joining Oracle as a software engineer intern this summer!</li>
-                    <li>2020 Mar: As a final project for CSE 544 Principle of DBMS, I've built <a href="/doc/sdl.pdf">Sdl</a>, a staged Datalog compiler that achieves up to 10X speedup compared to Souffle Datalog tool! Also, for CSE 505 Software Engineering, our <a href="/doc/mutants.pdf">final report</a> proposes and examines the idea of utilizing E-graph data structure to kill equivalent and redundant mutants in software testing.</li>
-                    <!-- <li>2019 Dec: Hello, world!</li> -->
-                </ul>
-                <!-- <hr> -->
-
-                <h4>See me at</h4>
-                <ul>
-                    <li>
-                        <a href="/blog">My blog</a>
-                    </li>
-                    <!-- <li>
-                        <a href="https://www.linkedin.com/in/yihongz-0828/">LinkedIn</a>
-                    </li> -->
-                    <!-- <li>
-                        <a href="https://www.zhihu.com/people/zhang-yi-hong-88/">Zhihu (Blocked by Chinese censorship)</a>
-                    </li> -->
-                    <li>
-                        <a href="https://github.com/zyh3838438zyh">GitHub</a>
-                    </li>
-                </ul>
-                
-                <!-- <hr style="border-top: double">
-                <h4>Experiences</h4>
-                <ul>
-                    <li class="experience">
-                        <div class="experience-period">Aug. 2019&mdash;Sept. 2019</div>
-                        <div class="experience-title">Software Development Intern</div>
-                        <div class="experience-organization">Codeus Technology Inc.</div>
-                    </li>
-    
-                    <li class="experience">
-                            <div class="experience-period">Jun. 2019&mdash;Aug. 2019</div>
-                            <div class="experience-title">Part-time Lecturer for USACO</div>
-                            <div class="experience-organization">Biggerlab Inc.</div>
-                        </li>
-                    <li class="experience">
-                        <div class="experience-period">Jun. 2018&mdash;Sept. 2018</div>
-                        <div class="experience-title">Fullstack Intern</div>
-                        <div class="experience-organization">Thinktown Education Inc.</div>
-                    </li>
-                    <li class="experience">
-                        <div class="experience-period">Dec. 2017&mdash;Sept. 2018</div>
-                        <div class="experience-title">Cofounder, Product Officer</div>
-                        <div class="experience-organization">SheSaysForEquality</div>
-                    </li>
-
-                    <li class="experience">
-                        <div class="experience-period">Jul. 2017&mdash;Nov. 2017</div>
-                        <div class="experience-title">Teaching Assistant</div>
-                        <div class="experience-organization">Ninechapter</div>
-                    </li>
-
-                    <li class="experience">
-                        <div class="experience-period">Sept. 2015&mdash;Feb. 2017</div>
-                        <div class="experience-title">Informatics Team Member</div>
-                        <div class="experience-organization">Hangzhou Xuejun High School</div>
-                    </li>
-                </ul> -->
-                <hr>
-                <!-- <h4>Honors</h4>
-                <ul>
-                    <li class="experience">
-                        <div class="experience-title">5nd Place</div>
-                        <div class="experience-organization">International Collegiate Programming Contest PacNW Regionals, 2018</div>
-                    </li>
-                    <li class="experience">
-                        <div class="experience-title">1nd Place</div>
-                        <div class="experience-organization">International Collegiate Programming Contest UW Qualifier, 2019</div>
-                    </li>
-                    <li class="experience">
-                        <div class="experience-title">Dean's list</div>
-                        <div class="experience-organization">University of Washington</div>
-                    </li>
-                    <li class="experience">
-                        <div class="experience-title">First Prize</div>
-                        <div class="experience-organization">National Olympiad in Informatics in Provinces, Zhejiang, China</div>
-                    </li>
-                    <li class="experience">
-                        <div class="experience-title">National Finalist</div>
-                        <div class="experience-organization">2018 Ideas4Action</div>
-                    </li>
-                    <li class="experience">
-                        <div class="experience-title">AP Scholar with Distinction</div>
-                        <div class="experience-organization">CollegeBoard</div>
-                    </li>
-                </ul> -->
-                <!-- <h4>Certifications</h4>
-                <ul>
-                    <li>
-                        <b>TOEFL iBT Test:</b> 106
-                    </li> -->
-                    <!-- <li>
-                        <b>Redesigned SAT:</b> 1520
-                    </li>
-                    <li>
-                        <b>Programming Ability Test (Advanced):</b> Score 100/100, Rank 1/1207
-                    </li>
-                    <li>
-                        <b>AP Exams:</b>
-                        <b>Computer Science A</b> 5,
-                        <b>Calculus BC</b> 5,
-                        <b>Physics C: Mechanics</b> 5,
-                        <b>Physics C: Electronics &amp; Magnetism</b> 5,
-                        <b>Statistics</b> 5,
-                        <b>Macroeconomics</b> 4
-                    </li> -->
-                <!-- </ul> -->
-                <!-- <hr> -->
-                <!-- <h4>Log</h4>
-                <ul>
-                    <li>2020 Jan: I've added my Chinese name on the webpage! As well as some more selected coursework.</li>
-                    <li>2020 Mar: Added more courses.</li>
-                    <li>2020 May: Refactor the homepage.</li>
-                </ul> -->
-            <!-- </div> -->
-            <!-- <div id="right"> -->
-                
-                <!-- <img class="full-image" src="/img/classmates.jpeg" alt="with friends">
-                <div class="description">with friends (me: second from right to left)</div>
-
-                <img class="full-image" src="/img/boism.jpeg" alt="with Boism enthusiasts">
-                <div class="description">with
-                    <a href="https://github.com/huitaoshen/valley-beyond">Boism</a>
-                    enthusiasts (me: third from right to left)</div> -->
-
-                <!-- <div>I'm also an enthusiast of <a href="/video/wuism.mp4">Wuism</a>.</div> -->
-
-                <h4>Miscellaneous</h4>
+                <!-- <h4>Miscellaneous</h4>
                 This page is hosted by
                 <a href="https://github.com/zyh3838438zyh/zyh3838438zyh.github.io">GitHub Pages</a>.
                 <br>
                 <span id="busuanzi_container_site_pv" style='display:none'>visit count:
                     <span id="busuanzi_value_site_pv"></span>
-                </span>
+                </span> -->
                 <br>
                 <br>
                 <br>
                 <br>
-                <br>
-                <br>
-                <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-            <!-- </div> -->
-        </div>
     </div>
 </body>
 
