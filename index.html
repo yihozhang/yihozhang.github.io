@@ -9,7 +9,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Cache-control" content="no-cache">
     <meta http-equiv="Cache" content="no-cache">
-    <link rel="stylesheet" type="text/css" href="css/app.css?tag=feminis" />
+    <link rel="stylesheet" type="text/css" href="css/app.css?tag=changed" />
     <script>var clicky_site_ids = clicky_site_ids || []; clicky_site_ids.push(101294496);</script>
     <script async src="//static.getclicky.com/js"></script>
 </head>
@@ -26,8 +26,8 @@
             <!-- <div id="left"> -->
                 <h3>Yihong Zhang (张轶泓)</h3>
                 <!-- <h4></h4> -->
-                <b>Undergrad at
-                    <a href="https://www.washington.edu">the University of Washington</a>
+                <b>BS/MS student at
+                    <a href="https://cs.washington.edu">Paul G. Allen School of Computer Science & Engineering</a>
                 </b><br>
                 <tt style="font-size: 18px">$(firstname[0])$(lastname[0])489@cs.washington.edu</tt>
                 <!-- <a href="https://repl.it/repls/ExoticRowdyQuotient"></a> -->
@@ -41,26 +41,38 @@
 
                 <h3>Papers</h3>
                 <ul>
-                    <li><b>Faster and Worst-Case Optimal E-matching via Reduction to Conjunctive Queries</b> (Acceptted by PLDI 2021 SRC)<br>
-                    Yihong Zhang<br>
+                    <li><b>Faster and Worst-Case Optimal E-matching via Reduction to Conjunctive Queries</b><br>
+                    <b>Yihong Zhang</b><br>
+                    PLDI 2021 Student Research Competition<br>
                     <a href="doc/relational.pdf">[abstract]</a> <a href="doc/relational_poster.pdf">[poster]</a>
                     </li>
-                    <li><b>GeCo: Quality Counterfactual Explanations in Real Time</b> (To appear at VLDB 2021)<br>
-                    Maximilian Schleich, Zixuan Geng, Yihong Zhang, Dan Suciu<br>
+                    <li><b>GeCo: Quality Counterfactual Explanations in Real Time</b> <br>
+                    <a href="https://mjschleich.github.io/">Maximilian Schleich</a>, 
+                    <a href="https://www.linkedin.com/in/zixuan-gibbs-geng-4969181a2">Zixuan Geng</a>, 
+                    <b>Yihong Zhang</b>, 
+                    <a href="https://homes.cs.washington.edu/~suciu/">Dan Suciu</a><br>
+                    To appear at VLDB 2021<br>
                     <a href="https://arxiv.org/abs/2101.01292">[arxiv]</a> <a href="https://github.com/mjschleich/GeCo.jl">[src]</a>
                     </li>
                 </ul>
                 <h3>Graduate course projects</h3>
                 <ul>
                     <li><b>A Staged Datalog Compiler using Lightweight Modular Staging</b><br>
-                    In this project, I build a staged Datalog compiler using Lightweight Modular Staging (LMS). Experiments show that it achieves up to 10x speedup compared to Souffle Datalog tool. <a href="doc/sdl.pdf">[report]</a> <a href="https://github.com/zyh3838438zyh/sdl">[src]</a></li>
+                    CSE 544 Principles of DBMS <br>
+                    In this project, I build a staged Datalog compiler using Lightweight Modular Staging (LMS). Experiments show that it achieves up to 10x speedup compared to Souffle Datalog tool. <br>
+                    <a href="doc/sdl.pdf">[report]</a> <a href="https://github.com/zyh3838438zyh/sdl">[src]</a></li>
                     <li><b>Combining Statistical Top-down Deductions and Bottom-up Enumerations for Programming by Example</b><br>
-                    In this project, I add support for enumerative search to MaxFlash for PBE solving. The enumerated programs are used to directly solve the synthesis problem and guide the witness functions during probabilistic deductions. This is an attempt to unify enumerative search, deductive search, and stochastic search into a framework for program synthesis. Experiments on the SyGuS benchmarks shows mixed (aka negative) results.  <a href="doc/maxduet.pdf">[report]</a> <a href="https://github.com/yihozhang/maxduet">[src]</a></li>
+                    CSE 573 Artificial Intelligence <br>
+                    In this project, I add support for enumerative search to MaxFlash for PBE solving. The enumerated programs are used to directly solve the synthesis problem and guide the witness functions during probabilistic deductions. This is an attempt to unify enumerative search, deductive search, and stochastic search into a framework for program synthesis. Experiments on the SyGuS benchmarks shows mixed (aka negative) results. <br>
+                    <a href="doc/maxduet.pdf">[report]</a> <a href="https://github.com/yihozhang/maxduet">[src]</a></li>
                         
                     <li><b>Cornelius: Killing equivalent and redundant mutants with E-graph</b><br>
-                    with Ben Kushigian, Ishan Chatterjee, and Gabrielle Strandquist. We propose to utilize E-graph to eliminate equivalent and redundant mutants for mutation testing. This addresses the phase-ordering problem faced by Trivial Compiler Equivalence (TCE), a known technique for eliminating equivalent mutants. Experiments on a pure Java subset show that it discovers much more equivalent and redundant mutants than TCE in less time.  <a href="doc/mutants.pdf">[report]</a> <a href="https://github.com/bkushigian/cornelius">[src]</a></li>
+                    CSE 503: Software Engineering <br>
+                    with <a href="https://bkushigian.github.io/">Ben Kushigian</a>, <a href="https://scholar.google.com/citations?user=CdUDJxoAAAAJ&hl=en">Ishan Chatterjee</a>, and Gabrielle Strandquist. We propose to utilize E-graph to eliminate equivalent and redundant mutants for mutation testing. This addresses the phase-ordering problem faced by Trivial Compiler Equivalence (TCE), a known technique for eliminating equivalent mutants. Experiments on a pure Java subset show that it discovers much more equivalent and redundant mutants than TCE in less time. <br>
+                    <a href="doc/mutants.pdf">[report]</a> <a href="https://github.com/bkushigian/cornelius">[src]</a></li>
                     <li><b>Sager: A Demonic Graph Synthesizer for Worst-Case Performance</b><br>
-                    with Mike He. We propose to use symbolic evaluations to synthesize input instances that determine the worst-case complexity of a given algorithm. We build a prototype implementation with Rosette and show that it makes Shortest-Path Faster Algorithm (SPFA) and its several variants asymptotically worse. <a href="https://github.com/AD1024/Sager">[src]</a></li>
+                    with <a href="https://ad1024.space/about">Mike He</a>. We propose to use symbolic evaluations to synthesize input instances that determine the worst-case complexity of a given algorithm. We build a prototype implementation with Rosette and show that it makes Shortest-Path Faster Algorithm (SPFA) and its several variants asymptotically worse. <br>
+                    <a href="https://github.com/AD1024/Sager">[src]</a></li>
                     
                 </ul>
 
