@@ -157,11 +157,11 @@ Finally, in equational reasoning a la egg,
  "for every `(a + b) + c`, 
  populate `a + (b + c)` on the right
  and make them equivalent".
-This rule will look like the following in Gogi:
+This rule will look like the following:
 ```prolog
 add(a, add[b, c], id) :- add(add[a, b], c, id)
 ```
 
-Gogi further has the `:=` syntactic sugar.
+Gogi further has the `:=` syntactic sugar to simplify such rules.
 
 ## Ext 3: Functional Dependency Repair
