@@ -2,6 +2,6 @@
 
 for f in blog/*.md; do
     echo "Rendering $f"
-    pandoc -f markdown -t latex -o "${f%.md}.pdf" "$f"
-    pandoc -f markdown -t html --mathjax --standalone -o "${f%.md}.html" "$f"
+    pandoc -f markdown+inline_notes -t latex -o "${f%.md}.pdf" "$f"
+    pandoc -f markdown+inline_notes -t html --highlight-style zenburn --mathjax --standalone -o "${f%.md}.html" "$f"
 done
