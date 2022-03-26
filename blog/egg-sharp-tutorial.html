@@ -478,6 +478,55 @@ proven to be equivalent to true, a distinguished sort value,
 <p>All these rewrite will be very hard to express in egg.</p>
 <h2 id="ext-3-functional-dependency-repair">Ext 3: Functional Dependency
 Repair</h2>
+<h2 id="ext-2.1-repairing-fds">Ext 2.1: Repairing FDs</h2>
+<p>FDs can be violated: what if the user introduced two values for the
+same set of determinant columns? In this case, we need to repair the
+FDs. We have seen such examples many times in previous sections. For
+example, rules like <code>R[x1, ..., xk] := ...</code> will add new
+values to <code>R</code> indexed by <code>x1, ..., xk</code>, and it is
+likely that there are already other tuples with the same prefix
+<code>x1, ..., xk</code>. These rules may potentially cause violation of
+functional dependencies. In general, there are two kinds of
+violations:</p>
+<p><strong>Case 1.</strong> If the dependent column is a sort value,
+then egglogish will unify the two terms later in the iteration. We can
+think of a term of a sort in egglogish as a constant in some theories,
+which refers to some element in the model. But we don’t know which
+element it refers to. However, by repairing functional dependencies, we
+can get some clues about what the structure will look like. Consider the
+following program</p>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rel add(expr<span class="kw">,</span> expr) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>rel num(i64) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">% add the fact 2 + 1, where the last column is auto-generated.</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>add[num[<span class="dv">2</span>], num[<span class="dv">1</span>]]<span class="kw">.</span> </span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co">% add the fact 2+1, but the last column is add[num[1], num[2]]</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co">% (add[num[1], num[2]] is created on the fly because</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">% it occurs at the left hand side.)</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>add(num[<span class="dv">2</span>]<span class="kw">,</span> num[<span class="dv">1</span>]<span class="kw">,</span> </span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    add[num[<span class="dv">1</span>], num[<span class="dv">2</span>]])<span class="kw">.</span> </span></code></pre></div>
+<p>Because now (without repairing) <code>add[num[1], num[2]]</code> will
+contain two rows. The FD is violated. If we think of rewriting under FD
+as a process of finding a model for the sort, then what do we learn from
+this violation? We learned that the two sort values must be the same
+thing! Therefore, to respect the FD, the expr originally referred by
+<code>add[num[2], num[1]]</code> and by <code>add[num[1], num[2]]</code>
+should be treated as the same expr! As we will show later, when a Gogi
+program reaches the fixpoint, it produces a valid, minimal model for the
+relations and the sorts such that the rewrite rules and the functional
+dependencies are both respected.</p>
+<p>TODO: mention no global union-find</p>
+<p><strong>Case 2.</strong> What if the dependent column is a regular
+type as a Rust struct or an integer? Well, we also need to unify them,
+but in a different way. The idea here is to describe these values with a
+algebraic structure, which in this case is a lattice. A lattice has a
+bottom (means does not exist) and a top (means conflicts). Similar to <a
+href="https://dl.acm.org/doi/10.1145/2980983.2908096">Flix</a>, lattice
+values will grow by taking the least upper bound of all the violating
+tuples. In that sense, Gogi also generalizes Flix (as is described in
+the PLDI ’16 paper)</p>
 <section class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />

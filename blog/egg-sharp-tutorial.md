@@ -309,3 +309,63 @@ If later `x >= 0` is proven to be equivalent to true,
 All these rewrite will be very hard to express in egg.
 
 ## Ext 3: Functional Dependency Repair
+
+
+## Ext 2.1: Repairing FDs
+
+FDs can be violated: 
+ what if the user introduced two values for the same set of determinant columns? 
+In this case, we need to repair the FDs.
+We have seen such examples many times in previous sections.
+For example, rules like `R[x1, ..., xk] := ...` will add new values to `R` indexed by `x1, ..., xk`,
+ and it is likely that there are already other tuples with the same prefix `x1, ..., xk`.
+These rules may potentially cause violation of functional dependencies.
+In general, there are two kinds of violations:
+
+**Case 1.** 
+If the dependent column is a sort value, 
+ then egglogish will unify the two terms later in the iteration.
+We can think of a term of a sort in egglogish as a constant in some theories, 
+ which refers to some element in the model. 
+But we don’t know which element it refers to. 
+However, by repairing functional dependencies, 
+ we can get some clues about what the structure will look like.
+Consider the following program
+```prolog
+rel add(expr, expr) -> expr.
+rel num(i64) -> expr.
+
+% add the fact 2 + 1, where the last column is auto-generated.
+add[num[2], num[1]]. 
+
+% add the fact 2+1, but the last column is add[num[1], num[2]]
+% (add[num[1], num[2]] is created on the fly because
+% it occurs at the left hand side.)
+add(num[2], num[1], 
+    add[num[1], num[2]]). 
+```
+
+Because now (without repairing) `add[num[1], num[2]]` will contain two rows. 
+The FD is violated.
+If we think of rewriting under FD as a process of finding a model for the sort,
+ then what do we learn from this violation? 
+We learned that the two sort values must be the same thing!
+Therefore, to respect the FD, 
+ the expr originally referred by `add[num[2], num[1]]` and 
+ by `add[num[1], num[2]]` should be treated as the same expr!
+As we will show later, when a Gogi program reaches the fixpoint, 
+ it produces a valid, minimal model for the relations and the sorts 
+ such that the rewrite rules and the functional dependencies are both respected.
+
+TODO: mention no global union-find
+
+**Case 2.**
+What if the dependent column is a regular type as a Rust struct or an integer?
+Well, we also need to unify them, but in a different way.
+The idea here is to describe these values with a algebraic structure, 
+ which in this case is a lattice. 
+A lattice has a bottom (means does not exist) and a top (means conflicts).
+Similar to [Flix](https://dl.acm.org/doi/10.1145/2980983.2908096),
+ lattice values will grow by taking the least upper bound of 
+ all the violating tuples.
+In that sense, Gogi also generalizes Flix (as is described in the PLDI '16 paper)
