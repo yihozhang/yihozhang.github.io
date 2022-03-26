@@ -1,6 +1,7 @@
 ---
 title: A tutorial on the imaginary Gogi language
 author: Yihong Zhang
+toc: true
 ---
 
 Welcome to the tutorial on Gogi (short for eg**g**l**ogi**sh), a made-up language that attempts to generalize
@@ -24,7 +25,7 @@ I'm actually more excited about this approach,
 
 Gogi is Datalog, so it supports various reasoning expressible in Datalog. 
 A rule has the form `head1, ..., headn :- body1, ..., bodyn`.
-For example, below is a valid egg# program:
+For example, below is a valid Gogi program:
 
 ```prolog
 rel link(string, string) from "./link.csv".
@@ -91,7 +92,7 @@ rel add(expr, expr) -> expr.
 declares a relation with three columns, 
 and the first two columns together 
 uniquely determines the third column.
-This represents a constructor that takes two `expr`s.
+This represents a constructor with two `expr` arguments.
 
 Users can introduce new sort values with functional dependencies.
 Example:
@@ -121,7 +122,7 @@ Negated atoms like `!num(1, _)` is necessary here
  because otherwise it will inserts more than one atoms matching `num(1, _)`,
  which violates the functional dependency associated to the relation.
 
-The example Gogi program can also be written into one single rule with multiple heads:
+The above example Gogi program can also be written into one single rule with multiple heads:
 ```prolog
 add(c, d, e), num(1, c), num(2, d).
 % roughly equivalent to 
@@ -132,9 +133,9 @@ add(c, d, e), num(1, c), num(2, d).
 %                                       e = new_expr().
 ```
 
-## The bracket syntax
+### The bracket syntax
 
-Gogi also supports the bracket syntax, so it can be further simplified to:
+Gogi also supports the bracket syntax, so the last program can be further simplified to:
 
 ```prolog
 add[num[1], num[2]].
@@ -142,7 +143,7 @@ add[num[1], num[2]].
 
 The bracket syntax will implicitly fill the omitted column(s) 
  with newly generated variable(s).
-If the atom is in nested inside another term,
+If the atom is nested within another term,
  the nested atom will be lifted to the top-level,
  and the generated variable(s) will take the original position of the atom.
 Another silly example of the bracket syntax:
@@ -188,7 +189,13 @@ num[1] := div[a, a] if num(x, a), x != 0.
 Note the equational rules may introduce functional dependency violation;
  for instance, last rule may cause multiple tuples to match `num(1, _)`,
  yet the first column should uniquely determines the tuple.
-We will introduce how we resolve this kind of violations in the section on [Functional Dependency Repair](#ext-3-functional-dependency-repair).
+We will discuss more about how we resolve this kind of violations 
+ in the section on [Functional Dependency Repair](#ext-3-functional-dependency-repair).
+The essential idea is that, if two sort values are present 
+ with the same primary key, then the two sort values must be equivalent,
+ whereas if two lattice values are present with the same primary key,
+ the new, unique lattice value should generalize the two values, 
+ i.e., it will be the least-upper bound of those lattice values.
 
 ### Relations with lattices
 
@@ -310,9 +317,6 @@ All these rewrite will be very hard to express in egg.
 
 ## Ext 3: Functional Dependency Repair
 
-
-## Ext 2.1: Repairing FDs
-
 FDs can be violated: 
  what if the user introduced two values for the same set of determinant columns? 
 In this case, we need to repair the FDs.
@@ -324,8 +328,8 @@ In general, there are two kinds of violations:
 
 **Case 1.** 
 If the dependent column is a sort value, 
- then egglogish will unify the two terms later in the iteration.
-We can think of a term of a sort in egglogish as a constant in some theories, 
+ Gogi will unify the two sort values later in the iteration.
+We can think of a term of a sort in Gogi as a constant in some theories, 
  which refers to some element in the model. 
 But we don’t know which element it refers to. 
 However, by repairing functional dependencies, 
@@ -346,13 +350,15 @@ add(num[2], num[1],
 ```
 
 Because now (without repairing) `add[num[1], num[2]]` will contain two rows. 
-The FD is violated.
-If we think of rewriting under FD as a process of finding a model for the sort,
+The functional dependency is violated.
+If we think of rewriting under functional dependency as a process of finding a model for the sort,
  then what do we learn from this violation? 
-We learned that the two sort values must be the same thing!
-Therefore, to respect the FD, 
+We learned that, to respect the functional dependency,
+ the two sort values must be the same thing!
+Therefore 
  the expr originally referred by `add[num[2], num[1]]` and 
- by `add[num[1], num[2]]` should be treated as the same expr!
+ by `add[num[1], num[2]]` will be treated as the same expr
+ and no longer be distinguishable in Gogi!
 As we will show later, when a Gogi program reaches the fixpoint, 
  it produces a valid, minimal model for the relations and the sorts 
  such that the rewrite rules and the functional dependencies are both respected.
@@ -365,7 +371,80 @@ Well, we also need to unify them, but in a different way.
 The idea here is to describe these values with a algebraic structure, 
  which in this case is a lattice. 
 A lattice has a bottom (means does not exist) and a top (means conflicts).
-Similar to [Flix](https://dl.acm.org/doi/10.1145/2980983.2908096),
+Similar to [Flix](https://flix.dev/),
  lattice values will grow by taking the least upper bound of 
  all the violating tuples.
-In that sense, Gogi also generalizes Flix (as is described in the PLDI '16 paper)
+In that sense, Gogi also generalizes Flix 
+ (as is described in the [PLDI '16](https://dl.acm.org/doi/10.1145/2980983.2908096) paper).
+
+## Ext 4: Seamless Interop with Rust
+
+This proposed extension takes inspiration 
+ from recent work on [Ascent](https://dl.acm.org/doi/pdf/10.1145/3497776.3517779),
+ an expressive Datalog engine that has seamless integration
+ with the Rust ecosystem.
+One interesting feature of Ascent is that it allows 
+ first-class introspection of the column values.
+Ascent use this feature to support features like first-class environment
+ (this and the next example are both from page 4 of the Ascent paper; comments are mine):
+```rust
+𝜍(v, ρ2, a, tick(e, t, k)) <--
+  𝜍(?e@Ref(x), ρ, a, t), // the environment ρ is enumerated here
+  σ(ρ[x], ?Value(v, ρ2)), // ρ[x] is used as an index for σ
+  σ(a, ?Kont(k));
+```
+
+One thing though is that Ascent allows enumerating structs as a relation
+ with the `for` keyword. For example:
+```rust
+𝜍(v, ρ2, σ, a, tick(v, t,k)) <--
+  𝜍(?Ref(x), ρ, σ, a, t),
+  // enumerating σ[&ρ[x]]
+  for xv in σ[&ρ[x]].iter(), if let Value(v,ρ2) = xv,
+  // enumerating σ[a]
+  for av in σ[a].iter(), if let Kont(k) = av;
+```
+This makes Ascent have a more macro-y vibe,
+ which makes sense since the whole Ascent frontend is based
+ on Rust's procedural macros.
+However, I think the similar can be easily achieved 
+ inside the relational land,
+ so in a full-fledged relational language like Gogi,
+ the `for` syntax may not be necessary.
+
+Seamless interop with Rust is in general very powerful.
+In fact, we have already used this feature a lot.
+For example,
+ lattices in Gogi are structs defined in Rust 
+ that implements certain traits.
+So in rules like `hi(x, n.into()) :- num(n, x).`, 
+ we are in fact calling methods 
+ in the corresponding struct to convert from and to 
+ other structs.
+
+In general, these user-defined functions 
+ introduced functional dependencies from domains of functions to their range.
+For example,
+ rule `hi(x, n.into()) :- num(n, x).` can be viewed as
+ `hi(x, n_into) :- num(n, x), into_rel(n, n_into)` 
+ with functional dependency from `n` to `n_into`.
+Advanced join algorithms
+ like worst-case optimal joins
+ can leverage these functional dependencies
+ to optimize the query.
+ 
+# The Model Semantics of Gogi and its Evaluation Algorithm
+
+# Gogi by Example
+
+## Lambda Calculus
+
+## Type Inference for HM Type System
+
+# Comparison to other languages
+
+## Comparison to Rel
+
+## Comparison to Souffle
+
+## Comparison to Flix
