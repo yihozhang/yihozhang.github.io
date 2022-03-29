@@ -35,6 +35,7 @@ tc(a, b) :- link(a, b).
 tc(a, b) :- link(a, c), tc(c, b).
 ```
 
+TODO:
 However, Datalog by itself is not that interesting.
 So for the first part of the post,
  I will instead focus on the extensions 
@@ -388,21 +389,21 @@ One interesting feature of Ascent is that it allows
 Ascent use this feature to support features like first-class environment
  (this and the next example are both from page 4 of the Ascent paper; comments are mine):
 ```rust
-𝜍(v, ρ2, a, tick(e, t, k)) <--
-  𝜍(?e@Ref(x), ρ, a, t), // the environment ρ is enumerated here
-  σ(ρ[x], ?Value(v, ρ2)), // ρ[x] is used as an index for σ
-  σ(a, ?Kont(k));
+sigma(v, rho2, a, tick(e, t, k)) <--
+  sigma(?e@Ref(x), rho, a, t), // the environment rho is enumerated here
+  store(rho[x], ?Value(v, rho2)), // rho[x] is used as an index for store
+  store(a, ?Kont(k));
 ```
 
 One thing though is that Ascent allows enumerating structs as a relation
  with the `for` keyword. For example:
 ```rust
-𝜍(v, ρ2, σ, a, tick(v, t,k)) <--
-  𝜍(?Ref(x), ρ, σ, a, t),
-  // enumerating σ[&ρ[x]]
-  for xv in σ[&ρ[x]].iter(), if let Value(v,ρ2) = xv,
-  // enumerating σ[a]
-  for av in σ[a].iter(), if let Kont(k) = av;
+sigma(v, rho2, store, a, tick(v, t,k)) <--
+  sigma(?Ref(x), rho, store, a, t),
+  // enumerating store[&rho[x]]
+  for xv in store[&rho[x]].iter(), if let Value(v,rho2) = xv,
+  // enumerating store[a]
+  for av in store[a].iter(), if let Kont(k) = av;
 ```
 This makes Ascent have a more macro-y vibe,
  which makes sense since the whole Ascent frontend is based
@@ -417,10 +418,9 @@ In fact, we have already used this feature a lot.
 For example,
  lattices in Gogi are structs defined in Rust 
  that implements certain traits.
-So in rules like `hi(x, n.into()) :- num(n, x).`, 
- we are in fact calling methods 
- in the corresponding struct to convert from and to 
- other structs.
+So rules like `hi(x, n.into()) :- num(n, x).`, 
+ will call methods 
+ in the corresponding struct (e.g., `n.into()`).
 
 In general, these user-defined functions 
  introduced functional dependencies from domains of functions to their range.
@@ -433,7 +433,129 @@ Advanced join algorithms
  can leverage these functional dependencies
  to optimize the query.
  
-# The Model Semantics of Gogi and its Evaluation Algorithm
+# The Model Semantics of Gogi and its Evaluation
+
+In this section, we will focus on the problem of how to formalize Gogi 
+ and how to evaluate Gogi programs. 
+This section will first give the model semantics of Gogi.
+Then, It will describe
+ rebuilding, an essential procedure for 
+ evaluating and maintaining e-graphs,
+ namely rebuilding, in the Gogi setting.
+Finally,
+ we will discuss how Gogi's matching procedure
+ can benefit from semi-naive evaluation,
+ a classic evaluation algorithm in Datalog
+## The Model Semantics
+
+For simplicity, we assume that 
+ in our core language
+ there will only be one (interpreted) lattice $L$
+ and one (uninterpreted) sort $S$.
+
+A relation declaration in core Gogi has the following shape:
+
+$$\text{rel }R(c_1,\dots,c_p)\rightarrow (s_1,\ldots, s_m, l_1,\ldots, l_m)$$
+<!-- ```prolog
+rel R(c1, ..., cp) -> (s1, ..., sm, l1, ..., ln).
+``` -->
+
+where $s_j$ is a sort value, 
+ $l_k$ is a lattice value, 
+ and $c_i$ can be either a lattice or sort value. 
+Such declaration specifies 
+ a relation with schema  
+ $(c_1, \ldots c_p, s_1, \ldots, s_m, l_1, \ldots, l_n)$
+ and implies the following logical constraint:
+
+$$
+  \forall 
+  \overline c,\overline s,\overline l,
+  \overline{s'},\overline{l'}.
+  R(\overline c, \overline s, \overline l)\land
+  R(\overline{c'}, \overline{s'}, \overline{l'})\rightarrow
+  \overline s=\overline{s'}\land \overline l = \overline{l'}$$
+<!-- ```prolog
+forall c1, ..., cp, 
+       s1, ..., sm, l1, ..., lm, 
+       s'1, ..., s'm, l'1, ..., l'm:
+  R(c1, ..., cp, s1, ..., sm, l1, ..., lm) /\
+  R(c1, ..., cp, s'1, ..., s'm, l'1, ..., l'm)
+  ->
+  (/\j (sj = s'j)) /\
+  (/\k (lk = l'k))
+``` -->
+where $\overline x$ denotes a vector of variables $x_1,\ldots,x_k$.
+
+A rewrite rule looks like follows:
+$$
+  \exists \overline{z}.R_1(\overline{x_1}), \ldots, R_n(\overline {x_n})
+  \gets
+  S_1(\overline{y_1}), \ldots, S_m(\overline{y_m}),
+$$
+All variables $x_{ij}$ in the head are bound in the body.
+Unbounded variables in Gogi's head are translated
+into existential variables $\overline z$ in the core.
+<!-- ```prolog
+R1(x11, ..., x1m1), ..., Rn(xn1, ..., xnmn) 
+    :- S1(y11, ..., y1m'1), ... Sn'(y11, ..., yn'mn'),
+       z1 = fresh, ..., zk = fresh.
+``` -->
+
+The rewrite rule in the core is further translated to the following logical constraint:
+
+$$
+  \forall \overline{y}.
+  \left(\land_i S_i\left(\overline{y_i}\right)\right) \rightarrow
+  \exists \overline{z}\in L^k. \land_i \overline{x_i}\sqsubseteq_L R_i$$
+<!-- ```prolog
+forall y11, ..., yn’mn’:
+  (/\i Si(yi1, ..., yim'i)) ->
+  exists z1 in L, ..., zk in L,
+    /\i (xi1, ... ximi) subset_L Ri
+``` -->
+where $\overline{y}$ is the set of variables occurring in $\overline{y_1},\ldots, \overline{y_m}$ and
+$$
+(\overline{c},\overline{s},\overline{l})
+\sqsubseteq_L R\iff
+\exists \overline{l'}.
+ R(\overline{c},\overline{s},\overline{l'}) \land\left(\land_i\;l_i\leq_L l'_i\right)
+$$
+<!-- ```
+(s1, ..., sm, l1, ..., ln) subset_L R
+	iff
+exists l'1, ..., l'n: 
+  R(s1, ..., sm, l'1, ..., l'n) /\
+  /\j (lj <= l'j)
+``` -->
+
+In English, 
+whenever a valuation of variables
+ makes right-hand side satisfied, 
+ there must exists $\overline{z}$ 
+ such that the left-hand side also "holds"
+ (in the sense that there exists tuples that
+ subsumes the substituted left-hand side).
+
+The result of evaluating a (core) Gogi program is 
+ the minimal model $(S_{\min}, D_{\min})$ that 
+ satisfies the logical constraints from the program,
+ where $S_{\min}$ is the minimal set of elements (up to isomorphism) in $S$ 
+ and $D$ is the minimal database instance (i.e., interpretation of relations) with domain $L$ and $S_{\min}$.
+
+This formalization should look very familiar 
+ for people who know the [chase](https://dl.acm.org/doi/10.1145/3034786.3034796): 
+Functional dependencies are equality-generating dependencies (EGD),
+ and rewrite rules are tuple-generating dependencies (TGD).
+However, different from the chase, 
+ which has both labelled nulls and constants 
+ and unifying two constants will cause a crash,
+ Gogi has only labelled nulls (in the chase's terminology).
+
+## The Evaluation Algorithm
+
+### Rebuilding
+### Semi-Naive E-Matching
 
 # Gogi by Example
 

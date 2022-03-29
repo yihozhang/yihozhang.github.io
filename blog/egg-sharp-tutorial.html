@@ -31,9 +31,6 @@
         font-size: 0.9em;
         padding: 1em;
       }
-      h1 {
-        font-size: 1.8em;
-      }
     }
     @media print {
       body {
@@ -138,12 +135,6 @@
     #TOC li {
       list-style: none;
     }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
     #TOC a:not(:hover) {
       text-decoration: none;
     }
@@ -216,9 +207,7 @@
     code span.vs { color: #cc9393; } /* VerbatimString */
     code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
   </style>
-  <script
-  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
-  type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -228,125 +217,53 @@
 <h1 class="title">A tutorial on the imaginary Gogi language</h1>
 <p class="author">Yihong Zhang</p>
 </header>
-<p>Welcome to the tutorial on Gogi (short for
-eg<strong>g</strong>l<strong>ogi</strong>sh), a made-up language that
-attempts to generalize both <a
-href="https://en.wikipedia.org/wiki/Datalog">Datalog</a> and <a
-href="https://egraphs-good.github.io">egg</a>. This blog stems from a <a
-href="https://github.com/nikomatsakis/plmw-2022">trick</a> I learned
-from Nicholas Matsakis at PLMW 2022: To write a tutorial for a
-non-existing language. By doing this, I can get a sense of what I want
-from this new language as well as early feedbacks from others.</p>
-<p>Why Gogi? The motivation behind Gogi is to find a good model for
-relational e-graphs that can take full advantage of (1) performance of
-relational e-matching and (2) expressiveness of Datalog, while (3) being
-compatiable with egg as well as (4) efficient. This is the first
-approach I described at the beginning of the previous <a
-href="blog/ematch-trick.html">post</a>. I’m actually more excited about
-this approach, because I believe this is <em>the right way</em> in long
-term.</p>
-<p>Gogi is Datalog, so it supports various reasoning expressible in
-Datalog. A rule has the form
-<code>head1, ..., headn :- body1, ..., bodyn</code>. For example, below
-is a valid egg# program:</p>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>rel link(string<span class="kw">,</span> string) from <span class="ot">&quot;./</span><span class="er">link</span><span class="ot">.</span><span class="er">csv</span><span class="ot">&quot;</span><span class="kw">.</span></span>
+<nav id="TOC" role="doc-toc">
+
+</nav>
+<p>Welcome to the tutorial on Gogi (short for eg<strong>g</strong>l<strong>ogi</strong>sh), a made-up language that attempts to generalize both <a href="https://en.wikipedia.org/wiki/Datalog">Datalog</a> and <a href="https://egraphs-good.github.io">egg</a>. This blog stems from a <a href="https://github.com/nikomatsakis/plmw-2022">trick</a> I learned from Nicholas Matsakis at PLMW 2022: To write a tutorial for a non-existing language. By doing this, I can get a sense of what I want from this new language as well as early feedbacks from others.</p>
+<p>Why Gogi? The motivation behind Gogi is to find a good model for relational e-graphs that can take full advantage of (1) performance of relational e-matching and (2) expressiveness of Datalog, while (3) being compatiable with egg as well as (4) efficient. This is the first approach I described at the beginning of the previous <a href="blog/ematch-trick.html">post</a>. I’m actually more excited about this approach, because I believe this is <em>the right way</em> in long term.</p>
+<p>Gogi is Datalog, so it supports various reasoning expressible in Datalog. A rule has the form <code>head1, ..., headn :- body1, ..., bodyn</code>. For example, below is a valid Gogi program:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>rel link(string<span class="kw">,</span> string) from <span class="ot">&quot;./</span><span class="er">link</span><span class="ot">.</span><span class="er">csv</span><span class="ot">&quot;</span><span class="kw">.</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>rel tc(string<span class="kw">,</span> string)<span class="kw">.</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>tc(a<span class="kw">,</span> b) <span class="kw">:-</span> link(a<span class="kw">,</span> b)<span class="kw">.</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>tc(a<span class="kw">,</span> b) <span class="kw">:-</span> link(a<span class="kw">,</span> c)<span class="kw">,</span> tc(c<span class="kw">,</span> b)<span class="kw">.</span></span></code></pre></div>
-<p>However, Datalog by itself is not that interesting. So for the first
-part of the post, I will instead focus on the extensions that make Gogi
-interesting. Next, I’ll give some examples and show why Gogi generalizes
-egg I will also try to develop the operational and model semantics of
-Gogi. <!-- Finally, I'll discuss some thoughts on Gogi. --></p>
+<p>TODO: However, Datalog by itself is not that interesting. So for the first part of the post, I will instead focus on the extensions that make Gogi interesting. Next, I’ll give some examples and show why Gogi generalizes egg I will also try to develop the operational and model semantics of Gogi. <!-- Finally, I'll discuss some thoughts on Gogi. --></p>
 <h1 id="introduction-to-gogi">Introduction to Gogi</h1>
-<h2 id="ext-1-user-defined-sorts-and-lattices">Ext 1: User-defined sorts
-and lattices</h2>
-<p>In Gogi, every value is either a (semi)lattice value or a sort value.
-Lattices in Gogi are algebraic structures with a binary join operator
-(<span class="math inline">\(\lor\)</span>) that is associative,
-commutative, and idempotent and a default top <span
-class="math inline">\(\top\)</span> where <span
-class="math inline">\(\top\lor e=\top\)</span> for all <span
-class="math inline">\(e\)</span>. For example, standard types like
-<code>string</code>, <code>i64</code>, and <code>u64</code> in Gogi are
-in fact trivial lattices with <span class="math inline">\(s_1\lor s_2
-=\top\)</span> for all <span class="math inline">\(s_1\neq s_2\)</span>.
-In Gogi, <span class="math inline">\(\top\)</span> means unresolvable
-errors. Users can define their own lattices by providing a definition
-for lattice join.</p>
-<p>Similarly, users can define sorts. Unlike lattices, sorts are
-uninterpreted. As a result, sort values can only be created implicitly
-via functional dependency. We will go back to this point later.</p>
-<h2 id="ext-2-relations-and-functional-dependencies">Ext 2: Relations
-and Functional Dependencies</h2>
-<h3 id="declaring-a-relation-with-functional-dependency">Declaring a
-relation with functional dependency</h3>
-<p>Relations can be declared using the <code>rel</code> keyword.
-Moreover, it is possible to specify a functional dependency between
-columns in Gogi. For example,</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sort expr<span class="kw">.</span></span>
+<h2 id="ext-1-user-defined-sorts-and-lattices">Ext 1: User-defined sorts and lattices</h2>
+<p>In Gogi, every value is either a (semi)lattice value or a sort value. Lattices in Gogi are algebraic structures with a binary join operator (<span class="math inline">\(\lor\)</span>) that is associative, commutative, and idempotent and a default top <span class="math inline">\(\top\)</span> where <span class="math inline">\(\top\lor e=\top\)</span> for all <span class="math inline">\(e\)</span>. For example, standard types like <code>string</code>, <code>i64</code>, and <code>u64</code> in Gogi are in fact trivial lattices with <span class="math inline">\(s_1\lor s_2 =\top\)</span> for all <span class="math inline">\(s_1\neq s_2\)</span>. In Gogi, <span class="math inline">\(\top\)</span> means unresolvable errors. Users can define their own lattices by providing a definition for lattice join.</p>
+<p>Similarly, users can define sorts. Unlike lattices, sorts are uninterpreted. As a result, sort values can only be created implicitly via functional dependency. We will go back to this point later.</p>
+<h2 id="ext-2-relations-and-functional-dependencies">Ext 2: Relations and Functional Dependencies</h2>
+<h3 id="declaring-a-relation-with-functional-dependency">Declaring a relation with functional dependency</h3>
+<p>Relations can be declared using the <code>rel</code> keyword. Moreover, it is possible to specify a functional dependency between columns in Gogi. For example,</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>sort expr<span class="kw">.</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>rel num(i64) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span></code></pre></div>
-<p>declares a sort called <code>expr</code> and a <code>num</code>
-relation with two columns <code>(i64, expr)</code>. In the
-<code>num</code> relation, each <code>i64</code> uniquely determines the
-remaining column (i.e., <code>num(x, e1)</code> and
-<code>num(x, e2)</code> implies <code>e1 = e2</code>). The
-<code>num</code> relation can be read as a function from
-<code>i64</code> to values in <code>expr</code>. Similar declarations
-are ubiquitous in Gogi to represent sort constructors.</p>
+<p>declares a sort called <code>expr</code> and a <code>num</code> relation with two columns <code>(i64, expr)</code>. In the <code>num</code> relation, each <code>i64</code> uniquely determines the remaining column (i.e., <code>num(x, e1)</code> and <code>num(x, e2)</code> implies <code>e1 = e2</code>). The <code>num</code> relation can be read as a function from <code>i64</code> to values in <code>expr</code>. Similar declarations are ubiquitous in Gogi to represent sort constructors.</p>
 <p>As another example,</p>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rel add(expr<span class="kw">,</span> expr) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span></code></pre></div>
-<p>declares a relation with three columns, and the first two columns
-together uniquely determines the third column. This represents a
-constructor that takes two <code>expr</code>s.</p>
-<p>Users can introduce new sort values with functional dependencies.
-Example:</p>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>num(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">.</span> <span class="co">% equivalently, num(1, _).</span></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rel add(expr<span class="kw">,</span> expr) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span></code></pre></div>
+<p>declares a relation with three columns, and the first two columns together uniquely determines the third column. This represents a constructor with two <code>expr</code> arguments.</p>
+<p>Users can introduce new sort values with functional dependencies. Example:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>num(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">.</span> <span class="co">% equivalently, num(1, _).</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>num(<span class="dv">2</span><span class="kw">,</span> d)<span class="kw">.</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>add(c<span class="kw">,</span> d<span class="kw">,</span> e) <span class="kw">:-</span> num(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">,</span> num(<span class="dv">2</span><span class="kw">,</span> d)<span class="kw">.</span></span></code></pre></div>
-<p>This program is interesting and its semantics deviates from the one
-in standard Datalog. In standard Datalog, this program will not compile
-because variable <code>c</code> in the first rule, <code>d</code> in the
-second rule, and <code>e</code> in the third rule are not bound.
-However, this is a valid program in Gogi. Thanks to functional
-dependency, variables associated to head atoms do not necessarily have
-to be bound in the bodies. The above Gogi program is roughly equivalent
-to the following Datalog program:</p>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>num(<span class="dv">1</span><span class="kw">,</span> c) <span class="kw">:-</span> <span class="kw">!</span>num(<span class="dv">1</span><span class="kw">,</span> <span class="dt">_</span>)<span class="kw">,</span> c <span class="kw">=</span> new_expr()<span class="kw">.</span></span>
+<p>This program is interesting and its semantics deviates from the one in standard Datalog. In standard Datalog, this program will not compile because variable <code>c</code> in the first rule, <code>d</code> in the second rule, and <code>e</code> in the third rule are not bound. However, this is a valid program in Gogi. Thanks to functional dependency, variables associated to head atoms do not necessarily have to be bound in the bodies. The above Gogi program is roughly equivalent to the following Datalog program:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>num(<span class="dv">1</span><span class="kw">,</span> c) <span class="kw">:-</span> <span class="kw">!</span>num(<span class="dv">1</span><span class="kw">,</span> <span class="dt">_</span>)<span class="kw">,</span> c <span class="kw">=</span> new_expr()<span class="kw">.</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>num(<span class="dv">2</span><span class="kw">,</span> d) <span class="kw">:-</span> <span class="kw">!</span>num(<span class="dv">2</span><span class="kw">,</span> <span class="dt">_</span>)<span class="kw">,</span> d <span class="kw">=</span> new_expr()<span class="kw">.</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>add(c<span class="kw">,</span> d<span class="kw">,</span> e) <span class="kw">:-</span> num(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">,</span> num(<span class="dv">2</span><span class="kw">,</span> d)<span class="kw">,</span> <span class="kw">!</span>add(c<span class="kw">,</span> d<span class="kw">,</span> <span class="dt">_</span>)<span class="kw">,</span> e <span class="kw">=</span> new_expr()</span></code></pre></div>
-<p>Negated atoms like <code>!num(1, _)</code> is necessary here because
-otherwise it will inserts more than one atoms matching
-<code>num(1, _)</code>, which violates the functional dependency
-associated to the relation.</p>
-<p>The example Gogi program can also be written into one single rule
-with multiple heads:</p>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>add(c<span class="kw">,</span> d<span class="kw">,</span> e)<span class="kw">,</span> num(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">,</span> num(<span class="dv">2</span><span class="kw">,</span> d)<span class="kw">.</span></span>
+<p>Negated atoms like <code>!num(1, _)</code> is necessary here because otherwise it will inserts more than one atoms matching <code>num(1, _)</code>, which violates the functional dependency associated to the relation.</p>
+<p>The above example Gogi program can also be written into one single rule with multiple heads:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>add(c<span class="kw">,</span> d<span class="kw">,</span> e)<span class="kw">,</span> num(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">,</span> num(<span class="dv">2</span><span class="kw">,</span> d)<span class="kw">.</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">% roughly equivalent to </span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">% add(c, d, e), num(1, c), num(2, d) :- !num(1, _), !num(2, _), </span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">%                                       c = new_expr(), </span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">%                                       d = new_expr(),</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">%                                       !add(c, d, _),</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">%                                       e = new_expr().</span></span></code></pre></div>
-<h2 id="the-bracket-syntax">The bracket syntax</h2>
-<p>Gogi also supports the bracket syntax, so it can be further
-simplified to:</p>
-<div class="sourceCode" id="cb7"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>add[num[<span class="dv">1</span>], num[<span class="dv">2</span>]]<span class="kw">.</span></span></code></pre></div>
-<p>The bracket syntax will implicitly fill the omitted column(s) with
-newly generated variable(s). If the atom is in nested inside another
-term, the nested atom will be lifted to the top-level, and the generated
-variable(s) will take the original position of the atom. Another silly
-example of the bracket syntax:</p>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ans(x) <span class="kw">:-</span> <span class="al">xor</span>[<span class="al">xor</span>[x]]<span class="kw">.</span></span>
+<h3 id="the-bracket-syntax">The bracket syntax</h3>
+<p>Gogi also supports the bracket syntax, so the last program can be further simplified to:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>add[num[<span class="dv">1</span>], num[<span class="dv">2</span>]]<span class="kw">.</span></span></code></pre></div>
+<p>The bracket syntax will implicitly fill the omitted column(s) with newly generated variable(s). If the atom is nested within another term, the nested atom will be lifted to the top-level, and the generated variable(s) will take the original position of the atom. Another silly example of the bracket syntax:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ans(x) <span class="kw">:-</span> <span class="al">xor</span>[<span class="al">xor</span>[x]]<span class="kw">.</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">% expands to</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">% ans(x) :- xor[y, z], xor(x, y, z)</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">% which expands to</span></span>
@@ -354,54 +271,25 @@ class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb8-1"><a hr
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">% this rule can be thought as</span></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">%   for any expr x, y where `y xor (x xor y)`</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">%   is present in the database, collect x as the result.</span></span></code></pre></div>
-<p>Finally, in equational reasoning a la egg, it is common to write
-rules like “for every <code>(a + b) + c</code>, populate
-<code>a + (b + c)</code> on the right and make them equivalent”. This
-rule will look like the following:</p>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>add(a<span class="kw">,</span> add[b, c]<span class="kw">,</span> id) <span class="kw">:-</span> add(add[a, b]<span class="kw">,</span> c<span class="kw">,</span> id)<span class="kw">.</span></span></code></pre></div>
-<p>Gogi further has a syntactic sugar for these equational rules:
-<code>head := body if body1 ... bodyn</code> where both
-<code>head</code> and <code>body</code> should use the bracket syntax
-and omit the same number of columns. The if clause can be omitted. Gogi
-will expand this syntactic sugar by unfolding the top-level bracket in
-<code>head</code> and <code>body</code> with the same variable(s):</p>
-<div class="sourceCode" id="cb10"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>add[b, a] := add[a, b]<span class="kw">.</span></span>
+<p>Finally, in equational reasoning a la egg, it is common to write rules like “for every <code>(a + b) + c</code>, populate <code>a + (b + c)</code> on the right and make them equivalent”. This rule will look like the following:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>add(a<span class="kw">,</span> add[b, c]<span class="kw">,</span> id) <span class="kw">:-</span> add(add[a, b]<span class="kw">,</span> c<span class="kw">,</span> id)<span class="kw">.</span></span></code></pre></div>
+<p>Gogi further has a syntactic sugar for these equational rules: <code>head := body if body1 ... bodyn</code> where both <code>head</code> and <code>body</code> should use the bracket syntax and omit the same number of columns. The if clause can be omitted. Gogi will expand this syntactic sugar by unfolding the top-level bracket in <code>head</code> and <code>body</code> with the same variable(s):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>add[b, a] := add[a, b]<span class="kw">.</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">% unfolds to add(b, a, id) :- add(a, b, id).</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>add[a, add[b, c]] := add[add[a, b], c]<span class="kw">.</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">% unfolds to add(a, add[b, c], id) :- add(add[a, b], c, id).</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>num[<span class="dv">1</span>] := <span class="fu">div</span>[a, a] if num(x<span class="kw">,</span> a)<span class="kw">,</span> x <span class="kw">!=</span> <span class="dv">0</span><span class="kw">.</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">% unfolds to num(1, id) :- div(a, a, id), num(x, a), x != 0.</span></span></code></pre></div>
-<p>Note the equational rules may introduce functional dependency
-violation; for instance, last rule may cause multiple tuples to match
-<code>num(1, _)</code>, yet the first column should uniquely determines
-the tuple. We will introduce how we resolve this kind of violations in
-the section on <a href="#ext-3-functional-dependency-repair">Functional
-Dependency Repair</a>.</p>
+<p>Note the equational rules may introduce functional dependency violation; for instance, last rule may cause multiple tuples to match <code>num(1, _)</code>, yet the first column should uniquely determines the tuple. We will discuss more about how we resolve this kind of violations in the section on <a href="#ext-3-functional-dependency-repair">Functional Dependency Repair</a>. The essential idea is that, if two sort values are present with the same primary key, then the two sort values must be equivalent, whereas if two lattice values are present with the same primary key, the new, unique lattice value should generalize the two values, i.e., it will be the least-upper bound of those lattice values.</p>
 <h3 id="relations-with-lattices">Relations with lattices</h3>
-<p>The example relations we see so far mostly center around sort values.
-However, it is also possible and indeed very useful to define relations
-with lattices:</p>
-<div class="sourceCode" id="cb11"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>rel hi(expr) <span class="kw">-&gt;</span> lmax(<span class="fu">-</span><span class="dv">2147483648</span>)<span class="kw">.</span></span>
+<p>The example relations we see so far mostly center around sort values. However, it is also possible and indeed very useful to define relations with lattices:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>rel hi(expr) <span class="kw">-&gt;</span> lmax(<span class="fu">-</span><span class="dv">2147483648</span>)<span class="kw">.</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>rel lo(expr) <span class="kw">-&gt;</span> lmin(<span class="dv">2147482647</span>)<span class="kw">.</span></span></code></pre></div>
-<p>To define a lattice column, a default value need to be provided in
-the relation definition. The default value is not a lattice bottom: the
-bottom means do not exist. Meanwhile, the lattice top means there are
-conflicts. It is also possible for default value to refer to the
-determinant columns:</p>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>rel add1(i<span class="fu">:</span> i64) <span class="kw">-&gt;</span> i64(i <span class="fu">+</span> <span class="dv">1</span>)<span class="kw">.</span></span></code></pre></div>
-<p>The column initialization syntax should be reminiscent of C++’s <a
-href="https://en.cppreference.com/w/cpp/language/constructor">member
-initializer lists</a>.</p>
-<p>In the above example, <code>lo</code> and <code>hi</code> together
-define a range analysis for the <code>expr</code> sort. This in facts
-generalizes the e-class analyses in egg. Here are some rules for
-<code>hi</code> and <code>lo</code> (stolen from Zach):</p>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>hi(x<span class="kw">,</span> n<span class="al">.</span>into()) <span class="kw">:-</span> num(n<span class="kw">,</span> x)<span class="kw">.</span></span>
+<p>To define a lattice column, a default value need to be provided in the relation definition. The default value is not a lattice bottom: the bottom means do not exist. Meanwhile, the lattice top means there are conflicts. It is also possible for default value to refer to the determinant columns:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>rel add1(i<span class="fu">:</span> i64) <span class="kw">-&gt;</span> i64(i <span class="fu">+</span> <span class="dv">1</span>)<span class="kw">.</span></span></code></pre></div>
+<p>The column initialization syntax should be reminiscent of C++’s <a href="https://en.cppreference.com/w/cpp/language/constructor">member initializer lists</a>.</p>
+<p>In the above example, <code>lo</code> and <code>hi</code> together define a range analysis for the <code>expr</code> sort. This in facts generalizes the e-class analyses in egg. Here are some rules for <code>hi</code> and <code>lo</code> (stolen from Zach):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>hi(x<span class="kw">,</span> n<span class="al">.</span>into()) <span class="kw">:-</span> num(n<span class="kw">,</span> x)<span class="kw">.</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>lo(x<span class="kw">,</span> n<span class="al">.</span>into()) <span class="kw">:-</span> num(n<span class="kw">,</span> x)<span class="kw">.</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>lo(nx<span class="kw">,</span> n<span class="al">.</span>negated()) <span class="kw">:-</span> hi(x<span class="kw">,</span> n)<span class="kw">,</span> neg(x<span class="kw">,</span> nx)<span class="kw">.</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>hi(nx<span class="kw">,</span> n<span class="al">.</span>negated()) <span class="kw">:-</span> lo(x<span class="kw">,</span> n)<span class="kw">,</span> neg(x<span class="kw">,</span> nx)<span class="kw">.</span></span>
@@ -411,23 +299,9 @@ class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb13-1"><a h
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>lo(xy<span class="kw">,</span> lox <span class="fu">+</span> loy) <span class="kw">:-</span> lo(x<span class="kw">,</span> lox)<span class="kw">,</span> hi(y<span class="kw">,</span> loy)<span class="kw">,</span> add(x<span class="kw">,</span> y<span class="kw">,</span> xy)<span class="kw">.</span></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co">% can be further simplified to</span></span>
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co">%   lo[xy] := lo[x] + lo[y] if add(x, y, xy)</span></span></code></pre></div>
-<p>Note here instead of
-<code>lo(neg[x], n.negated()) :- hi(x, n).</code>, we put the
-<code>neg</code> atom to the right-hand side and write
-<code>lo(nx, n.negated()) :- hi(x, n), neg(x, nx).</code> There are some
-nuanced differences between the two rules. This rule, besides doing what
-the second rule does, always populates a <code>neg</code> tuple for each
-<code>hi</code> tuple even when it does not exist, so the first rule can
-be viewed as an “annotation-only” version of the first rule, which is
-usually what we want.</p>
-<p>The last example shows e-class analyses in Gogi is composable (i.e.,
-each analysis can freely refer to each other). This is one of the reason
-why we believe Gogi generalizes e-class analyses. Moreover, they can
-also interact with other non-lattice relations in a meaningful way: <a
-href="#fn1" class="footnote-ref" id="fnref1"
-role="doc-noteref"><sup>1</sup></a></p>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>rel geq(expr<span class="kw">,</span> expr)<span class="kw">.</span></span>
+<p>Note here instead of <code>lo(neg[x], n.negated()) :- hi(x, n).</code>, we put the <code>neg</code> atom to the right-hand side and write <code>lo(nx, n.negated()) :- hi(x, n), neg(x, nx).</code> There are some nuanced differences between the two rules. This rule, besides doing what the second rule does, always populates a <code>neg</code> tuple for each <code>hi</code> tuple even when it does not exist, so the first rule can be viewed as an “annotation-only” version of the first rule, which is usually what we want.</p>
+<p>The last example shows e-class analyses in Gogi is composable (i.e., each analysis can freely refer to each other). This is one of the reason why we believe Gogi generalizes e-class analyses. Moreover, they can also interact with other non-lattice relations in a meaningful way: <a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>rel geq(expr<span class="kw">,</span> expr)<span class="kw">.</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">% ... some arithmetic rules ...</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -441,10 +315,8 @@ class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb14-1"><a h
 <span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">% x and abs[x] are equivalent when x &gt; 0</span></span>
 <span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>x := abs[x] if geq(x<span class="kw">,</span> num[<span class="dv">0</span>])</span></code></pre></div>
-<p>Diverging a little bit, it is even possible to write the above rules
-without using analyses / relations with lattices:</p>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>sort bool<span class="kw">.</span></span>
+<p>Diverging a little bit, it is even possible to write the above rules without using analyses / relations with lattices:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>sort bool<span class="kw">.</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>rel <span class="kw">true</span>() <span class="kw">-&gt;</span> bool<span class="kw">.</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>rel <span class="kw">false</span>() <span class="kw">-&gt;</span> bool<span class="kw">.</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>rel geq(expr<span class="kw">,</span> expr) <span class="kw">-&gt;</span> bool<span class="kw">.</span></span>
@@ -469,34 +341,12 @@ class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb15-1"><a h
 <span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="co">% if x&gt;0 is equivalent to true,</span></span>
 <span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="co">% every abs[x] in the database should be equivalent to x </span></span>
 <span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>x := abs[x] if geq(x<span class="kw">,</span> <span class="dv">0</span><span class="kw">,</span> <span class="kw">true</span>[])</span></code></pre></div>
-<p>The above program can be seen as implementing a small theorem prover
-in Gogi. Whenever it sees abs[x], a query about <code>x &gt;= 0</code>
-will be issued to the database. If later <code>x &gt;= 0</code> is
-proven to be equivalent to true, a distinguished sort value,
-<code>abs[x]</code> will be put in the same e-class as
-<code>x</code>.</p>
+<p>The above program can be seen as implementing a small theorem prover in Gogi. Whenever it sees abs[x], a query about <code>x &gt;= 0</code> will be issued to the database. If later <code>x &gt;= 0</code> is proven to be equivalent to true, a distinguished sort value, <code>abs[x]</code> will be put in the same e-class as <code>x</code>.</p>
 <p>All these rewrite will be very hard to express in egg.</p>
-<h2 id="ext-3-functional-dependency-repair">Ext 3: Functional Dependency
-Repair</h2>
-<h2 id="ext-2.1-repairing-fds">Ext 2.1: Repairing FDs</h2>
-<p>FDs can be violated: what if the user introduced two values for the
-same set of determinant columns? In this case, we need to repair the
-FDs. We have seen such examples many times in previous sections. For
-example, rules like <code>R[x1, ..., xk] := ...</code> will add new
-values to <code>R</code> indexed by <code>x1, ..., xk</code>, and it is
-likely that there are already other tuples with the same prefix
-<code>x1, ..., xk</code>. These rules may potentially cause violation of
-functional dependencies. In general, there are two kinds of
-violations:</p>
-<p><strong>Case 1.</strong> If the dependent column is a sort value,
-then egglogish will unify the two terms later in the iteration. We can
-think of a term of a sort in egglogish as a constant in some theories,
-which refers to some element in the model. But we don’t know which
-element it refers to. However, by repairing functional dependencies, we
-can get some clues about what the structure will look like. Consider the
-following program</p>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rel add(expr<span class="kw">,</span> expr) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span>
+<h2 id="ext-3-functional-dependency-repair">Ext 3: Functional Dependency Repair</h2>
+<p>FDs can be violated: what if the user introduced two values for the same set of determinant columns? In this case, we need to repair the FDs. We have seen such examples many times in previous sections. For example, rules like <code>R[x1, ..., xk] := ...</code> will add new values to <code>R</code> indexed by <code>x1, ..., xk</code>, and it is likely that there are already other tuples with the same prefix <code>x1, ..., xk</code>. These rules may potentially cause violation of functional dependencies. In general, there are two kinds of violations:</p>
+<p><strong>Case 1.</strong> If the dependent column is a sort value, Gogi will unify the two sort values later in the iteration. We can think of a term of a sort in Gogi as a constant in some theories, which refers to some element in the model. But we don’t know which element it refers to. However, by repairing functional dependencies, we can get some clues about what the structure will look like. Consider the following program</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rel add(expr<span class="kw">,</span> expr) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>rel num(i64) <span class="kw">-&gt;</span> expr<span class="kw">.</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">% add the fact 2 + 1, where the last column is auto-generated.</span></span>
@@ -507,36 +357,97 @@ class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb16-1"><a h
 <span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co">% it occurs at the left hand side.)</span></span>
 <span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>add(num[<span class="dv">2</span>]<span class="kw">,</span> num[<span class="dv">1</span>]<span class="kw">,</span> </span>
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    add[num[<span class="dv">1</span>], num[<span class="dv">2</span>]])<span class="kw">.</span> </span></code></pre></div>
-<p>Because now (without repairing) <code>add[num[1], num[2]]</code> will
-contain two rows. The FD is violated. If we think of rewriting under FD
-as a process of finding a model for the sort, then what do we learn from
-this violation? We learned that the two sort values must be the same
-thing! Therefore, to respect the FD, the expr originally referred by
-<code>add[num[2], num[1]]</code> and by <code>add[num[1], num[2]]</code>
-should be treated as the same expr! As we will show later, when a Gogi
-program reaches the fixpoint, it produces a valid, minimal model for the
-relations and the sorts such that the rewrite rules and the functional
-dependencies are both respected.</p>
+<p>Because now (without repairing) <code>add[num[1], num[2]]</code> will contain two rows. The functional dependency is violated. If we think of rewriting under functional dependency as a process of finding a model for the sort, then what do we learn from this violation? We learned that, to respect the functional dependency, the two sort values must be the same thing! Therefore the expr originally referred by <code>add[num[2], num[1]]</code> and by <code>add[num[1], num[2]]</code> will be treated as the same expr and no longer be distinguishable in Gogi! As we will show later, when a Gogi program reaches the fixpoint, it produces a valid, minimal model for the relations and the sorts such that the rewrite rules and the functional dependencies are both respected.</p>
 <p>TODO: mention no global union-find</p>
-<p><strong>Case 2.</strong> What if the dependent column is a regular
-type as a Rust struct or an integer? Well, we also need to unify them,
-but in a different way. The idea here is to describe these values with a
-algebraic structure, which in this case is a lattice. A lattice has a
-bottom (means does not exist) and a top (means conflicts). Similar to <a
-href="https://dl.acm.org/doi/10.1145/2980983.2908096">Flix</a>, lattice
-values will grow by taking the least upper bound of all the violating
-tuples. In that sense, Gogi also generalizes Flix (as is described in
-the PLDI ’16 paper)</p>
-<section class="footnotes footnotes-end-of-document"
-role="doc-endnotes">
+<p><strong>Case 2.</strong> What if the dependent column is a regular type as a Rust struct or an integer? Well, we also need to unify them, but in a different way. The idea here is to describe these values with a algebraic structure, which in this case is a lattice. A lattice has a bottom (means does not exist) and a top (means conflicts). Similar to <a href="https://flix.dev/">Flix</a>, lattice values will grow by taking the least upper bound of all the violating tuples. In that sense, Gogi also generalizes Flix (as is described in the <a href="https://dl.acm.org/doi/10.1145/2980983.2908096">PLDI ’16</a> paper).</p>
+<h2 id="ext-4-seamless-interop-with-rust">Ext 4: Seamless Interop with Rust</h2>
+<p>This proposed extension takes inspiration from recent work on <a href="https://dl.acm.org/doi/pdf/10.1145/3497776.3517779">Ascent</a>, an expressive Datalog engine that has seamless integration with the Rust ecosystem. One interesting feature of Ascent is that it allows first-class introspection of the column values. Ascent use this feature to support features like first-class environment (this and the next example are both from page 4 of the Ascent paper; comments are mine):</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>sigma(v<span class="op">,</span> rho2<span class="op">,</span> a<span class="op">,</span> tick(e<span class="op">,</span> t<span class="op">,</span> k)) <span class="op">&lt;--</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  sigma(<span class="op">?</span>e<span class="op">@</span>Ref(x)<span class="op">,</span> rho<span class="op">,</span> a<span class="op">,</span> t)<span class="op">,</span> <span class="co">// the environment rho is enumerated here</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  store(rho[x]<span class="op">,</span> <span class="op">?</span>Value(v<span class="op">,</span> rho2))<span class="op">,</span> <span class="co">// rho[x] is used as an index for store</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  store(a<span class="op">,</span> <span class="op">?</span>Kont(k))<span class="op">;</span></span></code></pre></div>
+<p>One thing though is that Ascent allows enumerating structs as a relation with the <code>for</code> keyword. For example:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sigma(v<span class="op">,</span> rho2<span class="op">,</span> store<span class="op">,</span> a<span class="op">,</span> tick(v<span class="op">,</span> t<span class="op">,</span>k)) <span class="op">&lt;--</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  sigma(<span class="op">?</span>Ref(x)<span class="op">,</span> rho<span class="op">,</span> store<span class="op">,</span> a<span class="op">,</span> t)<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">// enumerating store[&amp;rho[x]]</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> xv <span class="kw">in</span> store[<span class="op">&amp;</span>rho[x]]<span class="op">.</span>iter()<span class="op">,</span> <span class="cf">if</span> <span class="kw">let</span> Value(v<span class="op">,</span>rho2) <span class="op">=</span> xv<span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="co">// enumerating store[a]</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> av <span class="kw">in</span> store[a]<span class="op">.</span>iter()<span class="op">,</span> <span class="cf">if</span> <span class="kw">let</span> Kont(k) <span class="op">=</span> av<span class="op">;</span></span></code></pre></div>
+<p>This makes Ascent have a more macro-y vibe, which makes sense since the whole Ascent frontend is based on Rust’s procedural macros. However, I think the similar can be easily achieved inside the relational land, so in a full-fledged relational language like Gogi, the <code>for</code> syntax may not be necessary.</p>
+<p>Seamless interop with Rust is in general very powerful. In fact, we have already used this feature a lot. For example, lattices in Gogi are structs defined in Rust that implements certain traits. So rules like <code>hi(x, n.into()) :- num(n, x).</code>, will call methods in the corresponding struct (e.g., <code>n.into()</code>).</p>
+<p>In general, these user-defined functions introduced functional dependencies from domains of functions to their range. For example, rule <code>hi(x, n.into()) :- num(n, x).</code> can be viewed as <code>hi(x, n_into) :- num(n, x), into_rel(n, n_into)</code> with functional dependency from <code>n</code> to <code>n_into</code>. Advanced join algorithms like worst-case optimal joins can leverage these functional dependencies to optimize the query.</p>
+<h1 id="the-model-semantics-of-gogi-and-its-evaluation">The Model Semantics of Gogi and its Evaluation</h1>
+<p>In this section, we will focus on the problem of how to formalize Gogi and how to evaluate Gogi programs. This section will first give the model semantics of Gogi. Then, It will describe rebuilding, an essential procedure for evaluating and maintaining e-graphs, namely rebuilding, in the Gogi setting. Finally, we will discuss how Gogi’s matching procedure can benefit from semi-naive evaluation, a classic evaluation algorithm in Datalog ## The Model Semantics</p>
+<p>For simplicity, we assume that in our core language there will only be one (interpreted) lattice <span class="math inline">\(L\)</span> and one (uninterpreted) sort <span class="math inline">\(S\)</span>.</p>
+<p>A relation declaration in core Gogi has the following shape:</p>
+<p><span class="math display">\[\text{rel }R(c_1,\dots,c_p)\rightarrow (s_1,\ldots, s_m, l_1,\ldots, l_m)\]</span> <!-- ```prolog
+rel R(c1, ..., cp) -> (s1, ..., sm, l1, ..., ln).
+``` --></p>
+<p>where <span class="math inline">\(s_j\)</span> is a sort value, <span class="math inline">\(l_k\)</span> is a lattice value, and <span class="math inline">\(c_i\)</span> can be either a lattice or sort value. Such declaration specifies a relation with schema<br />
+<span class="math inline">\((c_1, \ldots c_p, s_1, \ldots, s_m, l_1, \ldots, l_n)\)</span> and implies the following logical constraint:</p>
+<p><span class="math display">\[
+  \forall 
+  \overline c,\overline s,\overline l,
+  \overline{s&#39;},\overline{l&#39;}.
+  R(\overline c, \overline s, \overline l)\land
+  R(\overline{c&#39;}, \overline{s&#39;}, \overline{l&#39;})\rightarrow
+  \overline s=\overline{s&#39;}\land \overline l = \overline{l&#39;}\]</span> <!-- ```prolog
+forall c1, ..., cp, 
+       s1, ..., sm, l1, ..., lm, 
+       s'1, ..., s'm, l'1, ..., l'm:
+  R(c1, ..., cp, s1, ..., sm, l1, ..., lm) /\
+  R(c1, ..., cp, s'1, ..., s'm, l'1, ..., l'm)
+  ->
+  (/\j (sj = s'j)) /\
+  (/\k (lk = l'k))
+``` --> where <span class="math inline">\(\overline x\)</span> denotes a vector of variables <span class="math inline">\(x_1,\ldots,x_k\)</span>.</p>
+<p>A rewrite rule looks like follows: <span class="math display">\[
+  \exists \overline{z}.R_1(\overline{x_1}), \ldots, R_n(\overline {x_n})
+  \gets
+  S_1(\overline{y_1}), \ldots, S_m(\overline{y_m}),
+\]</span> All variables <span class="math inline">\(x_{ij}\)</span> in the head are bound in the body. Unbounded variables in Gogi’s head are translated into existential variables <span class="math inline">\(\overline z\)</span> in the core. <!-- ```prolog
+R1(x11, ..., x1m1), ..., Rn(xn1, ..., xnmn) 
+    :- S1(y11, ..., y1m'1), ... Sn'(y11, ..., yn'mn'),
+       z1 = fresh, ..., zk = fresh.
+``` --></p>
+<p>The rewrite rule in the core is further translated to the following logical constraint:</p>
+<p><span class="math display">\[
+  \forall \overline{y}.
+  \left(\land_i S_i\left(\overline{y_i}\right)\right) \rightarrow
+  \exists \overline{z}\in L^k. \land_i \overline{x_i}\sqsubseteq_L R_i\]</span> <!-- ```prolog
+forall y11, ..., yn’mn’:
+  (/\i Si(yi1, ..., yim'i)) ->
+  exists z1 in L, ..., zk in L,
+    /\i (xi1, ... ximi) subset_L Ri
+``` --> where <span class="math inline">\(\overline{y}\)</span> is the set of variables occurring in <span class="math inline">\(\overline{y_1},\ldots, \overline{y_m}\)</span> and <span class="math display">\[
+(\overline{c},\overline{s},\overline{l})
+\sqsubseteq_L R\iff
+\exists \overline{l&#39;}.
+ R(\overline{c},\overline{s},\overline{l&#39;}) \land\left(\land_i\;l_i\leq_L l&#39;_i\right)
+\]</span> <!-- ```
+(s1, ..., sm, l1, ..., ln) subset_L R
+    iff
+exists l'1, ..., l'n: 
+  R(s1, ..., sm, l'1, ..., l'n) /\
+  /\j (lj <= l'j)
+``` --></p>
+<p>In English, whenever a valuation of variables makes right-hand side satisfied, there must exists <span class="math inline">\(\overline{z}\)</span> such that the left-hand side also “holds” (in the sense that there exists tuples that subsumes the substituted left-hand side).</p>
+<p>The result of evaluating a (core) Gogi program is the minimal model <span class="math inline">\((S_{\min}, D_{\min})\)</span> that satisfies the logical constraints from the program, where <span class="math inline">\(S_{\min}\)</span> is the minimal set of elements (up to isomorphism) in <span class="math inline">\(S\)</span> and <span class="math inline">\(D\)</span> is the minimal database instance (i.e., interpretation of relations) with domain <span class="math inline">\(L\)</span> and <span class="math inline">\(S_{\min}\)</span>.</p>
+<p>This formalization should look very familiar for people who know the <a href="https://dl.acm.org/doi/10.1145/3034786.3034796">chase</a>: Functional dependencies are equality-generating dependencies (EGD), and rewrite rules are tuple-generating dependencies (TGD). However, different from the chase, which has both labelled nulls and constants and unifying two constants will cause a crash, Gogi has only labelled nulls (in the chase’s terminology).</p>
+<h2 id="the-evaluation-algorithm">The Evaluation Algorithm</h2>
+<h3 id="rebuilding">Rebuilding</h3>
+<h3 id="semi-naive-e-matching">Semi-Naive E-Matching</h3>
+<h1 id="gogi-by-example">Gogi by Example</h1>
+<h2 id="lambda-calculus">Lambda Calculus</h2>
+<h2 id="type-inference-for-hm-type-system">Type Inference for HM Type System</h2>
+<h1 id="comparison-to-other-languages">Comparison to other languages</h1>
+<h2 id="comparison-to-rel">Comparison to Rel</h2>
+<h2 id="comparison-to-souffle">Comparison to Souffle</h2>
+<h2 id="comparison-to-flix">Comparison to Flix</h2>
+<section class="footnotes" role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1" role="doc-endnote"><p> The last rule in this example has a
-single variable on the left-hand side, but the above mentioned syntactic
-expansion for <code>:=</code> does not apply to this case. The rule is
-indeed equivalent to
-<code>abs(x, x) :- abs[x] if geq(x, num[0])</code>.<a href="#fnref1"
-class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1" role="doc-endnote"><p> The last rule in this example has a single variable on the left-hand side, but the above mentioned syntactic expansion for <code>:=</code> does not apply to this case. The rule is indeed equivalent to <code>abs(x, x) :- abs[x] if geq(x, num[0])</code>.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </body>
