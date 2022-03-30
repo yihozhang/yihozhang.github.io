@@ -111,8 +111,10 @@ In standard Datalog, this program will not compile
  and `e` in the third rule are not bound.
 However, this is a valid program in Gogi.
 Thanks to functional dependency, 
- variables associated to head atoms do not necessarily 
+ variables in the head do not necessarily 
  have to be bound in the bodies.
+Variables can be unbound as long as 
+ they can be inferred from the functional dependency.
 The above Gogi program is roughly equivalent to the following Datalog program:
 ```prolog
 num(1, c) :- !num(1, _), c = new_expr().
@@ -455,7 +457,7 @@ For simplicity, we assume that
 
 A relation declaration in core Gogi has the following shape:
 
-$$\text{rel }R(c_1,\dots,c_p)\rightarrow (s_1,\ldots, s_m, l_1,\ldots, l_m)$$
+$$\text{rel }R(c_1,\dots,c_p)\rightarrow (s_1,\ldots, s_m, l_1,\ldots, l_n)$$
 <!-- ```prolog
 rel R(c1, ..., cp) -> (s1, ..., sm, l1, ..., ln).
 ``` -->
@@ -470,56 +472,58 @@ Such declaration specifies
 
 $$
   \forall 
-  \overline c,\overline s,\overline l,
-  \overline{s'},\overline{l'}.
-  R(\overline c, \overline s, \overline l)\land
-  R(\overline{c'}, \overline{s'}, \overline{l'})\rightarrow
-  \overline s=\overline{s'}\land \overline l = \overline{l'}$$
-<!-- ```prolog
-forall c1, ..., cp, 
-       s1, ..., sm, l1, ..., lm, 
-       s'1, ..., s'm, l'1, ..., l'm:
-  R(c1, ..., cp, s1, ..., sm, l1, ..., lm) /\
-  R(c1, ..., cp, s'1, ..., s'm, l'1, ..., l'm)
-  ->
-  (/\j (sj = s'j)) /\
-  (/\k (lk = l'k))
-``` -->
-where $\overline x$ denotes a vector of variables $x_1,\ldots,x_k$.
+  \vec c,\vec s,\vec l,
+  \vec{s'},\vec{l'}.
+  R(\vec c, \vec s, \vec l)\land
+  R(\vec{c'}, \vec{s'}, \vec{l'})\rightarrow
+  \vec s=\vec{s'}\land \vec l = \vec{l'}$$
+where $\vec x$ denotes a vector of variables $x_1,\ldots,x_k$.
 
-A rewrite rule looks like follows:
+A rewrite rule in the core looks like follows:
 $$
-  \exists \overline{z}.R_1(\overline{x_1}), \ldots, R_n(\overline {x_n})
+  \exists \vec{z}.R_1(\vec{x_1}), \ldots, R_n(\vec {x_n})
   \gets
-  S_1(\overline{y_1}), \ldots, S_m(\overline{y_m}),
+  S_1(\vec{y_1}), \ldots, S_m(\vec{y_m}),
 $$
 All variables $x_{ij}$ in the head are bound in the body.
-Unbounded variables in Gogi's head are translated
-into existential variables $\overline z$ in the core.
-<!-- ```prolog
-R1(x11, ..., x1m1), ..., Rn(xn1, ..., xnmn) 
-    :- S1(y11, ..., y1m'1), ... Sn'(y11, ..., yn'mn'),
-       z1 = fresh, ..., zk = fresh.
-``` -->
+Unbound variables in Gogi's head are translated
+ into existential variables $\vec z$ in the core.
+
+Importantly, unbound variables in Gogi 
+ must be "inferrable" from the functional dependency,
+ meaning that they must be a dependent variable 
+ within some relation atoms.
+For example, the following Gogi program is not valid,
+ because rule `R(1, c)` can be triggered arbitrarily many times
+ and produces different `c`:
+```prolog
+sort S.
+rel R(i64, S).
+R(1, c). % translated from R[1].
+```
+
+This "inferrable" constraints can be formalized as
+$$\forall i\exists j, z_i\in \text{dep}(R_j(\vec{x_j})),$$
+where $\text{dep}\left(R_j\left(\vec{x_j}\right)\right)$ is the set of dependent variables in atom $R_j(\vec{x_j})$
 
 The rewrite rule in the core is further translated to the following logical constraint:
 
 $$
-  \forall \overline{y}.
-  \left(\land_i S_i\left(\overline{y_i}\right)\right) \rightarrow
-  \exists \overline{z}\in L^k. \land_i \overline{x_i}\sqsubseteq_L R_i$$
+  \forall \vec{y}.
+  \left(\land_i S_i\left(\vec{y_i}\right)\right) \rightarrow
+  \exists \vec{z}\in L^k. \land_i \vec{x_i}\sqsubseteq_L R_i,$$
 <!-- ```prolog
 forall y11, ..., yn’mn’:
   (/\i Si(yi1, ..., yim'i)) ->
   exists z1 in L, ..., zk in L,
     /\i (xi1, ... ximi) subset_L Ri
 ``` -->
-where $\overline{y}$ is the set of variables occurring in $\overline{y_1},\ldots, \overline{y_m}$ and
+where $\vec{y}$ is the set of variables occurring in $\vec{y_1},\ldots, \vec{y_m}$ and
 $$
-(\overline{c},\overline{s},\overline{l})
+(\vec{c},\vec{s},\vec{l})
 \sqsubseteq_L R\iff
-\exists \overline{l'}.
- R(\overline{c},\overline{s},\overline{l'}) \land\left(\land_i\;l_i\leq_L l'_i\right)
+\exists \vec{l'}.
+ R(\vec{c},\vec{s},\vec{l'}) \land\left(\land_i\;l_i\leq_L l'_i\right)
 $$
 <!-- ```
 (s1, ..., sm, l1, ..., ln) subset_L R
@@ -532,7 +536,7 @@ exists l'1, ..., l'n:
 In English, 
 whenever a valuation of variables
  makes right-hand side satisfied, 
- there must exists $\overline{z}$ 
+ there must exists $\vec{z}$ 
  such that the left-hand side also "holds"
  (in the sense that there exists tuples that
  subsumes the substituted left-hand side).
@@ -540,22 +544,54 @@ whenever a valuation of variables
 The result of evaluating a (core) Gogi program is 
  the minimal model $(S_{\min}, D_{\min})$ that 
  satisfies the logical constraints from the program,
- where $S_{\min}$ is the minimal set of elements (up to isomorphism) in $S$ 
+ where $S_{\min}$ is the minimal $S$ of sort values (up to isomorphism)
  and $D$ is the minimal database instance (i.e., interpretation of relations) with domain $L$ and $S_{\min}$.
 
-This formalization should look very familiar 
- for people who know the [chase](https://dl.acm.org/doi/10.1145/3034786.3034796): 
+This core formalization should look familiar 
+ to people who know the [chase](https://dl.acm.org/doi/10.1145/3034786.3034796): 
 Functional dependencies are equality-generating dependencies (EGD),
  and rewrite rules are tuple-generating dependencies (TGD).
-However, different from the chase, 
- which has both labelled nulls and constants 
- and unifying two constants will cause a crash,
- Gogi has only labelled nulls (in the chase's terminology).
+However, there are several critical distinctions between Gogi and the chase.
+First, the chase has both labelled nulls and constants, 
+ and unifying two constants will cause a conflict.
+Sort values in Gogi can be thought as labelled nulls, 
+ and there is no matching concept for constants.
+Moreover,
+ Gogi supports lattice values.
+This feature has its root in both egg and relational languages like Flix,
+ and is necessary for different kinds of analysis tasks
+ that Gogi strives to support.
+Finally, and perhaps most importantly,
+ Gogi has this "inferrable" constraint for existential variables.
+This constraint leads Gogi 
+ to have a single very efficient rebuilding algorithm
+ of executing both EGDs (from functional dependencies) 
+ and TGDs (from rewrite rules).
+In contrast, 
+ EGDs and TGDs in the chase are executed independently.
+Without the lattice values and lifting the inferrable constraint,
+ it is possible to express Gogi programs in the chase.
 
 ## The Evaluation Algorithm
 
+The evaluation algorithm of Gogi programs 
+ consists of two parts.
+The core of the evaluation is the invariant-maintaining rebuilding algorithm,
+ which is inspired 
+ both by the rebuilding algorithm of egg and 
+ by the evaluation algorithm of the chase.
+Moreover,
+ since the nature of evaluating Gogi 
+ is a monotonic computation over the relational database,
+ it can benefit from the semi-naive evaluation algorithm.
+We call this Semi-Naive Matching, which can be seen as 
+ a further improvement over
+[relational e-matching](https://dl.acm.org/doi/10.1145/3498696).
 ### Rebuilding
-### Semi-Naive E-Matching
+
+
+
+### Semi-Naive Matching
 
 # Gogi by Example
 
