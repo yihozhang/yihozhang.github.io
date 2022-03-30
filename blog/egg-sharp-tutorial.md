@@ -586,13 +586,14 @@ We call this semi-naive matching, which can be seen as
  a further improvement over
 [relational e-matching](https://dl.acm.org/doi/10.1145/3498696).
 
+
 ### Rebuilding
 
 The rebuilding algorithm:
 
 ```python
 todo = mk_union_find()
-domain = {}
+domain = mk_set()
 
 def on_insert(R, tup):
   # find the tuple by its determinant columns
@@ -623,9 +624,11 @@ def rebuild():
     # refresh todo
     union_find = todo
     todo = mk_union_find()
-    
+    domain = mk_set()
+
     to_remove = mk_set()
     to_insert = mk_set()
+
     for val in domain:
       for R in DB:
         for col in R.cols:
@@ -634,6 +637,7 @@ def rebuild():
             if new_tup != tup:
               to_remove.add((R, tup))
               to_insert.add((R, new_tup))
+
     DB.remove_all(to_remove)
     # may trigger on_insert
     DB.insert_all(to_insert)
