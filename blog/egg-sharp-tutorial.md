@@ -588,7 +588,56 @@ We call this semi-naive matching, which can be seen as
 
 ### Rebuilding
 
+The rebuilding algorithm:
 
+```python
+todo = mk_union_find()
+domain = {}
+
+def on_insert(R, tup):
+  # find the tuple by its determinant columns
+  orig_tup = R.find_by_determinant(tup.det)
+  if orig_tup is None:
+    R.insert(tup)
+  else:
+    # enumerate each dependent column
+    for c1 in tup.dep:
+      col = s1.col
+      c2 = orig_tup[col]
+      if col.is_sort():
+        s1 = todo.get_or_create(c1)
+        s2 = todo.get_or_create(c2)
+        todo.union(s1, s2)
+        domain.add_all([s1, s2])
+      elif col.is_lattice():
+        orig_tup.set_col(col, c1.lat_max(c2))
+      else:
+        error("cannot resolve FD conflicts")
+
+def normalize(tuple, union_find):
+  return tuple.map(
+    lambda val: union_find.get_or_default(val, val))
+
+def rebuild():
+  while not todo.is_empty():
+    # refresh todo
+    union_find = todo
+    todo = mk_union_find()
+    
+    to_remove = mk_set()
+    to_insert = mk_set()
+    for val in domain:
+      for R in DB:
+        for col in R.cols:
+          for tup in R.index_by(col, val)
+            new_tup = normalize(tup, union_find)
+            if new_tup != tup:
+              to_remove.add((R, tup))
+              to_insert.add((R, new_tup))
+    DB.remove_all(to_remove)
+    # may trigger on_insert
+    DB.insert_all(to_insert)
+```
 
 ### Semi-Naive Matching
 
