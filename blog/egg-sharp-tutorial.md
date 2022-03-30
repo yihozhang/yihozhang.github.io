@@ -483,19 +483,17 @@ A rewrite rule in the core looks like follows:
 $$
   \exists \vec{z}.R_1(\vec{x_1}), \ldots, R_n(\vec {x_n})
   \gets
-  S_1(\vec{y_1}), \ldots, S_m(\vec{y_m}),
+  S_1(\vec{y_1}), \ldots, S_m(\vec{y_m}).
 $$
-All variables $x_{ij}$ in the head are bound in the body.
-Unbound variables in Gogi's head are translated
- into existential variables $\vec z$ in the core.
-
-Importantly, unbound variables in Gogi 
+All variables $x_{ij}$ in the head are either bound in the body
+ or existentially quantified.
+Importantly, existentially quantified variables in the core
  must be "inferrable" from the functional dependency,
  meaning that they must be a dependent variable 
  within some relation atoms.
 For example, the following Gogi program is not valid,
- because rule `R(1, c)` can be triggered arbitrarily many times
- and produces different `c`:
+ because rule `R(1, c)` can be triggered arbitrarily many times,
+ each with different `c`:
 ```prolog
 sort S.
 rel R(i64, S).
@@ -503,8 +501,8 @@ R(1, c). % translated from R[1].
 ```
 
 This "inferrable" constraints can be formalized as
-$$\forall i\exists j, z_i\in \text{dep}(R_j(\vec{x_j})),$$
-where $\text{dep}\left(R_j\left(\vec{x_j}\right)\right)$ is the set of dependent variables in atom $R_j(\vec{x_j})$
+$$\forall i.\exists j. z_i\in \text{dep}(R_j(\vec{x_j})),$$
+where $\text{dep}\left(R_j\left(\vec{x_j}\right)\right)$ is the set of dependent variables in atom $R_j(\vec{x_j})$.
 
 The rewrite rule in the core is further translated to the following logical constraint:
 
@@ -535,17 +533,17 @@ exists l'1, ..., l'n:
 
 In English, 
 whenever a valuation of variables
- makes right-hand side satisfied, 
- there must exists $\vec{z}$ 
- such that the left-hand side also "holds"
- (in the sense that there exists tuples that
- subsumes the substituted left-hand side).
+ satisfied right-hand side, 
+ there exists some $\vec{z}$ 
+ such that the left-hand side also "holds",
+ in the sense that some tuples in the relation
+ subsumes the substituted left-hand side.
 
 The result of evaluating a (core) Gogi program is 
  the minimal model $(S_{\min}, D_{\min})$ that 
- satisfies the logical constraints from the program,
+ satisfies the logical constraints derived from the program,
  where $S_{\min}$ is the minimal $S$ of sort values (up to isomorphism)
- and $D$ is the minimal database instance (i.e., interpretation of relations) with domain $L$ and $S_{\min}$.
+ and $D_{\min}$ is the minimal database instance (i.e., interpretation of relations) with domain $L$ and $S_{\min}$.
 
 This core formalization should look familiar 
  to people who know the [chase](https://dl.acm.org/doi/10.1145/3034786.3034796): 
@@ -555,10 +553,10 @@ However, there are several critical distinctions between Gogi and the chase.
 First, the chase has both labelled nulls and constants, 
  and unifying two constants will cause a conflict.
 Sort values in Gogi can be thought as labelled nulls, 
- and there is no matching concept for constants.
+ and there is no matching concept for constants in Gogi.
 Moreover,
  Gogi supports lattice values.
-This feature has its root in both egg and relational languages like Flix,
+This feature has its root in both egg's e-class analyses and relational languages like Flix,
  and is necessary for different kinds of analysis tasks
  that Gogi strives to support.
 Finally, and perhaps most importantly,
@@ -570,7 +568,7 @@ This constraint leads Gogi
 In contrast, 
  EGDs and TGDs in the chase are executed independently.
 Without the lattice values and lifting the inferrable constraint,
- it is possible to express Gogi programs in the chase.
+ Gogi programs can be expressed in the chase.
 
 ## The Evaluation Algorithm
 
@@ -581,12 +579,13 @@ The core of the evaluation is the invariant-maintaining rebuilding algorithm,
  both by the rebuilding algorithm of egg and 
  by the evaluation algorithm of the chase.
 Moreover,
- since the nature of evaluating Gogi 
+ because the nature of evaluating Gogi 
  is a monotonic computation over the relational database,
- it can benefit from the semi-naive evaluation algorithm.
-We call this Semi-Naive Matching, which can be seen as 
+ it can benefit from the semi-naive evaluation algorithm of Datalog.
+We call this semi-naive matching, which can be seen as 
  a further improvement over
 [relational e-matching](https://dl.acm.org/doi/10.1145/3498696).
+
 ### Rebuilding
 
 
