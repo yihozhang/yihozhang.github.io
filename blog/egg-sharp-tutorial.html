@@ -424,61 +424,107 @@ exists l'1, ..., l'n:
 ``` --></p>
 <p>In English, whenever a valuation of variables satisfied right-hand side, there exists some <span class="math inline">\(\vec{z}\)</span> such that the left-hand side also “holds”, in the sense that some tuples in the relation subsumes the substituted left-hand side.</p>
 <p>The result of evaluating a (core) Gogi program is the minimal model <span class="math inline">\((S_{\min}, D_{\min})\)</span> that satisfies the logical constraints derived from the program, where <span class="math inline">\(S_{\min}\)</span> is the minimal <span class="math inline">\(S\)</span> of sort values (up to isomorphism) and <span class="math inline">\(D_{\min}\)</span> is the minimal database instance (i.e., interpretation of relations) with domain <span class="math inline">\(L\)</span> and <span class="math inline">\(S_{\min}\)</span>.</p>
-<p>This core formalization should look familiar to people who know the <a href="https://dl.acm.org/doi/10.1145/3034786.3034796">chase</a>: Functional dependencies are equality-generating dependencies (EGD), and rewrite rules are tuple-generating dependencies (TGD). However, there are several critical distinctions between Gogi and the chase. First, the chase has both labelled nulls and constants, and unifying two constants will cause a conflict. Sort values in Gogi can be thought as labelled nulls, and there is no matching concept for constants in Gogi. Moreover, Gogi supports lattice values. This feature has its root in both egg’s e-class analyses and relational languages like Flix, and is necessary for different kinds of analysis tasks that Gogi strives to support. Finally, and perhaps most importantly, Gogi has this “inferrable” constraint for existential variables. This constraint leads Gogi to have a single very efficient rebuilding algorithm of executing both EGDs (from functional dependencies) and TGDs (from rewrite rules). In contrast, EGDs and TGDs in the chase are executed independently. Without the lattice values and lifting the inferrable constraint, Gogi programs can be expressed in the chase.</p>
+<p>This core formalization should look familiar to people who know the <a href="https://dl.acm.org/doi/10.1145/3034786.3034796">chase</a>: Functional dependencies are equality-generating dependencies (EGD), and rewrite rules are tuple-generating dependencies (TGD). However, there are several critical distinctions between Gogi and the chase. First, the chase has both labelled nulls and constants, and unifying two constants will cause a conflict. Sort values in Gogi can be thought as labelled nulls, and there is no matching concept for constants in Gogi. Moreover, Gogi supports lattice values. This feature has its root in both egg’s e-class analyses and relational languages like Flix, and is necessary for different kinds of analysis tasks that Gogi strives to support. Finally, and perhaps most importantly, Gogi has this “inferrable” constraint for existential variables. This constraint leads Gogi to have a single very efficient application algorithm of executing both EGDs (from functional dependencies) and TGDs (from rewrite rules). In contrast, EGDs and TGDs in the chase are executed independently. Without the lattice values and lifting the inferrable constraint, Gogi programs can be expressed in the chase.</p>
 <h2 id="the-evaluation-algorithm">The Evaluation Algorithm</h2>
-<p>The evaluation algorithm of Gogi programs consists of two parts. The core of the evaluation is the invariant-maintaining rebuilding algorithm, which is inspired both by the rebuilding algorithm of egg and by the evaluation algorithm of the chase. Moreover, because the nature of evaluating Gogi is a monotonic computation over the relational database, it can benefit from the semi-naive evaluation algorithm of Datalog. We call this semi-naive matching, which can be seen as a further improvement over <a href="https://dl.acm.org/doi/10.1145/3498696">relational e-matching</a>.</p>
+<p>The evaluation algorithm of Gogi programs consists of two parts. The core of the evaluation is the invariant-maintaining rebuilding algorithm, which is inspired both by the rebuilding algorithm of egg and by the evaluation algorithm of the chase. The second part involves matching and applying Gogi rules. Applying Gogi rules is efficient. In the chase’s terminology, thanks to the above mentioned inferrable constraint, rule application in Gogi is able to utilize functional dependencies to avoid to generate unnecessary nulls. Moreover, because Gogi programs are monotonic computations over the relational database in nature, they can benefit from the semi-naive evaluation algorithm of Datalog. We call this semi-naive matching, which can be seen as a further improvement over <a href="https://dl.acm.org/doi/10.1145/3498696">relational e-matching</a>.</p>
 <h3 id="rebuilding">Rebuilding</h3>
 <p>The rebuilding algorithm:</p>
 <div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>todo <span class="op">=</span> mk_union_find()</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>domain <span class="op">=</span> mk_set()</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> on_insert(R, tup):</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># find the tuple by its determinant columns</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  orig_tup <span class="op">=</span> R.find_by_determinant(tup.det)</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> orig_tup <span class="kw">is</span> <span class="va">None</span>:</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    R.insert(tup)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># enumerate each dependent column</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c1 <span class="kw">in</span> tup.dep:</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>      col <span class="op">=</span> s1.col</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>      c2 <span class="op">=</span> orig_tup[col]</span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> col.is_sort():</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        s1 <span class="op">=</span> todo.get_or_create(c1)</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        s2 <span class="op">=</span> todo.get_or_create(c2)</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        todo.union(s1, s2)</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        domain.add_all([s1, s2])</span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>      <span class="cf">elif</span> col.is_lattice():</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        orig_tup.set_col(col, c1.lat_max(c2))</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span>:</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>        error(<span class="st">&quot;cannot resolve FD conflicts&quot;</span>)</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> normalize(<span class="bu">tuple</span>, union_find):</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">tuple</span>.<span class="bu">map</span>(</span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> val: union_find.get_or_default(val, val))</span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rebuild():</span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="kw">not</span> todo.is_empty():</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    <span class="co"># refresh todo</span></span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    union_find <span class="op">=</span> todo</span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    todo <span class="op">=</span> mk_union_find()</span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    domain <span class="op">=</span> mk_set()</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> union_sort(s1, s2):</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  todo.union(s1, s2)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  domain.add_all([s1, s2])</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> refresh_todo():</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  todo <span class="op">=</span> mk_union_find()</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  domain <span class="op">=</span> mk_set()</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> on_insert(R, tup):</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># find the tuple by its determinant columns</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  orig_tup <span class="op">=</span> R.find_by_determinant(tup.det)</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> orig_tup <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    R.insert(tup)</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># enumerate each dependent column</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c1 <span class="kw">in</span> tup.dep:</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      col <span class="op">=</span> c1.col</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      c2 <span class="op">=</span> orig_tup[col]</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> col.is_sort():</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>        s1 <span class="op">=</span> todo.get_or_create(c1)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        s2 <span class="op">=</span> todo.get_or_create(c2)</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>        union_sort(s1, s2)</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>      <span class="cf">elif</span> col.is_lattice():</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>        orig_tup.set_col(col, c1.lat_max(c2))</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span>:</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>        error(<span class="st">&quot;cannot resolve FD conflicts&quot;</span>)</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> normalize(<span class="bu">tuple</span>, union_find):</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">tuple</span>.<span class="bu">map</span>(</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> val: union_find.get_or_default(val, val))</span>
 <span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    to_remove <span class="op">=</span> mk_set()</span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    to_insert <span class="op">=</span> mk_set()</span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> val <span class="kw">in</span> domain:</span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> R <span class="kw">in</span> DB:</span>
-<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> col <span class="kw">in</span> R.cols:</span>
-<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> tup <span class="kw">in</span> R.index_by(col, val)</span>
-<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>            new_tup <span class="op">=</span> normalize(tup, union_find)</span>
-<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> new_tup <span class="op">!=</span> tup:</span>
-<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>              to_remove.add((R, tup))</span>
-<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>              to_insert.add((R, new_tup))</span>
-<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>    DB.remove_all(to_remove)</span>
-<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    <span class="co"># may trigger on_insert</span></span>
-<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    DB.insert_all(to_insert)</span></code></pre></div>
-<h3 id="semi-naive-matching">Semi-Naive Matching</h3>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rebuild(DB):</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="kw">not</span> todo.is_empty():</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># take todo into the local scope</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    union_find <span class="op">=</span> todo</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    refresh_todo()</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>    to_remove <span class="op">=</span> mk_set()</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    to_insert <span class="op">=</span> mk_set()</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> val <span class="kw">in</span> domain:</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> R <span class="kw">in</span> DB:</span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> col <span class="kw">in</span> R.cols:</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> tup <span class="kw">in</span> R.index_by(col, val)</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>            new_tup <span class="op">=</span> normalize(tup, union_find)</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> new_tup <span class="op">!=</span> tup:</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>              to_remove.add((R, tup))</span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>              to_insert.add((R, new_tup))</span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    DB.remove_all(to_remove)</span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    <span class="co"># may trigger on_insert</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>    DB.insert_all(to_insert)</span></code></pre></div>
+<h3 id="applying-rewrite-rules">Applying rewrite rules</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rewrite(pats, DB):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (lhs, rhs) <span class="kw">in</span> pats:</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> subst <span class="kw">in</span> match(DB, lhs):</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      subst <span class="op">=</span> chase(DB, subst, rhs)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (R, atom) <span class="kw">in</span> rhs:</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        DB.insert(R, atom.<span class="bu">apply</span>(subst))</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> chase(DB, subst, rhs):</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  triggered <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> triggered <span class="op">==</span> <span class="va">True</span>:</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    triggered <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> atom <span class="kw">in</span> rhs:</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>      det_vars <span class="op">=</span> atom.det</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> det_vars.is_subset_of(dom(subst)):</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        triggered <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>        R <span class="op">=</span> DB.get_rel(atom.rel)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        det <span class="op">=</span> det_vars.<span class="bu">apply</span>(subst)</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>        tup <span class="op">=</span> R.find_by_determinant(det)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tup <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> col <span class="kw">in</span> tup.dep:</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> subst.contains(col.var):</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>              union_sort(subst[var], col)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a></span></code></pre></div>
+<!-- 
+Note to myself: 
+the application algorithm here is different from the one
+in egglite. In egglite, a temp relation is built.
+I think this is because the operator sqlite supports / the sql
+langauge is not rich enough so we can't stream everything.
+Here we can.
+
+They also differ in how they handle the case when multiple
+values exist for the same atom (egglite will pick random one
+and wait the rebuilding to resolve the violation, Gogi will
+??? TODO), 
+-->
+<h4 id="semi-naive-matching">Semi-Naive Matching</h4>
+<p>One of the bottleneck in evaluating Gogi programs is applying the</p>
 <h1 id="gogi-by-example">Gogi by Example</h1>
 <h2 id="lambda-calculus">Lambda Calculus</h2>
 <h2 id="type-inference-for-hm-type-system">Type Inference for HM Type System</h2>

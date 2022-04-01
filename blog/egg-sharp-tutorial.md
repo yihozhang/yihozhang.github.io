@@ -562,7 +562,7 @@ This feature has its root in both egg's e-class analyses and relational language
 Finally, and perhaps most importantly,
  Gogi has this "inferrable" constraint for existential variables.
 This constraint leads Gogi 
- to have a single very efficient rebuilding algorithm
+ to have a single very efficient application algorithm
  of executing both EGDs (from functional dependencies) 
  and TGDs (from rewrite rules).
 In contrast, 
@@ -578,13 +578,19 @@ The core of the evaluation is the invariant-maintaining rebuilding algorithm,
  which is inspired 
  both by the rebuilding algorithm of egg and 
  by the evaluation algorithm of the chase.
+The second part involves matching and applying Gogi rules.
+Applying Gogi rules is efficient.
+In the chase's terminology, 
+ thanks to the above mentioned inferrable constraint, 
+ rule application in Gogi is able to utilize functional dependencies
+ to avoid to generate unnecessary nulls.
 Moreover,
- because the nature of evaluating Gogi 
- is a monotonic computation over the relational database,
- it can benefit from the semi-naive evaluation algorithm of Datalog.
+ because Gogi programs
+ are monotonic computations over the relational database in nature,
+ they can benefit from the semi-naive evaluation algorithm of Datalog.
 We call this semi-naive matching, which can be seen as 
  a further improvement over
-[relational e-matching](https://dl.acm.org/doi/10.1145/3498696).
+ [relational e-matching](https://dl.acm.org/doi/10.1145/3498696).
 
 
 ### Rebuilding
@@ -595,6 +601,14 @@ The rebuilding algorithm:
 todo = mk_union_find()
 domain = mk_set()
 
+def union_sort(s1, s2):
+  todo.union(s1, s2)
+  domain.add_all([s1, s2])
+
+def refresh_todo():
+  todo = mk_union_find()
+  domain = mk_set()
+
 def on_insert(R, tup):
   # find the tuple by its determinant columns
   orig_tup = R.find_by_determinant(tup.det)
@@ -603,13 +617,12 @@ def on_insert(R, tup):
   else:
     # enumerate each dependent column
     for c1 in tup.dep:
-      col = s1.col
+      col = c1.col
       c2 = orig_tup[col]
       if col.is_sort():
         s1 = todo.get_or_create(c1)
         s2 = todo.get_or_create(c2)
-        todo.union(s1, s2)
-        domain.add_all([s1, s2])
+        union_sort(s1, s2)
       elif col.is_lattice():
         orig_tup.set_col(col, c1.lat_max(c2))
       else:
@@ -619,12 +632,11 @@ def normalize(tuple, union_find):
   return tuple.map(
     lambda val: union_find.get_or_default(val, val))
 
-def rebuild():
+def rebuild(DB):
   while not todo.is_empty():
-    # refresh todo
+    # take todo into the local scope
     union_find = todo
-    todo = mk_union_find()
-    domain = mk_set()
+    refresh_todo()
 
     to_remove = mk_set()
     to_insert = mk_set()
@@ -643,7 +655,53 @@ def rebuild():
     DB.insert_all(to_insert)
 ```
 
-### Semi-Naive Matching
+### Applying rewrite rules
+
+```python
+def rewrite(pats, DB):
+  for (lhs, rhs) in pats:
+    for subst in match(DB, lhs):
+      subst = chase(DB, subst, rhs)
+      for (R, atom) in rhs:
+        DB.insert(R, atom.apply(subst))
+
+def chase(DB, subst, rhs):
+  triggered = True
+  while triggered == True:
+    triggered = False
+
+    for atom in rhs:
+      det_vars = atom.det
+      if det_vars.is_subset_of(dom(subst)):
+        triggered = True
+        
+        R = DB.get_rel(atom.rel)
+        det = det_vars.apply(subst)
+        tup = R.find_by_determinant(det)
+        if tup is not None:
+          for col in tup.dep:
+            if subst.contains(col.var):
+              union_sort(subst[var], col)
+
+
+```
+<!-- 
+Note to myself: 
+the application algorithm here is different from the one
+in egglite. In egglite, a temp relation is built.
+I think this is because the operator sqlite supports / the sql
+langauge is not rich enough so we can't stream everything.
+Here we can.
+
+They also differ in how they handle the case when multiple
+values exist for the same atom (egglite will pick random one
+and wait the rebuilding to resolve the violation, Gogi will
+??? TODO), 
+-->
+#### Semi-Naive Matching
+
+One of the bottleneck in evaluating Gogi programs
+ is applying the
 
 # Gogi by Example
 
