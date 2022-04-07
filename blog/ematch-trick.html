@@ -31,6 +31,9 @@
         font-size: 0.9em;
         padding: 1em;
       }
+      h1 {
+        font-size: 1.8em;
+      }
     }
     @media print {
       body {
@@ -135,6 +138,12 @@
     #TOC li {
       list-style: none;
     }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
     #TOC a:not(:hover) {
       text-decoration: none;
     }
@@ -207,7 +216,9 @@
     code span.vs { color: #cc9393; } /* VerbatimString */
     code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
@@ -217,58 +228,196 @@
 <h1 class="title">A Trick that Makes Classical E-Matching Faster</h1>
 <p class="author">Yihong Zhang</p>
 </header>
-<p>You might have seen our POPL 2022 paper on <a href="https://arxiv.org/abs/2108.02290">Relational E-matching</a>, where we use <a href="https://gitlab.com/remywang/blog/-/blob/master/posts/wcoj.md">database techniques</a> to improve an important procedure in e-graphs, namely e-matching. We made e-matching orders of magnitude faster, proved theoretical bounds of e-matching, and opened the door for all kinds of wild things you can do with databases and e-graphs. I’m very proud of this work, not only because it is elegant, fast, and theoretically (worst-case) optimal, but also because it is the kind of work I’d like to work on: building connections across areas.</p>
-<p>However, the relational e-matching approach also has some secret pitfalls. In particular, to have the best of both efficient e-graph maintenance and efficient e-matching, one has to switch back and forth between the e-graph to its relational representation. Our <a href="https://github.com/egraphs-good/egg/tree/relational">prototype implementation</a> builds a relational database and associated indices from scratch for each match-apply iteration. This is acceptable in the equality saturation setting. E-matching and updates always alternate in batches, so the cost of building the database is amortized. Plus, since building databases and indices are both linear time costs, they are often subsumed by the time spent on e-matching.</p>
-<p>However, what if e-matching is not run in batches? Or what if all the e-matching patterns are quite simple and the constant overhead is now a bottleneck? We can have some fast paths for that, but then there are a ton of things to consider: Are we going to keep two implementations of e-matching? What kind of queries should be computed by relational e-matching and what by traditional e-matching? … We can continue down this path and put a lot of engineering effort into building a practically efficient e-graph engine, or we can:</p>
+<p>You might have seen our POPL 2022 paper on <a
+href="https://arxiv.org/abs/2108.02290">Relational E-matching</a>, where
+we use <a
+href="https://gitlab.com/remywang/blog/-/blob/master/posts/wcoj.md">database
+techniques</a> to improve an important procedure in e-graphs, namely
+e-matching. We made e-matching orders of magnitude faster, proved
+theoretical bounds of e-matching, and opened the door for all kinds of
+wild things you can do with databases and e-graphs. I’m very proud of
+this work, not only because it is elegant, fast, and theoretically
+(worst-case) optimal, but also because it is the kind of work I’d like
+to work on: building connections across areas.</p>
+<p>However, the relational e-matching approach also has some secret
+pitfalls. In particular, to have the best of both efficient e-graph
+maintenance and efficient e-matching, one has to switch back and forth
+between the e-graph to its relational representation. Our <a
+href="https://github.com/egraphs-good/egg/tree/relational">prototype
+implementation</a> builds a relational database and associated indices
+from scratch for each match-apply iteration. This is acceptable in the
+equality saturation setting. E-matching and updates always alternate in
+batches, so the cost of building the database is amortized. Plus, since
+building databases and indices are both linear time costs, they are
+often subsumed by the time spent on e-matching.</p>
+<p>However, what if e-matching is not run in batches? Or what if all the
+e-matching patterns are quite simple and the constant overhead is now a
+bottleneck? We can have some fast paths for that, but then there are a
+ton of things to consider: Are we going to keep two implementations of
+e-matching? What kind of queries should be computed by relational
+e-matching and what by traditional e-matching? … We can continue down
+this path and put a lot of engineering effort into building a
+practically efficient e-graph engine, or we can:</p>
 <ol type="1">
-<li>start a clean-slate relational e-graph framework that handles all e-graph operations efficiently and forget about the graph part of an e-graph.</li>
-<li>keep the current e-graph data structure, and port some of the good bits of relational e-matching back to it.</li>
+<li>start a clean-slate relational e-graph framework that handles all
+e-graph operations efficiently and forget about the graph part of an
+e-graph.</li>
+<li>keep the current e-graph data structure, and port some of the good
+bits of relational e-matching back to it.</li>
 </ol>
-<p>I will focus on the second approach (and save the first approach for a future blog post). When working on relational e-matching, we found an optimization to the backtracking-style classical e-matching. Like relational e-matching, it is able to improve e-matching asymptotically in some cases, but it does not require transforming the input to a relational database. And it is very simple. For what it’s worth, this optimization (instead of relational e-matching) is what is currently implemented in egg.</p>
-<p>In this blog post, I will describe this optimization. But before that, let’s have some brief background on e-matching. Feel free to skip you already know what e-matching is.</p>
+<p>I will focus on the second approach (and save the first approach for
+a future blog post). When working on relational e-matching, we found an
+optimization to the backtracking-style classical e-matching. Like
+relational e-matching, it is able to improve e-matching asymptotically
+in some cases, but it does not require transforming the input to a
+relational database. And it is very simple. For what it’s worth, this
+optimization (instead of relational e-matching) is what is currently
+implemented in egg.</p>
+<p>In this blog post, I will describe this optimization. But before
+that, let’s have some brief background on e-matching. Feel free to skip
+you already know what e-matching is.</p>
 <h1 id="e-matching">E-Matching</h1>
-<p>There have been many great introductions to e-graphs and e-matching. For example, <a href="https://www.philipzucker.com/about/">Philip Zucker</a> gives a gentle introduction to <a href="https://www.philipzucker.com/egraph-1/">e-graphs</a> and <a href="https://www.philipzucker.com/egraph-2/">e-matching</a> in Julia. <a href="https://mwillsey.com">Max Willsey</a> also wrote a very nice <a href="https://docs.rs/egg/0.6.0/egg/tutorials/_01_background/index.html">tutorial</a> on e-graphs and <a href="https://docs.rs/egg/latest/egg/index.html">egg</a>. Basically, an e-graph is a data structure that compactly represents an equivalence relation and e-matching is pattern matching on such e-graphs modulo equivalence. Both e-matching and e-graphs are widely used in <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.146.1616">SMT solvers</a> and equality saturation-based <a href="https://proceedings.mlsys.org/paper/2021/file/65ded5353c5ee48d0b7d48c591b8f430-Paper.pdf">program optimizers</a>. A typical equality saturation-based program optimizer may take the majority of its time doing e-matching.</p>
-<p>There are several algorithms proposed for e-matching. For example, the one currently used in egg is based on the <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.146.1616">virtual machine</a> proposed by de Moura and Bjørner. The traditional backtracking-based e-matching algorithm does not exploit equality constraints during pattern compilation. Equality constraints are the term we used in the relational e-matching paper to describe the kind of constraints that all occurrences of the same variables should be mapped to equivalent terms. Those that violate the equality constraints will not be pruned away immediately. For example, <span class="math inline">\(f(\alpha, g(\alpha))\)</span> does not match <span class="math inline">\(f(1,g(2))\)</span>, because the first <span class="math inline">\(\alpha\)</span> is mapped to 1 but the second is mapped to 2. The classical backtracking-based e-matching will still consider it though.</p>
-<p>The relational e-matching approach instead treats an e-matching pattern as a kind of relational query. From a relational query, the query optimizer can easily identify all kinds of constraints, including equality constraints, and find an efficient query plan. As an example, the above pattern can be compiled to query <span class="math inline">\(Q(r, \alpha)\gets R_f(r, \alpha,x),R_g(x,\alpha)\)</span>, and a hash join could answer this query in linear time.</p>
+<p>There have been many great introductions to e-graphs and e-matching.
+For example, <a href="https://www.philipzucker.com/about/">Philip
+Zucker</a> gives a gentle introduction to <a
+href="https://www.philipzucker.com/egraph-1/">e-graphs</a> and <a
+href="https://www.philipzucker.com/egraph-2/">e-matching</a> in Julia.
+<a href="https://mwillsey.com">Max Willsey</a> also wrote a very nice <a
+href="https://docs.rs/egg/0.6.0/egg/tutorials/_01_background/index.html">tutorial</a>
+on e-graphs and <a
+href="https://docs.rs/egg/latest/egg/index.html">egg</a>. Basically, an
+e-graph is a data structure that compactly represents an equivalence
+relation and e-matching is pattern matching on such e-graphs modulo
+equivalence. Both e-matching and e-graphs are widely used in <a
+href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.146.1616">SMT
+solvers</a> and equality saturation-based <a
+href="https://proceedings.mlsys.org/paper/2021/file/65ded5353c5ee48d0b7d48c591b8f430-Paper.pdf">program
+optimizers</a>. A typical equality saturation-based program optimizer
+may take the majority of its time doing e-matching.</p>
+<p>There are several algorithms proposed for e-matching. For example,
+the one currently used in egg is based on the <a
+href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.146.1616">virtual
+machine</a> proposed by de Moura and Bjørner. The traditional
+backtracking-based e-matching algorithm does not exploit equality
+constraints during pattern compilation. Equality constraints are the
+term we used in the relational e-matching paper to describe the kind of
+constraints that all occurrences of the same variables should be mapped
+to equivalent terms. Those that violate the equality constraints will
+not be pruned away immediately. For example, <span
+class="math inline">\(f(\alpha, g(\alpha))\)</span> does not match <span
+class="math inline">\(f(1,g(2))\)</span>, because the first <span
+class="math inline">\(\alpha\)</span> is mapped to 1 but the second is
+mapped to 2. The classical backtracking-based e-matching will still
+consider it though.</p>
+<p>The relational e-matching approach instead treats an e-matching
+pattern as a kind of relational query. From a relational query, the
+query optimizer can easily identify all kinds of constraints, including
+equality constraints, and find an efficient query plan. As an example,
+the above pattern can be compiled to query <span
+class="math inline">\(Q(r, \alpha)\gets R_f(r,
+\alpha,x),R_g(x,\alpha)\)</span>, and a hash join could answer this
+query in linear time.</p>
 <h1 id="the-optimization">The optimization</h1>
-<p>The issue with the traditional backtracking-style e-matching is that it does not take advantage of the equality constraints, so it enumerates obviously unsatisfying terms. The optimization is therefore straightforward: do not enumerate terms that are obviously unsatisfying. And this is easy, because we already know what the (only) satisfying term should look like!</p>
-<p>Let’s first look at the classical e-matching algorithm (Fig. 3 of the relational e-matching <a href="https://dl.acm.org/doi/10.1145/3498696">paper</a>, with a typo fix).</p>
+<p>The issue with the traditional backtracking-style e-matching is that
+it does not take advantage of the equality constraints, so it enumerates
+obviously unsatisfying terms. The optimization is therefore
+straightforward: do not enumerate terms that are obviously unsatisfying.
+And this is easy, because we already know what the (only) satisfying
+term should look like!</p>
+<p>Let’s first look at the classical e-matching algorithm (Fig. 3 of the
+relational e-matching <a
+href="https://dl.acm.org/doi/10.1145/3498696">paper</a>, with a typo
+fix).</p>
 <p><span class="math display">\[\begin{align*}
-    \textit{match}(x,c,S) = 
-                   &amp; \{ \sigma \cup \{ x \mapsto c\} \mid \sigma \in S, x \not \in \text{dom}(\sigma)\}\ \cup\\
+    \textit{match}(x,c,S) =
+                   &amp; \{ \sigma \cup \{ x \mapsto c\} \mid \sigma \in
+S, x \not \in \text{dom}(\sigma)\}\ \cup\\
                    &amp; \{ \sigma \mid \sigma \in S, \sigma(x) = c \}\\
-    \textit{match}(f(p_{1}, \dots, p_{k}), c, S) = 
+    \textit{match}(f(p_{1}, \dots, p_{k}), c, S) =
                    &amp; \bigcup_{f(c_{1},\dots,c_{k})\in c}
-                     \textit{match}(p_{k}, c_{k}, \dots, \textit{match}(p_{1}, c_{1}, S))
+                     \textit{match}(p_{k}, c_{k}, \dots,
+\textit{match}(p_{1}, c_{1}, S))
 \end{align*}\]</span></p>
-<p>It takes a pattern <span class="math inline">\(p\)</span>, an e-class <span class="math inline">\(c\)</span>, and current substitutions <span class="math inline">\(S\)</span>, and returns the set of substitutions produced by e-matching <span class="math inline">\(p\)</span> over e-class <span class="math inline">\(c\)</span>, such that all produced substitutions are extensions of some substitutions in <span class="math inline">\(S\)</span>. The result of e-matching a pattern <span class="math inline">\(p\)</span> over an e-graph is <span class="math inline">\(\bigcup_{c\in C} \textit{match}(p, c, \{\emptyset\})\)</span> (both our paper and the <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.146.1616">paper</a> our definition is based on have another typo here), where <span class="math inline">\(C\)</span> is the set of e-classes in the e-graph.</p>
+<p>It takes a pattern <span class="math inline">\(p\)</span>, an e-class
+<span class="math inline">\(c\)</span>, and current substitutions <span
+class="math inline">\(S\)</span>, and returns the set of substitutions
+produced by e-matching <span class="math inline">\(p\)</span> over
+e-class <span class="math inline">\(c\)</span>, such that all produced
+substitutions are extensions of some substitutions in <span
+class="math inline">\(S\)</span>. The result of e-matching a pattern
+<span class="math inline">\(p\)</span> over an e-graph is <span
+class="math inline">\(\bigcup_{c\in C} \textit{match}(p, c,
+\{\emptyset\})\)</span> (both our paper and the <a
+href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.146.1616">paper</a>
+our definition is based on have another typo here), where <span
+class="math inline">\(C\)</span> is the set of e-classes in the
+e-graph.</p>
 <p>The algorithm is straightforward:</p>
 <ol type="1">
 <li>If the pattern is a variable, and
 <ol type="1">
-<li>if this variable is fresh in the domain of the substitution, then it’s safe to extend the substitutions with <span class="math inline">\(\{x\mapsto c\}\)</span>, or</li>
-<li>if this variable is not fresh, we keep only these substitutions that are consistent with the mapping <span class="math inline">\(\{x\mapsto c\}\)</span>.</li>
+<li>if this variable is fresh in the domain of the substitution, then
+it’s safe to extend the substitutions with <span
+class="math inline">\(\{x\mapsto c\}\)</span>, or</li>
+<li>if this variable is not fresh, we keep only these substitutions that
+are consistent with the mapping <span class="math inline">\(\{x\mapsto
+c\}\)</span>.</li>
 </ol></li>
-<li>If the pattern is a function symbol of the form <span class="math inline">\(f(p_1,\ldots,p_k)\)</span>, the algorithm iterates over <span class="math inline">\(f\)</span>-nodes <span class="math inline">\(f(c_1,\ldots, c_k)\)</span> in the e-class, and fold over the sub patterns and sub e-classes with <span class="math inline">\(\textit{match}\)</span>, to accumulate set of valid substitutions.</li>
+<li>If the pattern is a function symbol of the form <span
+class="math inline">\(f(p_1,\ldots,p_k)\)</span>, the algorithm iterates
+over <span class="math inline">\(f\)</span>-nodes <span
+class="math inline">\(f(c_1,\ldots, c_k)\)</span> in the e-class, and
+fold over the sub patterns and sub e-classes with <span
+class="math inline">\(\textit{match}\)</span>, to accumulate set of
+valid substitutions.</li>
 </ol>
-<p>The trick is to generalize case 1.b. In case 1.b, we know the substitution for a pattern is unique when the pattern is a non-fresh variable, but we <em>also</em> know this when the variables of the pattern are in the domain of the substitution (i.e., <span class="math inline">\(\text{fv}(p)\subseteq\text{dom}(S)\)</span>), thanks to canonicalization. In that case, the pattern after substitution is a ground term, which can be efficiently looked up in a bottom-up fashion.</p>
-<p>To implement this idea, we lift case 1.b to the top-level of the algorithm. During e-matching, the algorithm will first check whether the free vars of the input pattern is contained in the domain of the substitution. If yes, then instead of looking further into the pattern, the algorithm will lookup the substituted term for comparison. The following definition shows this:</p>
+<p>The trick is to generalize case 1.b. In case 1.b, we know the
+substitution for a pattern is unique when the pattern is a non-fresh
+variable, but we <em>also</em> know this when the variables of the
+pattern are in the domain of the substitution (i.e., <span
+class="math inline">\(\text{fv}(p)\subseteq\text{dom}(S)\)</span>),
+thanks to canonicalization. In that case, the pattern after substitution
+is a ground term, which can be efficiently looked up in a bottom-up
+fashion.</p>
+<p>To implement this idea, we lift case 1.b to the top-level of the
+algorithm. During e-matching, the algorithm will first check whether the
+free vars of the input pattern is contained in the domain of the
+substitution. If yes, then instead of looking further into the pattern,
+the algorithm will lookup the substituted term for comparison. The
+following definition shows this:</p>
 <p><span class="math display">\[\begin{align*}
     \textit{match}(p, c, S) = &amp; \begin{cases}
-        \{\sigma \mid \sigma\in S, 
-                      \textit{lookup}([\sigma]e)=c\} 
+        \{\sigma \mid \sigma\in S,
+                      \textit{lookup}([\sigma]e)=c\}
         &amp;\text{ if $\text{fv}(p)\subseteq \text{dom}(S)$ }\\
         match&#39;(p, c, S)&amp;\text{ o.w.}
     \end{cases}\\
-    \textit{match&#39;}(x,c,S) = 
-                   &amp; \{ \sigma \cup \{ x \mapsto c\} \mid \sigma \in S\}\\
-    \textit{match&#39;}(f(p_{1}, \dots, p_{k}), c, S) = 
+    \textit{match&#39;}(x,c,S) =
+                   &amp; \{ \sigma \cup \{ x \mapsto c\} \mid \sigma \in
+S\}\\
+    \textit{match&#39;}(f(p_{1}, \dots, p_{k}), c, S) =
                    &amp; \bigcup_{f(c_{1},\dots,c_{k})\in c}
-                     \textit{match}(p_{k}, c_{k}, \dots, \textit{match}(p_{1}, c_{1}, S))
+                     \textit{match}(p_{k}, c_{k}, \dots,
+\textit{match}(p_{1}, c_{1}, S))
 \end{align*}\]</span></p>
-<p>In the above definition, we also drop the check of <span class="math inline">\(x\not\in\text{dom}(\sigma)\)</span> for the variable case, which is guaranteed not to happen.</p>
-<p>As an example, consider <span class="math inline">\(f(\alpha, g(\alpha))\)</span> again. E-matching will enumerate through each <span class="math inline">\(f\)</span>-node and bind <span class="math inline">\(\alpha\)</span> to the first child of the <span class="math inline">\(f\)</span>-node. Here, the classical e-matching algorithm will then enumerate though the second child e-class of the <span class="math inline">\(f\)</span>-node for possible <span class="math inline">\(g\)</span>-nodes. However, because <span class="math inline">\(g(\alpha)\)</span> is a ground term after substituting <span class="math inline">\(\alpha\)</span> with <span class="math inline">\(\sigma(\alpha)\)</span>, we can effectively lookup <span class="math inline">\(g(\alpha)\)</span> and compare it with the e-class id of the second child. The pseudocode:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># classical e-matching</span></span>
+<p>In the above definition, we also drop the check of <span
+class="math inline">\(x\not\in\text{dom}(\sigma)\)</span> for the
+variable case, which is guaranteed not to happen.</p>
+<p>As an example, consider <span class="math inline">\(f(\alpha,
+g(\alpha))\)</span> again. E-matching will enumerate through each <span
+class="math inline">\(f\)</span>-node and bind <span
+class="math inline">\(\alpha\)</span> to the first child of the <span
+class="math inline">\(f\)</span>-node. Here, the classical e-matching
+algorithm will then enumerate though the second child e-class of the
+<span class="math inline">\(f\)</span>-node for possible <span
+class="math inline">\(g\)</span>-nodes. However, because <span
+class="math inline">\(g(\alpha)\)</span> is a ground term after
+substituting <span class="math inline">\(\alpha\)</span> with <span
+class="math inline">\(\sigma(\alpha)\)</span>, we can effectively lookup
+<span class="math inline">\(g(\alpha)\)</span> and compare it with the
+e-class id of the second child. The pseudocode:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># classical e-matching</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> c: <span class="co"># f(a, g(a))</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> g <span class="kw">in</span> f.child2: <span class="co"># g(a)</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> f.child1 <span class="op">!=</span> g.child1:</span>
@@ -281,17 +430,96 @@
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> g <span class="kw">is</span> <span class="va">None</span> <span class="kw">or</span> g <span class="op">!=</span> f.child2:</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">continue</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">yield</span> {a: f.child1}</span></code></pre></div>
-<p>Implementation-wise, egg adds a new operator to the e-matching virtual machine called <code>Lookup</code>. <code>Lookup</code> 1) substitutes the pattern with values in the VM register to produce a ground term and 2) lookup the ground term in the e-graph.</p>
-<h1 id="a-relational-view-of-the-trick">A Relational View of the Trick</h1>
-<p>How effective is this trick? To have a better understanding of this trick, let’s take a relational lens. The classical e-matching can be viewed as a relational query plan where hash joins only index one column (the link between parent and child) and potentially prune using the rest of equality columns (the equality constraint). At first I thought this optimization will make classical e-matching equivalent to some efficient hash join-based query plans, and by efficient I specifically mean that the hash joins will index all the columns known to be equivalent. But this is false. Consider the pattern <span class="math inline">\(f(\alpha, g(\alpha,\beta))\)</span>. The relational version of it is <span class="math inline">\(Q(r, \alpha,\beta)\gets R_f(r, \alpha, x),R_g(x,\alpha,\beta)\)</span>. An efficient plan with hash joins will index both <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(x\)</span>. However, our trick can’t use the <span class="math inline">\(\alpha\)</span> in <span class="math inline">\(f\)</span> to prune the <span class="math inline">\(\alpha\)</span> in <span class="math inline">\(g\)</span>, because there could be multiple satisfying <span class="math inline">\(g\)</span>-nodes (due to the unbound variable <span class="math inline">\(\beta\)</span>). In this case, our optimization does not offer any speedup.</p>
-<p>Now I think of this trick relationally as the kind of query optimizations that leverage functional dependencies. In the relational representation of e-graphs, there is a functional dependency from the children columns to the id column. For example, in relation <span class="math inline">\(R_f(x, c_1, c_2)\)</span>, the relational representation of binary function symbol <span class="math inline">\(f\)</span>, every combination of <span class="math inline">\(c_1\)</span> and <span class="math inline">\(c_2\)</span> uniquely determines <span class="math inline">\(x\)</span> thanks to e-graph canonicalization. Our trick uses this information to immediately determine the value of <span class="math inline">\(x\)</span> once <span class="math inline">\(c_1\)</span> and <span class="math inline">\(c_2\)</span> are known, without looking at obviously unsatisfying candidates.</p>
-<p>In the relational e-matching paper, we also described how we use functional dependency to speed up queries. In fact, if the variable ordering of generic joins follows the topological order of the (acyclic) functional dependency, the run-time complexity will be worst-case optimal <a href="https://dl.acm.org/doi/10.1145/3196959.3196990">under the presence of FDs</a>, a stronger guarantee than the original <a href="https://www.computer.org/csdl/proceedings-article/focs/2008/3436a739/12OmNy4IEUo">AGM</a> bound. Functional dependencies are also <a href="https://link.springer.com/article/10.1007/s00778-021-00676-3">exploited</a> for query optimization in databases.</p>
-<p>How does this compare to relational e-matching? First, as we saw above, it is not as powerful as relational e-matching. Moreover, the graph representation has the fundamental restriction that makes it very hard to do advanced optimizations, e.g., one that uses cardinality information. It’s also limited in the kind of join it is able to (conceptually) perform (only hash joins). However, I think this trick is cute and integrates well with an existing non-relational e-graph framework.</p>
+<p>Implementation-wise, egg adds a new operator to the e-matching
+virtual machine called <code>Lookup</code>. <code>Lookup</code> 1)
+substitutes the pattern with values in the VM register to produce a
+ground term and 2) lookup the ground term in the e-graph.</p>
+<h1 id="a-relational-view-of-the-trick">A Relational View of the
+Trick</h1>
+<p>How effective is this trick? To have a better understanding of this
+trick, let’s take a relational lens. The classical e-matching can be
+viewed as a relational query plan where hash joins only index one column
+(the link between parent and child) and potentially prune using the rest
+of equality columns (the equality constraint). At first I thought this
+optimization will make classical e-matching equivalent to some efficient
+hash join-based query plans, and by efficient I specifically mean that
+the hash joins will index all the columns known to be equivalent. But
+this is false. Consider the pattern <span
+class="math inline">\(f(\alpha, g(\alpha,\beta))\)</span>. The
+relational version of it is <span class="math inline">\(Q(r,
+\alpha,\beta)\gets R_f(r, \alpha, x),R_g(x,\alpha,\beta)\)</span>. An
+efficient plan with hash joins will index both <span
+class="math inline">\(\alpha\)</span> and <span
+class="math inline">\(x\)</span>. However, our trick can’t use the <span
+class="math inline">\(\alpha\)</span> in <span
+class="math inline">\(f\)</span> to prune the <span
+class="math inline">\(\alpha\)</span> in <span
+class="math inline">\(g\)</span>, because there could be multiple
+satisfying <span class="math inline">\(g\)</span>-nodes (due to the
+unbound variable <span class="math inline">\(\beta\)</span>). In this
+case, our optimization does not offer any speedup.</p>
+<p>Now I think of this trick relationally as the kind of query
+optimizations that leverage functional dependencies. In the relational
+representation of e-graphs, there is a functional dependency from the
+children columns to the id column. For example, in relation <span
+class="math inline">\(R_f(x, c_1, c_2)\)</span>, the relational
+representation of binary function symbol <span
+class="math inline">\(f\)</span>, every combination of <span
+class="math inline">\(c_1\)</span> and <span
+class="math inline">\(c_2\)</span> uniquely determines <span
+class="math inline">\(x\)</span> thanks to e-graph canonicalization. Our
+trick uses this information to immediately determine the value of <span
+class="math inline">\(x\)</span> once <span
+class="math inline">\(c_1\)</span> and <span
+class="math inline">\(c_2\)</span> are known, without looking at
+obviously unsatisfying candidates.</p>
+<p>In the relational e-matching paper, we also described how we use
+functional dependency to speed up queries. In fact, if the variable
+ordering of generic joins follows the topological order of the (acyclic)
+functional dependency, the run-time complexity will be worst-case
+optimal <a href="https://dl.acm.org/doi/10.1145/3196959.3196990">under
+the presence of FDs</a>, a stronger guarantee than the original <a
+href="https://www.computer.org/csdl/proceedings-article/focs/2008/3436a739/12OmNy4IEUo">AGM</a>
+bound. Functional dependencies are also <a
+href="https://link.springer.com/article/10.1007/s00778-021-00676-3">exploited</a>
+for query optimization in databases.</p>
+<p>How does this compare to relational e-matching? First, as we saw
+above, it is not as powerful as relational e-matching. Moreover, the
+graph representation has the fundamental restriction that makes it very
+hard to do advanced optimizations, e.g., one that uses cardinality
+information. It’s also limited in the kind of join it is able to
+(conceptually) perform (only hash joins). However, I think this trick is
+cute and integrates well with an existing non-relational e-graph
+framework.</p>
 <h1 id="query-planning">Query planning</h1>
-<p>This trick also poses a new question for classical e-matching planning: what visit order shall we use? In the above definition of our algorithm, we assumed a depth-first style order of processing, but this is not necessary. For example, after enumerating the top-level <span class="math inline">\(f\)</span>-node in pattern <span class="math inline">\(f(g(\alpha), h(\alpha, \beta))\)</span>, it will be most efficient to enumerate the <span class="math inline">\(h\)</span>-node and lookup <span class="math inline">\([\sigma]g(\alpha)\)</span> later. If however we first enumerate <span class="math inline">\(g(\alpha)\)</span>, we still can’t avoid enumerating <span class="math inline">\(h(\alpha,\beta)\)</span> later on.</p>
-<p>If we assume the cost of enumerating each node is the same, this problem can be viewed as finding the smallest connected component (CC) in the pattern tree that contains the root, such that the CC covers all distinct variables. This does not sound like an easy problem. I currently have two ways for solving this problem in my mind: 1) do a dynamic programming on trees with exponential states, and 2) reduce it to an ILP problem. Both sound like overkill for realistic queries though.</p>
-<p>I’m not sure what is a practically good planning heuristic. The one used in egg prioritizes sub-patterns with more free vars, but I’m skeptical how good it is: consider pattern <span class="math inline">\(f(f(g(\alpha),\beta)),g(h(\alpha), h(\beta)))\)</span>. This heuristics yield the following plan for this pattern:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f1 <span class="kw">in</span> c: <span class="co"># f(f(g(a), g(b))), g(h(a), h(b)))</span></span>
+<p>This trick also poses a new question for classical e-matching
+planning: what visit order shall we use? In the above definition of our
+algorithm, we assumed a depth-first style order of processing, but this
+is not necessary. For example, after enumerating the top-level <span
+class="math inline">\(f\)</span>-node in pattern <span
+class="math inline">\(f(g(\alpha), h(\alpha, \beta))\)</span>, it will
+be most efficient to enumerate the <span
+class="math inline">\(h\)</span>-node and lookup <span
+class="math inline">\([\sigma]g(\alpha)\)</span> later. If however we
+first enumerate <span class="math inline">\(g(\alpha)\)</span>, we still
+can’t avoid enumerating <span
+class="math inline">\(h(\alpha,\beta)\)</span> later on.</p>
+<p>If we assume the cost of enumerating each node is the same, this
+problem can be viewed as finding the smallest connected component (CC)
+in the pattern tree that contains the root, such that the CC covers all
+distinct variables. This does not sound like an easy problem. I
+currently have two ways for solving this problem in my mind: 1) do a
+dynamic programming on trees with exponential states, and 2) reduce it
+to an ILP problem. Both sound like overkill for realistic queries
+though.</p>
+<p>I’m not sure what is a practically good planning heuristic. The one
+used in egg prioritizes sub-patterns with more free vars, but I’m
+skeptical how good it is: consider pattern <span
+class="math inline">\(f(f(g(\alpha),\beta)),g(h(\alpha),
+h(\beta)))\)</span>. This heuristics yield the following plan for this
+pattern:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f1 <span class="kw">in</span> c: <span class="co"># f(f(g(a), g(b))), g(h(a), h(b)))</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> f2 <span class="kw">in</span> c.child1: <span class="co"># f(g(a), g(b))) (2 free vars)</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g1 <span class="kw">in</span> c.child2: <span class="co"># g(h(a), h(b)) (2 free vars)</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> g2 <span class="kw">in</span> f2.child1: <span class="co"># g(a) (1 free var)</span></span>
@@ -303,8 +531,26 @@
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> h2 <span class="kw">is</span> <span class="va">None</span> <span class="kw">or</span> h2 <span class="op">!=</span> g1.child2:</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>          <span class="cf">yield</span> {...}</span></code></pre></div>
-<p>This is complicated, but it suffices to only look at the first three loops: It does a cross product over the first and the second child of the top-level <span class="math inline">\(f\)</span>-node. It seems a good strategy is instead to prefer fewer free vars, and performs the search in a depth-first search, so that <span class="math inline">\(g(h(a), h(b))\)</span> can be looked up all at once after <span class="math inline">\(f(g(a), g(b))\)</span> is enumerated. But is preferring fewer free vars the right way to go? I don’t know. Also realistic patterns I’ve seen so far tend to be small and simple, so cases like the above may be rare.</p>
+<p>This is complicated, but it suffices to only look at the first three
+loops: It does a cross product over the first and the second child of
+the top-level <span class="math inline">\(f\)</span>-node. It seems a
+good strategy is instead to prefer fewer free vars, and performs the
+search in a depth-first search, so that <span
+class="math inline">\(g(h(a), h(b))\)</span> can be looked up all at
+once after <span class="math inline">\(f(g(a), g(b))\)</span> is
+enumerated. But is preferring fewer free vars the right way to go? I
+don’t know. Also realistic patterns I’ve seen so far tend to be small
+and simple, so cases like the above may be rare.</p>
 <h1 id="miscellaneous">Miscellaneous</h1>
-<p>I thank Max and Philip for their valuable discussions and comments. The presented trick stems from a <a href="https://github.com/egraphs-good/egg/pull/74">PR</a> that tries to improve e-matching for ground terms. In hindsight, the proposed improvement had been discussed in Leo and Nikolaj’s e-matching VM paper but was lost in egg’s original e-matching VM. Compared to that PR, which only looks up ground terms, this optimization generalizes it by also looking up terms that are grounded after substitution. Philip <a href="https://github.com/egraphs-good/egg/pull/74#issuecomment-818833367">came up</a> with this idea independently as well.</p>
+<p>I thank Max and Philip for their valuable discussions and comments.
+The presented trick stems from a <a
+href="https://github.com/egraphs-good/egg/pull/74">PR</a> that tries to
+improve e-matching for ground terms. In hindsight, the proposed
+improvement had been discussed in Leo and Nikolaj’s e-matching VM paper
+but was lost in egg’s original e-matching VM. Compared to that PR, which
+only looks up ground terms, this optimization generalizes it by also
+looking up terms that are grounded after substitution. Philip <a
+href="https://github.com/egraphs-good/egg/pull/74#issuecomment-818833367">came
+up</a> with this idea independently as well.</p>
 </body>
 </html>

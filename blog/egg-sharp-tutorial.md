@@ -458,13 +458,9 @@ For simplicity, we assume that
 A relation declaration in core Gogi has the following shape:
 
 $$\text{rel }R(c_1,\dots,c_p)\rightarrow (s_1,\ldots, s_m, l_1,\ldots, l_n)$$
-<!-- ```prolog
-rel R(c1, ..., cp) -> (s1, ..., sm, l1, ..., ln).
-``` -->
-
-where $s_j$ is a sort value, 
- $l_k$ is a lattice value, 
- and $c_i$ can be either a lattice or sort value. 
+where $s_j$ is a sort value column, 
+ $l_k$ is a lattice value column, 
+ and $c_i$ can be either a lattice or sort value column. 
 Such declaration specifies 
  a relation with schema  
  $(c_1, \ldots c_p, s_1, \ldots, s_m, l_1, \ldots, l_n)$
@@ -479,6 +475,10 @@ $$
   \vec s=\vec{s'}\land \vec l = \vec{l'}$$
 where $\vec x$ denotes a vector of variables $x_1,\ldots,x_k$.
 
+Note in the core formalization, we don't assign default values to lattices 
+and we assume the bottom is the default value, 
+and each default value is specified as a rewrite rule.
+
 A rewrite rule in the core looks like follows:
 $$
   \exists \vec{z}.R_1(\vec{x_1}), \ldots, R_n(\vec {x_n})
@@ -488,6 +488,7 @@ $$
 All variables $x_{ij}$ in the head are either bound in the body
  or existentially quantified.
 Importantly, existentially quantified variables in the core
+ quantifies over sort values and 
  must be "inferrable" from the functional dependency,
  meaning that they must be a dependent variable 
  within some relation atoms.
@@ -508,8 +509,8 @@ The rewrite rule in the core is further translated to the following logical cons
 
 $$
   \forall \vec{y}.
-  \left(\land_i \vec{y_i}\sqsubseteq_L S_i\right) \rightarrow
-  \exists \vec{z}\in L^k. \land_i \vec{x_i}\sqsubseteq_L R_i,$$
+  \left(\bigwedge_i \vec{y_i}\sqsubseteq_L S_i \rightarrow
+  \exists \vec{z}\in S^k. \bigwedge_i \vec{x_i}\sqsubseteq_L R_i\right),$$
 <!-- ```prolog
 forall y11, ..., yn’mn’:
   (/\i Si(yi1, ..., yim'i)) ->
@@ -521,7 +522,7 @@ $$
 (\vec{c},\vec{s},\vec{l})
 \sqsubseteq_L R\iff
 \exists \vec{l'}.
- R(\vec{c},\vec{s},\vec{l'}) \land\left(\land_i\;l_i\leq_L l'_i\right)
+ R(\vec{c},\vec{s},\vec{l'}) \land\left(\bigwedge_i\;l_i\leq_L l'_i\right)
 $$
 <!-- ```
 (s1, ..., sm, l1, ..., ln) subset_L R
@@ -601,7 +602,7 @@ The rebuilding algorithm:
 todo = mk_union_find()
 domain = mk_set()
 
-def unify(s1, s2):
+def union_sort(s1, s2):
   todo.union(s1, s2)
   domain.add_all([s1, s2])
 
@@ -622,15 +623,13 @@ def on_insert(R, tup):
       if col.is_sort():
         s1 = todo.get_or_create(c1)
         s2 = todo.get_or_create(c2)
-        unify(s1, s2)
-      elif col.is_lattice():
-        orig_tup.set_col(col, c1.lat_max(c2))
+        union_sort(s1, s2)
       else:
-        error("cannot resolve FD conflicts")
+        orig_tup.set_col(col, c1.lat_max(c2))
 
 def normalize(tuple, union_find):
-  return tuple.map(
-    lambda val: union_find.get_or_default(val, val))
+  return tuple.map(lambda val: 
+    union_find.get_or_default(val, default = val))
 
 def rebuild(DB):
   while not todo.is_empty():
@@ -658,39 +657,78 @@ def rebuild(DB):
 ### Applying rewrite rules
 
 ```python
-def rewrite(pats, DB):
+def batch_rewrite(pats, DB):
+  to_insert = mk_set()
   for (lhs, rhs) in pats:
     for subst in match(DB, lhs):
-      subst = chase(DB, subst, rhs)
+      subst = chase(DB, subst, lhs, rhs)
       for (R, atom) in rhs:
-        DB.insert(R, atom.apply(subst))
+        to_insert.add((R, atom.apply(subst)))
+  DB.insert_all(to_insert)
+  return to_insert.is_empty()
 
-def chase(DB, subst, rhs):
-  triggered = True
-  while triggered == True:
-    triggered = False
+def chase(DB, subst, lhs, rhs):
+  shouldContinue = True
+  while shouldContinue:
+    shouldContinue = False
 
     for atom in rhs:
-      det_vars = atom.det
-      if det_vars.is_subset_of(dom(subst)):
-        triggered = True
+      det_vars = atom.get_det_vars()
+      if det_vars.is_subset_of(subst.get_domain()):
+        shouldContinue = True
         
         R = DB.get_rel(atom.rel)
         det = det_vars.apply(subst)
         tup = R.find_by_determinant(det)
-        if tup is not None:
-          for col in tup.dep:
-            if subst.contains(col.var):
-              union_sort(subst[var], col)
+        for var in atom.get_dep_vars():
+          col = var.col
+          if var.is_sort():
+              if tup is None: continue
+              value = tup.get_by_col(col)
+              sort_update(subst, var, value)
+          else:
+            value = tup is None ? col.lat_init(det)
+                                : tup.get_by_col(col)
+            lat_update(subst, var, value)
 
+  for var in rhs.get_all_vars():
+    if !subst.contains(var):
+      assert var.is_sort():
+      subst[var] = new_sort_value(var.sort)
 
+def lat_update(subst, var, value):
+  if subst.contains(var):
+    subst[var] = subst[var].lat_max(value)
+  else:
+    subst[var] = value
+
+def sort_update(subst, var, value):
+  if subst.contains(var):
+    union_sort(subst[var], value)
+  else:
+    subst[var] = value
 ```
 <!-- 
 Note to myself: 
+This part differs slightly from egglite.
+E.g., in egglite, a temp relation is built with all vars.
+Here we only accumulate a to_insert list.
+We can even stream process everything, so tuples to be
+inserted are inserted immediately.
+
+There's also a design choice about how to handle the case when
+multiple values exist for the same atom. 
+egglite will pick random one, which is correct because 
+at the end of the day they will be unified.
+However, is there a smarter way of doing this?
+Potentially in combination with how we do unify-- because
+there still seems to be some populate-then-unify redundancy.
+
+[BELOW ARE OBSOLETE]
 the application algorithm here is different from the one
 in egglite. In egglite, a temp relation is built.
 I think this is because the operator sqlite supports / the sql
-langauge is not rich enough so we can't stream everything.
+language is not rich enough so we can't stream process everything.
 Here we can.
 
 They also differ in how they handle the case when multiple
@@ -698,10 +736,34 @@ values exist for the same atom (egglite will pick random one
 and wait the rebuilding to resolve the violation, Gogi will
 ??? TODO), 
 -->
-#### Semi-Naive Matching
+
+### The main algorithm
+
+```python
+def run(pats, DB, max_iter):
+  for iter in range(max_iter):
+    if !batch_rewrite(pats, DB):
+      return
+    rebuild(DB)
+```
+
+
+### Semi-Naive Matching
 
 One of the bottleneck in evaluating Gogi programs
- is applying the
+ is matching the left-hand side.
+Since we are matching over a relational representation
+ of the e-graphs,
+ we are already doing is already relational e-matching.
+However, we can go one step further:
+Let `DB'` be the database of tuples 
+ that are not touched in the current iteration of rewrite.
+`DB'` by itself will not produce any interesting new tuples;
+ it has to join with newly generated tuples (i.e., the delta database).
+This is exactly the semi-naive evaluation algorithm of Datalog.
+We call this similar optimization in Gogi semi-naive matching.
+This optimization will be tricky to do over e-graph's DAG representation,
+ yet is fairly obvious in Gogi's full-fledged relational representation.
 
 # Gogi by Example
 
