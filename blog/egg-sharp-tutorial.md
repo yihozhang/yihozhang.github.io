@@ -508,7 +508,7 @@ The rewrite rule in the core is further translated to the following logical cons
 
 $$
   \forall \vec{y}.
-  \left(\land_i S_i\left(\vec{y_i}\right)\right) \rightarrow
+  \left(\land_i \vec{y_i}\sqsubseteq_L S_i\right) \rightarrow
   \exists \vec{z}\in L^k. \land_i \vec{x_i}\sqsubseteq_L R_i,$$
 <!-- ```prolog
 forall y11, ..., yn’mn’:
@@ -601,7 +601,7 @@ The rebuilding algorithm:
 todo = mk_union_find()
 domain = mk_set()
 
-def union_sort(s1, s2):
+def unify(s1, s2):
   todo.union(s1, s2)
   domain.add_all([s1, s2])
 
@@ -622,7 +622,7 @@ def on_insert(R, tup):
       if col.is_sort():
         s1 = todo.get_or_create(c1)
         s2 = todo.get_or_create(c2)
-        union_sort(s1, s2)
+        unify(s1, s2)
       elif col.is_lattice():
         orig_tup.set_col(col, c1.lat_max(c2))
       else:
@@ -644,7 +644,7 @@ def rebuild(DB):
     for val in domain:
       for R in DB:
         for col in R.cols:
-          for tup in R.index_by(col, val)
+          for tup in R.index_by(col = col, val = val):
             new_tup = normalize(tup, union_find)
             if new_tup != tup:
               to_remove.add((R, tup))
