@@ -875,6 +875,93 @@ let[v1, e, lam[v2, body]]
 
 ## Type Inference for HM Type System
 
+```prolog
+sort expr.
+(decl-ctor lam (string expr) expr)
+(decl-ctor var (string) expr)
+(decl-ctor app (expr expr) expr)
+(decl-ctor let (string expr) expr)
+(decl-ctor unit () expr)
+
+(decl-sort type)
+(decl-ctor tvar (string) type)
+(decl-ctor tunit () type)
+(decl-ctor tarr (type type) type)
+; we don't need to introduce additional
+; rules for case like ((tvar s), tunit),
+; where we will normally subst one to the other,
+; because here once union! is performed,
+; the object language can't distinguish
+; (tvar s) from tunit
+(rule (
+    (eq (tarr fr1 to1) (tarr fr2 to2)
+)(
+    (union! fr1 fr2)
+    (union! to1 to2)
+))
+
+
+; a ctx is a list of var -> scheme
+(decl-sort ctx)
+(decl-ctor nil () ctx)
+(decl-ctor cons (string scheme) ctx)
+
+; a scheme is a type with some type variables qualified
+(decl-sort scheme)
+(decl-ctor forall (string-list, type) scheme)
+
+
+; \Sigma |- e : t
+(decl-fun type-of 
+    (: (ctx expr) type)
+    (default \bot) ; in default case the type is None
+                   ; each bottom value should be unique
+                   ; so they don't accidentally merge
+    (merge union!)) ; when merge, unify the type
+
+(decl-fun generalize (: (type) scheme) TODO)
+(decl-fun instantiate (: (scheme) type) TODO)
+
+; \Sigma |- () : Unit
+(merge (type-of ctx unit) tunit)
+
+; \Sigma; x: t1 |- e : t2
+; -------------------------------
+; \Sigma |- lam x. e : t1 -> t2
+(rule (
+    (eq a (type-of ctx (lam x e)))
+    (eq s (fresh-str))
+)(
+    (merge a (tarr (tvar s) 
+                   (type-of (cons x (forall [] (tvar s)))
+                               e)))
+))
+
+; \Sigma |- e1 :- t1 -> t2
+; \Sigma |- e2 : t1
+---------------------------------
+; \Sigma |- e1 e2 : t2
+(rule (
+    (eq a (type-of ctx (app e1 e2)))
+    (eq s (fresh-str))
+)(
+    (union! (type-of ctx e1) 
+            (tarr (type-of ctx e2)
+                  (tvar s)))
+    (union! a (tvar s))
+))
+
+
+(rule (
+    (eq a (type-of ctx (let x e1 e2)))
+)(
+    (union! a
+            (type-of (cons x (generalize (type-of ctx e1)) 
+                           ctx) 
+                        e2))
+))
+```
+
 # Comparison to other languages
 
 ## Comparison to Rel
