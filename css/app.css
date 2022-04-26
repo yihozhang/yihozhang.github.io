@@ -6,11 +6,22 @@
 	margin-left: auto;
 	margin-right: auto;
 	line-height: 1.5;
-	font-family: Helvetica, sans-serif;
+	font-family: -apple-system,
+	BlinkMacSystemFont,
+	"Segoe UI",
+	Roboto,
+	"Helvetica Neue",
+	Arial,
+	"Noto Sans",
+	sans-serif,
+	"Apple Color Emoji",
+	"Segoe UI Emoji",
+	"Segoe UI Symbol",
+	"Noto Color Emoji"
 }
 
 b {
-	font-weight: bold;
+	font-weight: 500;
 }
 
 a {
