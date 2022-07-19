@@ -47,7 +47,7 @@ I will also try to develop the operational and model semantics of Gogi.
 
 # Introduction to Gogi
 
-## Ext 1: User-defined sorts and lattices
+## Extension 1: User-defined sorts and lattices
 
 In Gogi, every value is either a (semi)lattice value or a sort value.
 Lattices in Gogi are algebraic structures 
@@ -67,7 +67,7 @@ As a result, sort values can only be created implicitly
  via functional dependency.
 We will go back to this point later.
 
-## Ext 2: Relations and Functional Dependencies
+## Extension 2: Relations with Functional Dependencies
 
 ### Declaring a relation with functional dependency
 
@@ -210,7 +210,7 @@ rel hi(expr) -> lmax(-2147483648).
 rel lo(expr) -> lmin(2147482647).
 ```
 To define a lattice column, 
- a default value need to be provided in the relation definition.
+ a default value needs to be provided in the relation definition.
 The default value is not a lattice bottom: 
  the bottom means do not exist.
 Meanwhile, the lattice top means there are conflicts.
@@ -308,9 +308,9 @@ geq[xxyy, 0] := true[] if add(mul[x, x], mul[y, y], xxyy).
 x := abs[x] if geq(x, 0, true[])
 ```
 
-The above program can be seen as implementing
+This can be seen as implementing
  a small theorem prover in Gogi.
-Whenever it sees abs[x], 
+Whenever it sees `abs[x]`, 
  a query about `x >= 0` will be issued to the database.
 If later `x >= 0` is proven to be equivalent to true,
  a distinguished sort value,
@@ -325,7 +325,7 @@ FDs can be violated:
 In this case, we need to repair the FDs.
 We have seen such examples many times in previous sections.
 For example, rules like `R[x1, ..., xk] := ...` will add new values to `R` indexed by `x1, ..., xk`,
- and it is likely that there are already other tuples with the same prefix `x1, ..., xk`.
+ and it is likely that there are already other tuples with the form `R(x1, ..., xk, _)`.
 These rules may potentially cause violation of functional dependencies.
 In general, there are two kinds of violations:
 
@@ -410,10 +410,10 @@ sigma(v, rho2, store, a, tick(v, t,k)) <--
 This makes Ascent have a more macro-y vibe,
  which makes sense since the whole Ascent frontend is based
  on Rust's procedural macros.
-However, I think the similar can be easily achieved 
- inside the relational land,
- so in a full-fledged relational language like Gogi,
- the `for` syntax may not be necessary.
+However, I think `for` can be easily achieved 
+ inside the pure relational land,
+ so in Gogi,
+ this may not be necessary.
 
 Seamless interop with Rust is in general very powerful.
 In fact, we have already used this feature a lot.
@@ -424,8 +424,8 @@ So rules like `hi(x, n.into()) :- num(n, x).`,
  will call methods 
  in the corresponding struct (e.g., `n.into()`).
 
-In general, these user-defined functions 
- introduced functional dependencies from domains of functions to their range.
+User-defined functions 
+ introduce functional dependencies from functions' domains to their ranges.
 For example,
  rule `hi(x, n.into()) :- num(n, x).` can be viewed as
  `hi(x, n_into) :- num(n, x), into_rel(n, n_into)` 
@@ -435,12 +435,20 @@ Advanced join algorithms
  can leverage these functional dependencies
  to optimize the query.
  
-# The Model Semantics of Gogi and its Evaluation
+<!-- # The Model Semantics of Gogi and its Evaluation
 
 In this section, we will focus on the problem of how to formalize Gogi 
  and how to evaluate Gogi programs. 
-This section will first give the model semantics of Gogi.
-Then, It will describe
+This section will first give a model semantics of Gogi 
+ motivated by monotonicity.
+
+// However, it turns out this model semantics is just an old wine in new bottles.
+// In fact, the semantics of data dependency and the chase, 
+//  which has been long studied in the database land,
+//  exactly captures this.
+// It is also fascinating that the output of equality saturation is in fact the core.
+
+After the model semantics, tis section will describe
  rebuilding, an essential procedure for 
  evaluating and maintaining e-graphs,
  namely rebuilding, in the Gogi setting.
@@ -448,128 +456,9 @@ Finally,
  we will discuss how Gogi's matching procedure
  can benefit from semi-naive evaluation,
  a classic evaluation algorithm in Datalog
-## The Model Semantics
 
-For simplicity, we assume that 
- in our core language
- there will only be one (interpreted) lattice $L$
- and one (uninterpreted) sort $S$.
+## The Model Semantics -->
 
-A relation declaration in core Gogi has the following shape:
-
-$$\text{rel }R(c_1,\dots,c_p)\rightarrow (s_1,\ldots, s_m, l_1,\ldots, l_n)$$
-where $s_j$ is a sort value column, 
- $l_k$ is a lattice value column, 
- and $c_i$ can be either a lattice or sort value column. 
-Such declaration specifies 
- a relation with schema  
- $(c_1, \ldots c_p, s_1, \ldots, s_m, l_1, \ldots, l_n)$
- and implies the following logical constraint:
-
-$$
-  \forall 
-  \vec c,\vec s,\vec l,
-  \vec{s'},\vec{l'}.
-  R(\vec c, \vec s, \vec l)\land
-  R(\vec{c'}, \vec{s'}, \vec{l'})\rightarrow
-  \vec s=\vec{s'}\land \vec l = \vec{l'}$$
-where $\vec x$ denotes a vector of variables $x_1,\ldots,x_k$.
-
-Note in the core formalization, we don't assign default values to lattices 
-and we assume the bottom is the default value, 
-and each default value is specified as a rewrite rule.
-
-A rewrite rule in the core looks like follows:
-$$
-  \exists \vec{z}.R_1(\vec{x_1}), \ldots, R_n(\vec {x_n})
-  \gets
-  S_1(\vec{y_1}), \ldots, S_m(\vec{y_m}).
-$$
-All variables $x_{ij}$ in the head are either bound in the body
- or existentially quantified.
-Importantly, existentially quantified variables in the core
- quantifies over sort values and 
- must be "inferrable" from the functional dependency,
- meaning that they must be a dependent variable 
- within some relation atoms.
-For example, the following Gogi program is not valid,
- because rule `R(1, c)` can be triggered arbitrarily many times,
- each with different `c`:
-```prolog
-sort S.
-rel R(i64, S).
-R(1, c). % translated from R[1].
-```
-
-This "inferrable" constraints can be formalized as
-$$\forall i.\exists j. z_i\in \text{dep}(R_j(\vec{x_j})),$$
-where $\text{dep}\left(R_j\left(\vec{x_j}\right)\right)$ is the set of dependent variables in atom $R_j(\vec{x_j})$.
-
-The rewrite rule in the core is further translated to the following logical constraint:
-
-$$
-  \forall \vec{y}.
-  \left(\bigwedge_i \vec{y_i}\sqsubseteq_L S_i \rightarrow
-  \exists \vec{z}\in S^k. \bigwedge_i \vec{x_i}\sqsubseteq_L R_i\right),$$
-<!-- ```prolog
-forall y11, ..., yn’mn’:
-  (/\i Si(yi1, ..., yim'i)) ->
-  exists z1 in L, ..., zk in L,
-    /\i (xi1, ... ximi) subset_L Ri
-``` -->
-where $\vec{y}$ is the set of variables occurring in $\vec{y_1},\ldots, \vec{y_m}$ and
-$$
-(\vec{c},\vec{s},\vec{l})
-\sqsubseteq_L R\iff
-\exists \vec{l'}.
- R(\vec{c},\vec{s},\vec{l'}) \land\left(\bigwedge_i\;l_i\leq_L l'_i\right)
-$$
-<!-- ```
-(s1, ..., sm, l1, ..., ln) subset_L R
-	iff
-exists l'1, ..., l'n: 
-  R(s1, ..., sm, l'1, ..., l'n) /\
-  /\j (lj <= l'j)
-``` -->
-
-In English, 
-whenever a valuation of variables
- satisfied right-hand side, 
- there exists some $\vec{z}$ 
- such that the left-hand side also "holds",
- in the sense that some tuples in the relation
- subsumes the substituted left-hand side.
-
-The result of evaluating a (core) Gogi program is 
- the minimal model $(S_{\min}, D_{\min})$ that 
- satisfies the logical constraints derived from the program,
- where $S_{\min}$ is the minimal $S$ of sort values (up to isomorphism)
- and $D_{\min}$ is the minimal database instance (i.e., interpretation of relations) with domain $L$ and $S_{\min}$.
-
-This core formalization should look familiar 
- to people who know the [chase](https://dl.acm.org/doi/10.1145/3034786.3034796): 
-Functional dependencies are equality-generating dependencies (EGD),
- and rewrite rules are tuple-generating dependencies (TGD).
-However, there are several critical distinctions between Gogi and the chase.
-First, the chase has both labelled nulls and constants, 
- and unifying two constants will cause a conflict.
-Sort values in Gogi can be thought as labelled nulls, 
- and there is no matching concept for constants in Gogi.
-Moreover,
- Gogi supports lattice values.
-This feature has its root in both egg's e-class analyses and relational languages like Flix,
- and is necessary for different kinds of analysis tasks
- that Gogi strives to support.
-Finally, and perhaps most importantly,
- Gogi has this "inferrable" constraint for existential variables.
-This constraint leads Gogi 
- to have a single very efficient application algorithm
- of executing both EGDs (from functional dependencies) 
- and TGDs (from rewrite rules).
-In contrast, 
- EGDs and TGDs in the chase are executed independently.
-Without the lattice values and lifting the inferrable constraint,
- Gogi programs can be expressed in the chase.
 
 ## The Evaluation Algorithm
 
@@ -578,13 +467,9 @@ The evaluation algorithm of Gogi programs
 The core of the evaluation is the invariant-maintaining rebuilding algorithm,
  which is inspired 
  both by the rebuilding algorithm of egg and 
- by the evaluation algorithm of the chase.
+ by the evaluation algorithm of [the chase](https://en.wikipedia.org/wiki/Chase_(algorithm)).
 The second part involves matching and applying Gogi rules.
-Applying Gogi rules is efficient.
-In the chase's terminology, 
- thanks to the above mentioned inferrable constraint, 
- rule application in Gogi is able to utilize functional dependencies
- to avoid to generate unnecessary nulls.
+Applying Gogi rules is efficient compared to the standard chase.
 Moreover,
  because Gogi programs
  are monotonic computations over the relational database in nature,
@@ -765,7 +650,7 @@ We call this similar optimization in Gogi semi-naive matching.
 This optimization will be tricky to do over e-graph's DAG representation,
  yet is fairly obvious in Gogi's full-fledged relational representation.
 
-# Gogi by Example
+<!-- # Gogi by Example
 
 ## Lambda Calculus
 
@@ -970,4 +855,4 @@ sort expr.
 
 ## Comparison to Flix
 
-## Comparison to the Chase
+## Comparison to the Chase -->
