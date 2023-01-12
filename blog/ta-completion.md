@@ -28,8 +28,8 @@ In this post, we will focus on the termination problem of EqSat.
 As it turns out,
  there are many interesting, and even surprising, results, about the termination problem of EqSat.
 
-In particular, this post will show (1) how the innocent-looking associativity rule is actually not terminating,
- (2) why a terminating, or even convergent, term rewriting system does not necessarily terminate in EqSat,
+In particular, this post will show (1) how the innocent-looking associativity rule can cause non-termination,
+ (2) why a terminating, and even convergent, term rewriting system does not necessarily terminate in EqSat,
  (3) how to fix the above problem by "weakening" EqSat's merge operation, 
  and (4) two potentially promising approaches to ensure the termination of EqSat.
 One fascinating thing I found during this journey is that,
@@ -38,8 +38,22 @@ One fascinating thing I found during this journey is that,
 Different from EqSat, TA Completion does not suffer from problem in (2) and is exactly the algorithm we will show in (3).
 Moreover, there is a beautiful connection between EqSat and TA completion.
 
-# 
+# Ground associative theory does not terminate in EqSat
 
+Associativity is the fundamental law to many algebraic structures like semigroups, monoids, and groups.
+It has the following form: $$x\cdot (y\cdot z)\approx (x\cdot y)\cdot z.$$
+If written as an (oriented) rewrite rule, it will look like $x\cdot (y\cdot z)\rightarrow (x\cdot y)\cdot z$
+ (or $x\cdot (y\cdot z)\rightarrow (x\cdot y)\cdot z$).
+In term rewriting, this rule alone is terminating, and it just looks so innocent--what could go wrong if you just permute the order to compute the product?
+After all, there are only finitely many ways to permute the order of computation.
+This is true in EqSat: if the initial e-graph contains only one term and the rule set contains only associativity, 
+ then EqSat will terminate and return the set of terms equivalent to the original term
+ under associativity.
+However, this is not the case.
+
+
+ even if you just have one more ground equation, 
+ e.g., $a\approx (a\cdot 2)\cdot ½$.
 
 
 
