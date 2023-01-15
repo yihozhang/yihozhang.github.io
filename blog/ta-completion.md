@@ -1,7 +1,6 @@
 ---
 title: Ensuring the Termination of EqSat over Terminating Term Rewriting System
 author: Yihong Zhang
-toc: true
 ---
 
 Term rewriting is one of the most fundamental techniques in programming languages. 
@@ -25,6 +24,9 @@ In the setting of EqSat,
 For example, in program optimization,
  we may want to get the most "optimized" term with regard to a given set of rules,
  so making sure EqSat terminate is important to such optimality guarantees.
+Or, you may know some theory is decidable but deciding it is slow,
+ so you want to speed up the reasoning by using EqSat,
+ but there is no point in "speeding up" EqSat if it simply does not terminate.
 In this post, we will focus on the termination problem of EqSat.
 As it turns out,
  there are many interesting, and even surprising, results, about the termination problem with EqSat.
@@ -36,7 +38,7 @@ This post will show (1) how the innocent-looking associativity rule can cause no
 One fascinating thing I found during this journey is that,
   researchers working on tree automata indeed developed a technique almost identical to EqSat,
   known as Tree Automata (TA) completion.
-Different from EqSat, TA Completion does not suffer from problem in (2) and is exactly the algorithm we will show in (3).
+Different from EqSat, TA Completion does not have the problem in (2) and is exactly the algorithm we will show in (3).
 Moreover, there is a beautiful connection between EqSat and TA completion.
 
 # Term rewriting 101: Ground theories are decidable via congruence closure
@@ -121,7 +123,7 @@ aba^3b^2&\approx ab^2aba^2\\
 b^3a^2b^2a^2ba&\approx b^3a^2b^2a^4\\
 a^4b^2a^2ba&\approx b^2a^4
 \end{align*}
-There is another way to state this proposition that appeals to math-minded persons: 
+There is another way to state this proposition that appeals to math-minded persons:
  the word problem for finitely presented semigroups are not decidable.
 
 Because of this, associative rules do not terminate in EqSat in general.
@@ -133,8 +135,53 @@ When it reaches the fixed point and terminates, this gives us a way to decide gr
 To better understand why associativity does not terminate in EqSat,
  here is an example:
  suppose $\cdot$ is associative and satisfy the ground identity 
- $(a\cdot b)\cdot b^{-1}\approx a$ for constants $a,b,b^{-1}$. 
-Now suppose we orient the identity into rewrite rule $(a\cdot b)\cdot b^{-1}\rightarrow a$ while having the associative rule $(x\cdot y)\cdot z\rightarrow x\cdot(y\cdot z)$.
+ $0\cdot a\approx 0$ for constants $0,a$. 
+Now suppose we orient this identity into rewrite rule 
+ $0\cdot a\rightarrow 0$ 
+ while having the associative rule $(x\cdot y)\cdot z\rightarrow x\cdot(y\cdot z)$.
 This is a terminating term-rewriting system (although not confluent,
- because the term $(a\cdot b)\cdot b^{-1}$ has two normal forms $a$
- and $a\cdot(b\cdot b^{-1})$).
+ because the term $(0\cdot a)\cdot a$ has two normal forms $0$
+ and $0\cdot(a\cdot a)$).
+
+However, this ruleset causes problems in EqSat: 
+ Starting with the initial term $0\cdot a$,
+ EqSat will apply the rewrite rule $0\cdot a\rightarrow 0$
+ and merge $0\cdot a$ and $0$ into the same E-class.
+The E-graph will look like this: 
+![$0\cdot a=0$](img/0a%3Da.png)
+
+Notice that because of the existence of cycles in this E-graph, 
+ it represents not only the two terms $0$ and $0\cdot a$ but indeed an infinite set of terms.
+For example, using the term rewriting system analogy of E-class above,
+ $(0\cdot a)\cdot a$ is *explicitly* represented by E-class $q_0$ because
+ $$(0\cdot a)\cdot a\rightarrow^* (q_0\cdot q_a)\cdot q_a\rightarrow q_0\cdot q_a\rightarrow q_0.$$
+In fact, $q_0$ represents the infinite set of terms $0\cdot a\approx(0\cdot a)\cdot a\approx ((0\cdot a)\cdot a)\cdot a\approx\cdots$.
+For any such term $(0\cdot a)\cdots$, it can be rewritten into the form $0\cdot a^n$.
+Now,
+ for associativity to terminate,
+ the output E-graph need to at least represent the set of terms
+ $a,a^2,a^3,\cdots$, with $a^n\not\approx a^m$ for any $n\neq m$.
+This requires infinitely many E-classes, each represents some $a^n$, while a finite E-graph
+ will have only a finite number of E-classes.
+Therefore, EqSat will not terminate in this case.
+
+## Canonical TRS can be non-terminating in EqSat
+
+In our last example, the term rewriting system $R=\{0\cdot a\rightarrow 0,(x\cdot y)\cdot z\rightarrow x\cdot (y\cdot z)\}$ is terminating,
+ but not confluent. 
+Confluence means that every term will have at most one normal form.
+Although it is tempting to think 
+ maybe non-confluence is what causes EqSat
+ to not terminate,
+ there are canonical (i.e., terminating + confluent) TRSs
+ that are non-terminating in EqSat.
+Here we give an canonical variant
+ of the above example:
+Let the TRS be $R=\{0\cdot (a\cdot a)\rightarrow 0, (x\cdot y)\cdot z\rightarrow x\cdot(y\cdot z)\}$.
+This avoids the non-confluent behavior since 
+(TODO: note this is not a confluent TRS.
+Consider ((0a)a)a)a.
+One rewrite sequence is ((0a)a)a)a -> ((0(aa))a)a -> (0a)a -> 0
+Or
+((0a)a)a)a  -> ((0a)(aa))a -> ((0(a(aa)))a
+
