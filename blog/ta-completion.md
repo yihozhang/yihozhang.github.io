@@ -8,8 +8,14 @@ It is used to define program semantics, to optimize programs, and to check progr
 An issue with using term rewriting to optimize program is that, it is usually not clear 
  which rule should be applied first, among all the possible rules.
 Equality saturation (EqSat) is a variant of term rewriting that mitigates this so-called Phase-Ordering Problem.
-In EqSat, all the rules are applied at the same time, 
- and the resulting program space is stored compactly in a data structure called E-graph.
+In EqSat, all the rules are applied at the same time,
+ and the resulting program space is stored compactly in a data structure called E-graph^[
+  The reader should treat E-graphs and tree automata as two interchangeable terms.
+  An E-graph is just a deterministic finite tree automaton
+  with no $\epsilon$ transitions and no unreachable states.
+  The only place the difference matters is in describing tree automata completion,
+  where we need $\epsilon$-transitions to denote the preorder relation between E-nodes/states.
+].
 
 EqSat has been shown to be very successful for program optimizations and program equivalence checking,
  even when the given set of rewrite rules are not terminating or even when the theory is not decidable in general.
@@ -74,31 +80,31 @@ One way to view the congruence closure algorithm is that
 For each input theory $E$, 
  it builds the corresponding E-graph,
  and every E-graph corresponds to a canonical term rewriting system.
-For example, the congruence closure algorithm will produce the following e-graph for the theory above:
+For example, the congruence closure algorithm will produce the following E-graph for the theory above:
 \begin{align*}
 c_a&=\{a, f(c_a), f(c_b)\}\\
 c_b&=\{b, g(c_c)\}\\
 c_c&=\{c\}
 \end{align*}
 where $c_a, c_b, c_c$ denote E-classes of the E-graph, and $a,b,c,f(c_a), f(c_b), g(c_c)$ denote E-nodes.
-This E-graph naturally gives the following canonical term rewriting system $R$, which rewrite terms to the e-classes they are in from bottom to top:
+This E-graph naturally gives the following canonical term rewriting system $G$, which rewrite terms to the e-classes they are in from bottom to top:
 \begin{align*}
-a&\rightarrow_R c_a\\
-f(c_a)&\rightarrow_R c_a\\
-f(c_b)&\rightarrow_R c_a\\
-b&\rightarrow_R c_b\\
-g(c_c)&\rightarrow_R c_b\\
-c&\rightarrow_R c_c\\
+a&\rightarrow_G c_a\\
+f(c_a)&\rightarrow_G c_a\\
+f(c_b)&\rightarrow_G c_a\\
+b&\rightarrow_G c_b\\
+g(c_c)&\rightarrow_G c_b\\
+c&\rightarrow_G c_c\\
 \end{align*}
 Now, checking $s\approx t$ 
  can be simply done by checking if there exists some normal form $u$ such that
- $s\rightarrow^*_R u \leftarrow^*_Rt$ holds. For example, $g(f(a))\approx g(f(g(c)))$ because
+ $s\rightarrow^*_G u \leftarrow^*_Gt$ holds. For example, $g(f(a))\approx g(f(g(c)))$ because
 \begin{align*}
-g(f(a))&\rightarrow_Rg(f(c_a))\\
-&\rightarrow_Rg(c_a)\\
-&\leftarrow_R g(f(c_b)) \\
-&\leftarrow_Rg(f(g(c_c))\\
-&\leftarrow_Rg(f(g(c))))
+g(f(a))&\rightarrow_Gg(f(c_a))\\
+&\rightarrow_Gg(c_a)\\
+&\leftarrow_G g(f(c_b)) \\
+&\leftarrow_Gg(f(g(c_c))\\
+&\leftarrow_Gg(f(g(c))))
 \end{align*}
 
 This is sound and always terminates, because the term rewriting system produced by an E-graph is canonical--meaning every term will have exactly one normal form and term rewriting always terminates.
@@ -149,29 +155,29 @@ However, this ruleset causes problems in EqSat:
  and merge $0\cdot a$ and $0$ into the same E-class.
 The E-graph will look like this:
 
-![0a=a](img/0a=a.png){width=50% .center}
+![$0\cdot a=a$](img/0a=a.png){width=50% .center}
 
 Notice that because of the existence of cycles in this E-graph, 
  it represents not only the two terms $0$ and $0\cdot a$ but indeed an infinite set of terms.
 For example, using the term rewriting system analogy of E-class above,
  $(0\cdot a)\cdot a$ is *explicitly* represented by E-class $q_0$ because
  $$(0\cdot a)\cdot a\rightarrow^* (q_0\cdot q_a)\cdot q_a\rightarrow q_0\cdot q_a\rightarrow q_0.$$
-In fact, $q_0$ represents the infinite set of terms $$0\cdot a\approx(0\cdot a)\cdot a\approx ((0\cdot a)\cdot a)\cdot a\approx\cdots$$.
-For any such term $(0\cdot a)\cdots$, it can be rewritten into the form $0\cdot a^n$.
+In fact, $q_0$ represents the infinite set of terms $$0\cdot a\approx(0\cdot a)\cdot a\approx ((0\cdot a)\cdot a)\cdot a\approx\cdots.$$
+For any such term $(0\cdot a)\cdot\cdots$, it can be rewritten to a term of the form $0\cdot (a\cdot \cdots)$.
 Now,
  for associativity to terminate,
  the output E-graph need to at least represent the set of terms
- $a,a^2,a^3,\cdots$, with $a^n\not\approx a^m$ for any $n\neq m$.
+ $a,a\cdot a,(a\cdot a)\cdot a,\cdots$, where any two terms are not equal.
 This requires infinitely many E-classes, each represents some $a^n$, while a finite E-graph
  will have only a finite number of E-classes.
 Therefore, EqSat will not terminate in this case.
 
-# Canonical TRS does not necessarily terminate in EqSat as well
+# Canonical TRSs do not necessarily terminate in EqSat as well
 
 In our last example, the term rewriting system $R=\{0\cdot a\rightarrow 0,(x\cdot y)\cdot z\rightarrow x\cdot (y\cdot z)\}$ is terminating,
  but it is not confluent. 
-Confluence means that every term will have at most one normal form.
-It is tempting to think that
+Confluence means that every term will have at most one normal form, and associativity is usually not confluent.
+One may be tempted to think that
  maybe non-confluence is what causes EqSat
  to not terminate.
 But it is not the case;
@@ -193,7 +199,7 @@ Running the rule $f(x)\rightarrow x$ over the initial E-graph
  will union $f(a)$ and $a$ together, creating an infinite 
  (but regular) set of terms $h(f^*(a), b)$. See figure.
 
-![h(f*(a), b)](img/hf*ab.png){width=50% .center}
+![An E-graph that represents $h(f^*(a), b)$](img/hf*ab.png){width=50% .center}
 
 Now, by rule $h(f(x), y) \rightarrow h(x, g(y))$, 
  each $h(f^n(a), b)$ will be rewritten into $h(a, g^n(b))$,
@@ -205,21 +211,84 @@ Again, the existence of infinitely many e-classes, one for each $g^n(b)$, implie
 # Tree Automata Completion to the Rescue
 
 I hope, just like me, you will find the above observations somewhat surprising.
-Intuitively, one will think that EqSat is just a more powerful
- way of doing term rewriting because it explores all the branches at the same time.
+Intuitively, one will think that EqSat is just a more powerful way of doing term rewriting.
+And for a terminating TRS,
+ the set of reachable terms is always finite^[This can be shown via [König's lemma for trees](https://en.wikipedia.org/wiki/K%C5%91nig%27s_lemma). Notice that TRSs are always finitely branching and rewriting in terminating TRSs will not contain cycles.],
+ so it is natural to think that running EqSat 
+ with a terminating TRS starting with some initial term will eventually terminate.
+But this is not true,
+ as has been shown in the last two sections.
 The issue is because EqSat is not exactly term rewriting:
  the equivalence in EqSat is bidirectional.
-For example, in our last example, with the rewrite from $f(a)$ to $a$, we are not only representing these two terms, but also $f(f(a))$ and $f(f(f(a)))$ and so on.
+For example, in our last example, the rewrite from $f(a)$ to $a$ does not only make the E-graph represent these two terms, but also $f(f(a))$ and $f(f(f(a)))$ and so on.
 
-Let us first define the problem where we expect canonical TRS to enjoy the termination property.
-For a TRS $R$, we define the set of reachable terms to be $R^*(s)=\{t\mid s\rightarrow_R^* t\}$. 
-It can be shown with [König's lemma for trees](https://en.wikipedia.org/wiki/K%C5%91nig%27s_lemma) that if $R$ is terminating,
- $R^*(s)$ is finite^[Notice that TRSs are always finitely branching and rewriting in terminating TRS will not contain cycles.].
-This implies if our procedure computes exactly $R^*(s)$,
- it is likely to terminate.
+Before going further, 
+ let us first formally define the related problem where we expect terminating TRSs to enjoy the termination property.
+For a TRS $R$, we define the set of reachable terms
+ $R^*(s)=\{t\mid s\rightarrow_R^* t\}$.
+If $R$ is terminating,
+ $R^*(s)$ is finite for any term $s$.
+It can also be shown that EqSat always computes a superset of $R^*(s)$.
+A natural idea is that if our EqSat procedure can compute exactly $R^*(s)$,
+ it is likely to terminate for terminating TRSs.
+And in fact it is capable of handling TRSs beyond terminating ones:
+ because we are working with E-graphs, we may represent infinite set of terms.
+This problem itself is interesting to study and has applications in areas like program verification.
 
+It turns out, term rewriting researchers have developed a technique that computes exactly $R^*(s)$, represented as a tree automaton.
+The technique is known as tree automata completion.
+In term rewriting, completion essentially means
+ the technique of rewriting a term rewriting system itself (usually to make the term rewriting system canonical).
+Tree automata completion proceeds as follows:
+ build an initial tree automaton and run term rewriting over this tree automaton until saturation.
+Specifically, it searches for left-hand sides of rewrite rules, build and insert right-hand sides, 
+ and merge the left-hand sides with right-hand sides.
+Does this sound familiar?
+Yes, this is EqSat!
+It is striking to me that the program optimization and term rewriting communities
+ independently come up with essentially the same technique.
+
+But wait a second, didn't we just say EqSat does not necessarily compute $R^*(s)$ exactly?
+This is correct. There is a single tweak that distinguishes tree automata completion from EqSat.
+In tree automata completion, merging is performed directionally.
+For example, 
+ suppose the left-hand side is in E-class $q_l$ and right-hand side in E-class $q_r$, 
+ EqSat will basically rename every occurrence of
+ $q_l$ with $q_r$ (or vice versa).
+As a result the two E-classes are not distinguishable after the merging.
+Tree automata completion, on the other hand,
+ performs the merging by adding a new transition $q_r\rightarrow q_l$
+ (remember the TRS view of an E-graph).
+This allows tree automata completion to add only terms from the right-hand side
+ to the E-graph.
+To better see the difference, 
+ consider the E-graph that represents terms $\{f(a), g(b)\}$
+\begin{align*}
+a&\rightarrow q_a\\
+f(q_a)&\rightarrow q_f\\
+b&\rightarrow q_b\\
+g(q_b)&\rightarrow q_g
+\end{align*}
+ and the rewrite $a\rightarrow b$.
+EqSat will rename $q_b$ with $q_a$ (or $q_b$ with $q_a$),
+ so every E-node that points to child $a$ (resp. $b$) now also points to $b$ (resp. $a$).
+The E-graph after the merging will now contain $\{f(a), f(b), g(a), g(b)\}$.
+Note that among these terms, $g(a)$ is not reachable by the TRS;
+the rewrite rule $a\rightarrow b$ can only rewrite $f(a)$ to $f(b)$, 
+ but not $g(b)$ to $g(a)$.
+In contrast, tree automata completion will
+ add the transition $q_b\rightarrow q_a$.
+Recall that we say a term $t$ is represented by an E-class $q$
+ in an E-graph $G$
+ if $t\rightarrow_G^* q$.
+With the above transition, we have every term represented by $q_a$ 
+ is now represented by $q_b$, 
+ but not the other way around.
+As a consequence, $f(b)$ is represented by the E-graph, 
+ since $$f(b)\rightarrow f(q_b)\rightarrow f(q_a)\rightarrow q_f,$$ 
+ while $g(a)$ is not in the E-graph.
 
 
 
 TODO: talk about matching is hard.
-TODO; talk about the expressive power of EqSat and Regular reachability
+TODO: talk about the expressive power of EqSat and Regular reachability
