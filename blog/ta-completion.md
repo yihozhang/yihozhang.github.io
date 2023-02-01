@@ -147,15 +147,16 @@ However, this ruleset causes problems in EqSat:
  Starting with the initial term $0\cdot a$,
  EqSat will apply the rewrite rule $0\cdot a\rightarrow 0$
  and merge $0\cdot a$ and $0$ into the same E-class.
-The E-graph will look like this: 
-![$0\cdot a=0$](img/0a%3Da.png)
+The E-graph will look like this:
+
+![0a=a](img/0a=a.png){width=50% .center}
 
 Notice that because of the existence of cycles in this E-graph, 
  it represents not only the two terms $0$ and $0\cdot a$ but indeed an infinite set of terms.
 For example, using the term rewriting system analogy of E-class above,
  $(0\cdot a)\cdot a$ is *explicitly* represented by E-class $q_0$ because
  $$(0\cdot a)\cdot a\rightarrow^* (q_0\cdot q_a)\cdot q_a\rightarrow q_0\cdot q_a\rightarrow q_0.$$
-In fact, $q_0$ represents the infinite set of terms $0\cdot a\approx(0\cdot a)\cdot a\approx ((0\cdot a)\cdot a)\cdot a\approx\cdots$.
+In fact, $q_0$ represents the infinite set of terms $$0\cdot a\approx(0\cdot a)\cdot a\approx ((0\cdot a)\cdot a)\cdot a\approx\cdots$$.
 For any such term $(0\cdot a)\cdots$, it can be rewritten into the form $0\cdot a^n$.
 Now,
  for associativity to terminate,
@@ -165,23 +166,60 @@ This requires infinitely many E-classes, each represents some $a^n$, while a fin
  will have only a finite number of E-classes.
 Therefore, EqSat will not terminate in this case.
 
-## Canonical TRS can be non-terminating in EqSat
+# Canonical TRS does not necessarily terminate in EqSat as well
 
 In our last example, the term rewriting system $R=\{0\cdot a\rightarrow 0,(x\cdot y)\cdot z\rightarrow x\cdot (y\cdot z)\}$ is terminating,
- but not confluent. 
+ but it is not confluent. 
 Confluence means that every term will have at most one normal form.
-Although it is tempting to think 
+It is tempting to think that
  maybe non-confluence is what causes EqSat
- to not terminate,
+ to not terminate.
+But it is not the case;
  there are canonical (i.e., terminating + confluent) TRSs
  that are non-terminating in EqSat.
-Here we give an canonical variant
- of the above example:
-Let the TRS be $R=\{0\cdot (a\cdot a)\rightarrow 0, (x\cdot y)\cdot z\rightarrow x\cdot(y\cdot z)\}$.
-This avoids the non-confluent behavior since 
-(TODO: note this is not a confluent TRS.
-Consider ((0a)a)a)a.
-One rewrite sequence is ((0a)a)a)a -> ((0(aa))a)a -> (0a)a -> 0
-Or
-((0a)a)a)a  -> ((0a)(aa))a -> ((0(a(aa)))a
+Here we give such an example:
+Let the TRS $R$ be \begin{align*}
+h(f(x), y) &\rightarrow h(x, g(y))\\
+h(x, g(y)) &\rightarrow h(x, y)\\
+f(x) &\rightarrow x
+\end{align*}
 
+This is a terminating term rewriting system, where every term of the form $h(f^n(a), g^m(b))$ 
+ will have the normal form $h(a, b)$, 
+ no matter the order of rule application.
+However, this is not terminating in EqSat:
+consider the initial term $h(f(a), b)$.
+Running the rule $f(x)\rightarrow x$ over the initial E-graph
+ will union $f(a)$ and $a$ together, creating an infinite 
+ (but regular) set of terms $h(f^*(a), b)$. See figure.
+
+![h(f*(a), b)](img/hf*ab.png){width=50% .center}
+
+Now, by rule $h(f(x), y) \rightarrow h(x, g(y))$, 
+ each $h(f^n(a), b)$ will be rewritten into $h(a, g^n(b))$,
+ so the output E-graph must contain $g^n(b)$ for $n\in \mathbb{N}$.
+But notice that the rule set will not rewrite any $g^n(b)$ to $g^m(b)$
+ for $n\neq m$, which means that we have an infinite set of inequivalent terms $b\not\approx g(b)\not\approx g^2(b)\not\approx \ldots$. 
+Again, the existence of infinitely many e-classes, one for each $g^n(b)$, implies that EqSat will not terminate.
+
+# Tree Automata Completion to the Rescue
+
+I hope, just like me, you will find the above observations somewhat surprising.
+Intuitively, one will think that EqSat is just a more powerful
+ way of doing term rewriting because it explores all the branches at the same time.
+The issue is because EqSat is not exactly term rewriting:
+ the equivalence in EqSat is bidirectional.
+For example, in our last example, with the rewrite from $f(a)$ to $a$, we are not only representing these two terms, but also $f(f(a))$ and $f(f(f(a)))$ and so on.
+
+Let us first define the problem where we expect canonical TRS to enjoy the termination property.
+For a TRS $R$, we define the set of reachable terms to be $R^*(s)=\{t\mid s\rightarrow_R^* t\}$. 
+It can be shown with [König's lemma for trees](https://en.wikipedia.org/wiki/K%C5%91nig%27s_lemma) that if $R$ is terminating,
+ $R^*(s)$ is finite^[Notice that TRSs are always finitely branching and rewriting in terminating TRS will not contain cycles.].
+This implies if our procedure computes exactly $R^*(s)$,
+ it is likely to terminate.
+
+
+
+
+TODO: talk about matching is hard.
+TODO; talk about the expressive power of EqSat and Regular reachability
