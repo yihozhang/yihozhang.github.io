@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Yihong Zhang" />
+  <title>Ensuring the Termination of EqSat over Terminating Term Rewriting System</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Ensuring the Termination of EqSat over Terminating
+Term Rewriting System</h1>
+<p class="author">Yihong Zhang</p>
+</header>
+<p>Term rewriting is one of the most fundamental techniques in
+programming languages. It is used to define program semantics, to
+optimize programs, and to check program equivalences. An issue with
+using term rewriting to optimize program is that, it is usually not
+clear which rule should be applied first, among all the possible rules.
+Equality saturation (EqSat) is a variant of term rewriting that
+mitigates this so-called Phase-Ordering Problem. In EqSat, all the rules
+are applied at the same time, and the resulting program space is stored
+compactly in a data structure called E-graph<a href="#fn1"
+class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a>.</p>
+<p>EqSat has been shown to be very successful for program optimizations
+and program equivalence checking, even when the given set of rewrite
+rules are not terminating or even when the theory is not decidable in
+general. However, despite its success in practice, there are no formal
+guarantees about EqSat: for example, when does EqSat terminate, and if
+it does not, how does one make it terminate. The first problem is known
+in the term rewriting literature as the termination problem, and the
+second is known as the completion problem. Both problems are very hard,
+and there are a ton of literatures on both problems. In the setting of
+EqSat, these problems are not only theoretically interesting, both also
+have practical implications. For example, in program optimization, we
+may want to get the most “optimized” term with regard to a given set of
+rules, so making sure EqSat terminate is important to such optimality
+guarantees. Or, you may know some theory is decidable but deciding it is
+slow, so you want to speed up the reasoning by using EqSat, but there is
+no point in “speeding up” EqSat if it simply does not terminate. In this
+post, we will focus on the termination problem of EqSat. As it turns
+out, there are many interesting, and even surprising, results, about the
+termination problem with EqSat.</p>
+<p>This post will show (1) how the innocent-looking associativity rule
+can cause non-termination, (2) why a terminating, and even canonical,
+term rewriting system does not necessarily terminate in EqSat, (3) how
+to fix the above problem by “weakening” EqSat’s merge operation, and (4)
+two potentially promising approaches to ensure the termination of EqSat.
+One fascinating thing I found during this journey is that, researchers
+working on tree automata indeed developed a technique almost identical
+to EqSat, known as Tree Automata (TA) completion. Different from EqSat,
+TA Completion does not have the problem in (2) and is exactly the
+algorithm we will show in (3). Moreover, there is a beautiful connection
+between EqSat and TA completion.</p>
+<h2
+id="term-rewriting-101-ground-theories-are-decidable-via-congruence-closure">Term
+rewriting 101: Ground theories are decidable via congruence closure</h2>
+<p>Before understanding why associativity can cause non-termination, let
+us first briefly review some relevant backgrounds on ground theories and
+congruence closure.</p>
+<p>A ground equational theory is an equational theory induced by a
+finite set of ground identities of the form <span
+class="math inline">\(s\approx t\)</span>, where both <span
+class="math inline">\(s\)</span> and <span
+class="math inline">\(t\)</span> are ground terms (i.e., no variables).
+For example, below is an example of a ground theory over signature <span
+class="math inline">\(\Sigma={a,b,c,f,g}\)</span>: <span
+class="math display">\[\begin{align*}
+  a&amp;\approx f(b)\\
+  b&amp;\approx g(c)\\
+  f(g(c))&amp;\approx f(a)\\
+\end{align*}\]</span> All the equations that can be implied by the three
+identities are true in this equational theory. For example, we have
+<span class="math inline">\(a\approx f(b)\approx f(g(c))\approx
+f(a)\)</span>. Here, <span class="math inline">\(f(b)\approx
+f(g(c))\)</span> holds because we have <span
+class="math inline">\(b\approx g(c)\)</span>. In equational theory, a
+function by definition maps equivalent inputs to equivalent outputs.</p>
+<p>A classical result in term rewriting and logic is that the word
+problem of ground equational theory is decidable. A (ground) word
+problem asks whether two ground terms <span
+class="math inline">\(s\)</span> and <span
+class="math inline">\(t\)</span> are equivalent in a given theory. In
+general, this problem is undecidable. However, if the theory is ground,
+several algorithms exist that decide its word problem. The most famous
+one is probably the <span class="math inline">\(O(n \log n)\)</span>
+congruence closure algorithm of Downey, Sethi, and Tarjan. One way to
+view the congruence closure algorithm is that it produces a canonical
+term rewriting system for each input set of ground identities: For each
+input theory <span class="math inline">\(E\)</span>, it builds the
+corresponding E-graph, and every E-graph corresponds to a canonical term
+rewriting system. For example, the congruence closure algorithm will
+produce the following E-graph for the theory above: <span
+class="math display">\[\begin{align*}
+c_a&amp;=\{a, f(c_a), f(c_b)\}\\
+c_b&amp;=\{b, g(c_c)\}\\
+c_c&amp;=\{c\}
+\end{align*}\]</span> where <span class="math inline">\(c_a, c_b,
+c_c\)</span> denote E-classes of the E-graph, and <span
+class="math inline">\(a,b,c,f(c_a), f(c_b), g(c_c)\)</span> denote
+E-nodes. This E-graph naturally gives the following canonical term
+rewriting system <span class="math inline">\(G\)</span>, which rewrite
+terms to the e-classes they are in from bottom to top: <span
+class="math display">\[\begin{align*}
+a&amp;\rightarrow_G c_a\\
+f(c_a)&amp;\rightarrow_G c_a\\
+f(c_b)&amp;\rightarrow_G c_a\\
+b&amp;\rightarrow_G c_b\\
+g(c_c)&amp;\rightarrow_G c_b\\
+c&amp;\rightarrow_G c_c\\
+\end{align*}\]</span> Now, checking <span class="math inline">\(s\approx
+t\)</span> can be simply done by checking if there exists some normal
+form <span class="math inline">\(u\)</span> such that <span
+class="math inline">\(s\rightarrow^*_G u \leftarrow^*_Gt\)</span> holds.
+For example, <span class="math inline">\(g(f(a))\approx
+g(f(g(c)))\)</span> because <span class="math display">\[\begin{align*}
+g(f(a))&amp;\rightarrow_Gg(f(c_a))\\
+&amp;\rightarrow_Gg(c_a)\\
+&amp;\leftarrow_G g(f(c_b)) \\
+&amp;\leftarrow_Gg(f(g(c_c))\\
+&amp;\leftarrow_Gg(f(g(c))))
+\end{align*}\]</span></p>
+<p>This is sound and always terminates, because the term rewriting
+system produced by an E-graph is canonical–meaning every term will have
+exactly one normal form and term rewriting always terminates.</p>
+<h2 id="ground-associative-theory-does-not-terminate-in-eqsat">Ground
+associative theory does not terminate in EqSat</h2>
+<p>Associativity is the fundamental law to many algebraic structures
+like semigroups, monoids, and groups. It has the following form: <span
+class="math display">\[x\cdot (y\cdot z)\approx (x\cdot y)\cdot
+z.\]</span> This rule can be oriented as <span
+class="math inline">\(x\cdot (y\cdot z)\rightarrow (x\cdot y)\cdot
+z\)</span> (or <span class="math inline">\(x\cdot (y\cdot z)\rightarrow
+(x\cdot y)\cdot z\)</span>). This rule must be terminating, you may
+think, so we can just apply the rule until saturation in EqSat, which
+will decide ground theories with associativity! Unfortunately, ground
+associative theories are not decidable in general. The book <em>Term
+Rewriting and All That</em> gives an example (we write <span
+class="math inline">\(xy\)</span> for <span class="math inline">\(x\cdot
+y\)</span> and <span class="math inline">\(x\cdots x\)</span> for <span
+class="math inline">\(x^n\)</span> for brevity and associativity allows
+us to drop brackets): <span class="math display">\[\begin{align*}
+(xy)z&amp;\approx x(yz)\\
+aba^2b^2&amp;\approx b^2a^2ba\\
+a^2bab^2a&amp;\approx b^2a^3ba\\
+aba^3b^2&amp;\approx ab^2aba^2\\
+b^3a^2b^2a^2ba&amp;\approx b^3a^2b^2a^4\\
+a^4b^2a^2ba&amp;\approx b^2a^4
+\end{align*}\]</span> There is another way to state this proposition
+that appeals to math-minded persons: the word problem for finitely
+presented semigroups are not decidable.</p>
+<p>Because of this, associative rules do not terminate in EqSat in
+general. To show this, suppose otherwise it is terminating, given a set
+of ground identities <span class="math inline">\(E\)</span>, we run the
+congruence closure algorithm over <span class="math inline">\(E\)</span>
+to get E-graph, and run both directions of the associativity. When it
+reaches the fixed point and terminates, this gives us a way to decide
+ground associative theories, which is a contradiction to the fact that
+such theories are not decidable.</p>
+<p>To better understand why associativity does not terminate in EqSat,
+here is an example: suppose <span class="math inline">\(\cdot\)</span>
+is associative and satisfy the ground identity <span
+class="math inline">\(0\cdot a\approx 0\)</span> for constants <span
+class="math inline">\(0,a\)</span>. Now suppose we orient this identity
+into rewrite rule <span class="math inline">\(0\cdot a\rightarrow
+0\)</span> while having the associative rule <span
+class="math inline">\((x\cdot y)\cdot z\rightarrow x\cdot(y\cdot
+z)\)</span>. This is a terminating term-rewriting system (although not
+confluent, because the term <span class="math inline">\((0\cdot a)\cdot
+a\)</span> has two normal forms <span class="math inline">\(0\)</span>
+and <span class="math inline">\(0\cdot(a\cdot a)\)</span>).</p>
+<p>However, this ruleset causes problems in EqSat: Starting with the
+initial term <span class="math inline">\(0\cdot a\)</span>, EqSat will
+apply the rewrite rule <span class="math inline">\(0\cdot a\rightarrow
+0\)</span> and merge <span class="math inline">\(0\cdot a\)</span> and
+<span class="math inline">\(0\)</span> into the same E-class. The
+E-graph will look like this:</p>
+<figure>
+<img src="img/0a=a.png" class="center" style="width:50.0%"
+alt="0\cdot a=a" />
+<figcaption aria-hidden="true"><span class="math inline">\(0\cdot
+a=a\)</span></figcaption>
+</figure>
+<p>Notice that because of the existence of cycles in this E-graph, it
+represents not only the two terms <span class="math inline">\(0\)</span>
+and <span class="math inline">\(0\cdot a\)</span> but indeed an infinite
+set of terms. For example, using the term rewriting system analogy of
+E-class above, <span class="math inline">\((0\cdot a)\cdot a\)</span> is
+<em>explicitly</em> represented by E-class <span
+class="math inline">\(q_0\)</span> because <span
+class="math display">\[(0\cdot a)\cdot a\rightarrow^* (q_0\cdot
+q_a)\cdot q_a\rightarrow q_0\cdot q_a\rightarrow q_0.\]</span> In fact,
+<span class="math inline">\(q_0\)</span> represents the infinite set of
+terms <span class="math display">\[0\cdot a\approx(0\cdot a)\cdot
+a\approx ((0\cdot a)\cdot a)\cdot a\approx\cdots.\]</span> For any such
+term <span class="math inline">\((0\cdot a)\cdot\cdots\)</span>, it can
+be rewritten to a term of the form <span class="math inline">\(0\cdot
+(a\cdot \cdots)\)</span>. Now, for associativity to terminate, the
+output E-graph need to at least represent the set of terms <span
+class="math inline">\(a,a\cdot a,(a\cdot a)\cdot a,\cdots\)</span>,
+where any two terms are not equal. This requires infinitely many
+E-classes, each represents some <span
+class="math inline">\(a^n\)</span>, while a finite E-graph will have
+only a finite number of E-classes. Therefore, EqSat will not terminate
+in this case.</p>
+<h2
+id="canonical-trss-do-not-necessarily-terminate-in-eqsat-as-well">Canonical
+TRSs do not necessarily terminate in EqSat as well</h2>
+<p>In our last example, the term rewriting system <span
+class="math inline">\(R=\{0\cdot a\rightarrow 0,(x\cdot y)\cdot
+z\rightarrow x\cdot (y\cdot z)\}\)</span> is terminating, but it is not
+confluent. Confluence means that every term will have at most one normal
+form, and associativity is usually not confluent. One may be tempted to
+think that maybe non-confluence is what causes EqSat to not terminate.
+But it is not the case; there are canonical (i.e., terminating +
+confluent) TRSs that are non-terminating in EqSat. Here we give such an
+example: Let the TRS <span class="math inline">\(R\)</span> be <span
+class="math display">\[\begin{align*}
+h(f(x), y) &amp;\rightarrow h(x, g(y))\\
+h(x, g(y)) &amp;\rightarrow h(x, y)\\
+f(x) &amp;\rightarrow x
+\end{align*}\]</span></p>
+<p>This is a terminating term rewriting system, where every term of the
+form <span class="math inline">\(h(f^n(a), g^m(b))\)</span> will have
+the normal form <span class="math inline">\(h(a, b)\)</span>, no matter
+the order of rule application. However, this is not terminating in
+EqSat: consider the initial term <span class="math inline">\(h(f(a),
+b)\)</span>. Running the rule <span
+class="math inline">\(f(x)\rightarrow x\)</span> over the initial
+E-graph will union <span class="math inline">\(f(a)\)</span> and <span
+class="math inline">\(a\)</span> together, creating an infinite (but
+regular) set of terms <span class="math inline">\(h(f^*(a), b)\)</span>.
+See figure.</p>
+<figure>
+<img src="img/hf*ab.png" class="center" style="width:50.0%"
+alt="An E-graph that represents h(f^*(a), b)" />
+<figcaption aria-hidden="true">An E-graph that represents <span
+class="math inline">\(h(f^*(a), b)\)</span></figcaption>
+</figure>
+<p>Now, by rule <span class="math inline">\(h(f(x), y) \rightarrow h(x,
+g(y))\)</span>, each <span class="math inline">\(h(f^n(a), b)\)</span>
+will be rewritten into <span class="math inline">\(h(a,
+g^n(b))\)</span>, so the output E-graph must contain <span
+class="math inline">\(g^n(b)\)</span> for <span
+class="math inline">\(n\in \mathbb{N}\)</span>. But notice that the rule
+set will not rewrite any <span class="math inline">\(g^n(b)\)</span> to
+<span class="math inline">\(g^m(b)\)</span> for <span
+class="math inline">\(n\neq m\)</span>, which means that we have an
+infinite set of inequivalent terms <span
+class="math inline">\(b\not\approx g(b)\not\approx g^2(b)\not\approx
+\ldots\)</span>. Again, the existence of infinitely many e-classes, one
+for each <span class="math inline">\(g^n(b)\)</span>, implies that EqSat
+will not terminate.</p>
+<h2 id="tree-automata-completion-to-the-rescue">Tree Automata Completion
+to the Rescue</h2>
+<p>I hope, just like me, you will find the above observations somewhat
+surprising. Intuitively, one will think that EqSat is just a more
+powerful way of doing term rewriting. And for a terminating TRS, the set
+of reachable terms is always finite<a href="#fn2" class="footnote-ref"
+id="fnref2" role="doc-noteref"><sup>2</sup></a>, so it is natural to
+think that running EqSat with a terminating TRS starting with some
+initial term will eventually terminate. But this is not true, as has
+been shown in the last two sections. The issue is because EqSat is not
+exactly term rewriting: the equivalence in EqSat is bidirectional. For
+example, in our last example, the rewrite from <span
+class="math inline">\(f(a)\)</span> to <span
+class="math inline">\(a\)</span> does not only make the E-graph
+represent these two terms, but also <span
+class="math inline">\(f(f(a))\)</span> and <span
+class="math inline">\(f(f(f(a)))\)</span> and so on.</p>
+<p>Before going further, let us first formally define the related
+problem where we expect terminating TRSs to enjoy the termination
+property. For a TRS <span class="math inline">\(R\)</span>, we define
+the set of reachable terms <span class="math inline">\(R^*(s)=\{t\mid
+s\rightarrow_R^* t\}\)</span>. If <span class="math inline">\(R\)</span>
+is terminating, <span class="math inline">\(R^*(s)\)</span> is finite
+for any term <span class="math inline">\(s\)</span>. It can also be
+shown that EqSat always computes a superset of <span
+class="math inline">\(R^*(s)\)</span>. A natural idea is that if our
+EqSat procedure can compute exactly <span
+class="math inline">\(R^*(s)\)</span>, it is likely to terminate for
+terminating TRSs. And in fact it is capable of handling TRSs beyond
+terminating ones: E-graphs can represent many infinite sets of terms.
+This problem itself is interesting to study and has applications in
+areas like program verification.</p>
+<p>It turns out, term rewriting researchers have developed a technique
+that computes exactly <span class="math inline">\(R^*(s)\)</span>,
+represented as a tree automaton. The technique is known as <strong>tree
+automata completion</strong>, which is the main technique I hope to
+introduce in this blog post. In term rewriting, completion essentially
+means “term-rewriting a term rewriting system” (usually to make the term
+rewriting system canonical). Tree automata completion proceeds as
+follows: build an initial tree automaton and run term rewriting over
+this tree automaton until saturation. Specifically, it searches for
+left-hand sides of rewrite rules, build and insert right-hand sides, and
+merge the left-hand sides with right-hand sides. Does this sound
+familiar? Yes, this is EqSat! It is striking to me that the program
+optimization and term rewriting communities independently come up with
+essentially the same technique.</p>
+<p>But wait a second, didn’t we just say EqSat does not necessarily
+compute <span class="math inline">\(R^*(s)\)</span> exactly? This is
+correct. There is a single tweak that distinguishes tree automata
+completion from EqSat. In tree automata completion, merging is performed
+directionally. For example, suppose the left-hand side is in E-class
+<span class="math inline">\(q_l\)</span> and right-hand side in E-class
+<span class="math inline">\(q_r\)</span>, EqSat will basically rename
+every occurrence of <span class="math inline">\(q_l\)</span> with <span
+class="math inline">\(q_r\)</span> (or vice versa). As a result the two
+E-classes are not distinguishable after the merging.</p>
+<p>Tree automata completion, on the other hand, performs the merging by
+adding a new transition <span class="math inline">\(q_r\rightarrow
+q_l\)</span> (remember the TRS view of an E-graph). This allows tree
+automata completion to add only terms from the right-hand side to the
+E-graph.</p>
+<p>To better see the difference, consider the E-graph that represents
+terms <span class="math inline">\(\{f(a), g(b)\}\)</span> <span
+class="math display">\[\begin{align*}
+a&amp;\rightarrow q_a\\
+f(q_a)&amp;\rightarrow q_f\\
+b&amp;\rightarrow q_b\\
+g(q_b)&amp;\rightarrow q_g
+\end{align*}\]</span> and the rewrite <span
+class="math inline">\(a\rightarrow b\)</span>. EqSat will rename <span
+class="math inline">\(q_b\)</span> with <span
+class="math inline">\(q_a\)</span> (or <span
+class="math inline">\(q_b\)</span> with <span
+class="math inline">\(q_a\)</span>), so every E-node that points to
+child <span class="math inline">\(a\)</span> (resp. <span
+class="math inline">\(b\)</span>) now also points to <span
+class="math inline">\(b\)</span> (resp. <span
+class="math inline">\(a\)</span>). The E-graph after the merging will
+now contain <span class="math inline">\(\{f(a), f(b), g(a),
+g(b)\}\)</span>. Note that among these terms, <span
+class="math inline">\(g(a)\)</span> is not reachable by the TRS; the
+rewrite rule <span class="math inline">\(a\rightarrow b\)</span> can
+only rewrite <span class="math inline">\(f(a)\)</span> to <span
+class="math inline">\(f(b)\)</span>, but not <span
+class="math inline">\(g(b)\)</span> to <span
+class="math inline">\(g(a)\)</span>. In contrast, tree automata
+completion will add the transition <span
+class="math inline">\(q_b\rightarrow q_a\)</span>. Recall that we say a
+term <span class="math inline">\(t\)</span> is represented by an E-class
+<span class="math inline">\(q\)</span> in an E-graph <span
+class="math inline">\(G\)</span> if <span
+class="math inline">\(t\rightarrow_G^* q\)</span>. With the above
+transition, we have every term represented by <span
+class="math inline">\(q_a\)</span> is now represented by <span
+class="math inline">\(q_b\)</span>, but not the other way around. As a
+consequence, <span class="math inline">\(f(b)\)</span> is represented by
+the E-graph, since <span class="math display">\[f(b)\rightarrow
+f(q_b)\rightarrow f(q_a)\rightarrow q_f,\]</span> while <span
+class="math inline">\(g(a)\)</span> is not in the E-graph.</p>
+<p>It is this single difference that guarantees that tree automata
+completion will only contain terms that can is reachable by the TRS at
+any moment. Moreover, if tree automata completion terminates, it will
+compute exactly <span class="math inline">\(R^*(s)\)</span>. The actual
+tree automata completion is slightly more general than this. Instead of
+considering the set of reachable terms of a single initial term, it
+considers the set of reachable terms of an initial tree automaton, which
+may contain an infinite set of terms. It turns out, although the set of
+reachable terms of a single term <span
+class="math inline">\(R^*(s)\)</span> is always finite (and thus
+regular) if <span class="math inline">\(R\)</span> is terminating, it is
+<a
+href="https://www.sciencedirect.com/science/article/pii/S2352220815000504">undecidable</a>
+if the set of reachable terms is regular or not even if <span
+class="math inline">\(R\)</span> is terminating and confluent. To ensure
+the termination of tree automata completion even when the reachable set
+is not regular, researchers have proposed approximation algorithms for
+tree automata completion, which are useful for applications like program
+verification.</p>
+<p>TODO: talk about matching is hard. TODO: talk about the expressive
+power of EqSat and Regular reachability.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p> The reader should treat E-graphs and tree automata as
+two interchangeable terms. An E-graph is just a deterministic finite
+tree automaton with no <span class="math inline">\(\epsilon\)</span>
+transitions and no unreachable states. The only place the difference
+matters is in describing tree automata completion, where we need <span
+class="math inline">\(\epsilon\)</span>-transitions to denote the
+preorder relation between E-nodes/states.<a href="#fnref1"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>This can be shown via <a
+href="https://en.wikipedia.org/wiki/K%C5%91nig%27s_lemma">König’s lemma
+for trees</a>. Notice that TRSs are always finitely branching and
+rewriting in terminating TRSs will not contain cycles.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>

@@ -47,7 +47,7 @@ One fascinating thing I found during this journey is that,
 Different from EqSat, TA Completion does not have the problem in (2) and is exactly the algorithm we will show in (3).
 Moreover, there is a beautiful connection between EqSat and TA completion.
 
-# Term rewriting 101: Ground theories are decidable via congruence closure
+## Term rewriting 101: Ground theories are decidable via congruence closure
 
 Before understanding why associativity can cause non-termination,
  let us first briefly review some relevant backgrounds on ground theories and congruence closure.
@@ -109,7 +109,7 @@ g(f(a))&\rightarrow_Gg(f(c_a))\\
 
 This is sound and always terminates, because the term rewriting system produced by an E-graph is canonical--meaning every term will have exactly one normal form and term rewriting always terminates.
 
-# Ground associative theory does not terminate in EqSat
+## Ground associative theory does not terminate in EqSat
 
 Associativity is the fundamental law to many algebraic structures like semigroups, monoids, and groups.
 It has the following form: 
@@ -172,7 +172,7 @@ This requires infinitely many E-classes, each represents some $a^n$, while a fin
  will have only a finite number of E-classes.
 Therefore, EqSat will not terminate in this case.
 
-# Canonical TRSs do not necessarily terminate in EqSat as well
+## Canonical TRSs do not necessarily terminate in EqSat as well
 
 In our last example, the term rewriting system $R=\{0\cdot a\rightarrow 0,(x\cdot y)\cdot z\rightarrow x\cdot (y\cdot z)\}$ is terminating,
  but it is not confluent. 
@@ -208,7 +208,7 @@ But notice that the rule set will not rewrite any $g^n(b)$ to $g^m(b)$
  for $n\neq m$, which means that we have an infinite set of inequivalent terms $b\not\approx g(b)\not\approx g^2(b)\not\approx \ldots$. 
 Again, the existence of infinitely many e-classes, one for each $g^n(b)$, implies that EqSat will not terminate.
 
-# Tree Automata Completion to the Rescue
+## Tree Automata Completion to the Rescue
 
 I hope, just like me, you will find the above observations somewhat surprising.
 Intuitively, one will think that EqSat is just a more powerful way of doing term rewriting.
@@ -232,13 +232,14 @@ It can also be shown that EqSat always computes a superset of $R^*(s)$.
 A natural idea is that if our EqSat procedure can compute exactly $R^*(s)$,
  it is likely to terminate for terminating TRSs.
 And in fact it is capable of handling TRSs beyond terminating ones:
- because we are working with E-graphs, we may represent infinite set of terms.
+E-graphs can represent many infinite sets of terms.
 This problem itself is interesting to study and has applications in areas like program verification.
 
 It turns out, term rewriting researchers have developed a technique that computes exactly $R^*(s)$, represented as a tree automaton.
-The technique is known as tree automata completion.
+The technique is known as **tree automata completion**, 
+ which is the main technique I hope to introduce in this blog post.
 In term rewriting, completion essentially means
- the technique of rewriting a term rewriting system itself (usually to make the term rewriting system canonical).
+ "term-rewriting a term rewriting system" (usually to make the term rewriting system canonical).
 Tree automata completion proceeds as follows:
  build an initial tree automaton and run term rewriting over this tree automaton until saturation.
 Specifically, it searches for left-hand sides of rewrite rules, build and insert right-hand sides, 
@@ -256,11 +257,13 @@ For example,
  EqSat will basically rename every occurrence of
  $q_l$ with $q_r$ (or vice versa).
 As a result the two E-classes are not distinguishable after the merging.
+
 Tree automata completion, on the other hand,
  performs the merging by adding a new transition $q_r\rightarrow q_l$
  (remember the TRS view of an E-graph).
 This allows tree automata completion to add only terms from the right-hand side
  to the E-graph.
+
 To better see the difference, 
  consider the E-graph that represents terms $\{f(a), g(b)\}$
 \begin{align*}
@@ -281,14 +284,30 @@ In contrast, tree automata completion will
 Recall that we say a term $t$ is represented by an E-class $q$
  in an E-graph $G$
  if $t\rightarrow_G^* q$.
-With the above transition, we have every term represented by $q_a$ 
- is now represented by $q_b$, 
+With the above transition, we have every term represented by $q_a$
+ is now represented by $q_b$,
  but not the other way around.
-As a consequence, $f(b)$ is represented by the E-graph, 
- since $$f(b)\rightarrow f(q_b)\rightarrow f(q_a)\rightarrow q_f,$$ 
+As a consequence, $f(b)$ is represented by the E-graph,
+ since $$f(b)\rightarrow f(q_b)\rightarrow f(q_a)\rightarrow q_f,$$
  while $g(a)$ is not in the E-graph.
 
+It is this single difference that guarantees that tree automata completion
+ will only contain terms that can is reachable by the TRS at any moment.
+Moreover, if tree automata completion terminates, 
+ it will compute exactly $R^*(s)$.
+The actual tree automata completion is slightly more general than this.
+Instead of considering the set of reachable terms of a single initial term,
+ it considers the set of reachable terms of an initial tree automaton,
+ which may contain an infinite set of terms.
+It turns out, although the set of reachable terms of a single term $R^*(s)$
+ is always finite (and thus regular) if $R$ is terminating,
+ it is [undecidable](https://www.sciencedirect.com/science/article/pii/S2352220815000504) 
+ if the set of reachable terms is regular or not
+ even if $R$ is terminating and confluent.
+To ensure the termination of tree automata completion even when the reachable set is not regular,
+ researchers have proposed approximation algorithms for tree automata completion,
+ which are useful for applications like program verification.
 
 
 TODO: talk about matching is hard.
-TODO: talk about the expressive power of EqSat and Regular reachability
+TODO: talk about the expressive power of EqSat and Regular reachability.
