@@ -212,7 +212,8 @@ working on tree automata indeed developed a technique almost identical
 to EqSat, known as Tree Automata (TA) completion. Different from EqSat,
 TA Completion does not have the problem in (2) and is exactly the
 algorithm we will show in (3). Moreover, there is a beautiful connection
-between EqSat and TA completion.</p>
+between EqSat and TA completion: TA completion is the “preorder” version
+of EqSat.</p>
 <h2
 id="term-rewriting-101-ground-theories-are-decidable-via-congruence-closure">Term
 rewriting 101: Ground theories are decidable via congruence closure</h2>
@@ -511,27 +512,99 @@ consequence, <span class="math inline">\(f(b)\)</span> is represented by
 the E-graph, since <span class="math display">\[f(b)\rightarrow
 f(q_b)\rightarrow f(q_a)\rightarrow q_f,\]</span> while <span
 class="math inline">\(g(a)\)</span> is not in the E-graph.</p>
-<p>It is this single difference that guarantees that tree automata
-completion will only contain terms that can is reachable by the TRS at
-any moment. Moreover, if tree automata completion terminates, it will
-compute exactly <span class="math inline">\(R^*(s)\)</span>. The actual
-tree automata completion is slightly more general than this. Instead of
-considering the set of reachable terms of a single initial term, it
-considers the set of reachable terms of an initial tree automaton, which
-may contain an infinite set of terms. It turns out, although the set of
-reachable terms of a single term <span
-class="math inline">\(R^*(s)\)</span> is always finite (and thus
-regular) if <span class="math inline">\(R\)</span> is terminating, it is
-<a
+<p>This difference guarantees that tree automata completion will only
+contain terms that can is reachable by the TRS at any moment. Moreover,
+if tree automata completion terminates, it will compute exactly <span
+class="math inline">\(R^*(s)\)</span>. The actual tree automata
+completion is slightly more general than this: instead of considering
+the set of reachable terms of a single initial term, it considers the
+set of reachable terms of an initial tree automaton, which may contain
+an infinite set of terms. It turns out, although the set of reachable
+terms of a single term <span class="math inline">\(R^*(s)\)</span> is
+always finite (and thus regular) if <span
+class="math inline">\(R\)</span> is terminating, it is <a
 href="https://www.sciencedirect.com/science/article/pii/S2352220815000504">undecidable</a>
-if the set of reachable terms is regular or not even if <span
-class="math inline">\(R\)</span> is terminating and confluent. To ensure
-the termination of tree automata completion even when the reachable set
-is not regular, researchers have proposed approximation algorithms for
-tree automata completion, which are useful for applications like program
-verification.</p>
-<p>TODO: talk about matching is hard. TODO: talk about the expressive
-power of EqSat and Regular reachability.</p>
+if the set of reachable terms is regular or not given an initial tree
+automaton even when <span class="math inline">\(R\)</span> is
+terminating and confluent. To ensure the termination of tree automata
+completion even when the reachable set is not regular, researchers have
+proposed approximation algorithms for tree automata completion, which
+are useful for applications like program verification.</p>
+<h3 id="discussions-on-tree-automata-completion">Discussions on tree
+automata completion</h3>
+<p><em>Equivalence and pre-order</em>. One interesting way of viewing
+tree automata completion is that <em>it generalizes the equivalence
+relation in EqSat to a preorder</em>: EqSat maintains an equivalence
+relation <span class="math inline">\(\approx\)</span> between terms and
+asserts <span class="math inline">\(l\sigma \approx r\sigma\)</span> for
+every left-hand side <span class="math inline">\(l\sigma\)</span> and
+right-hand side <span class="math inline">\(r\sigma\)</span>. EqSat also
+guarantees that if <span class="math inline">\(t[a]\)</span> is in the
+E-graph and <span class="math inline">\(a\approx b\)</span>, then <span
+class="math inline">\(t[b]\)</span> is also in the E-graph and <span
+class="math inline">\(t[a]\approx t[b]\)</span><a href="#fn3"
+class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.
+Tree automata completion, instead, maintains a <em>preorder</em>
+relation <span class="math inline">\(\lesssim\)</span> and asserts <span
+class="math inline">\(l\sigma\lesssim r\sigma\)</span> for every
+left-hand side <span class="math inline">\(l\sigma\)</span> and
+right-hand side <span class="math inline">\(r\sigma\)</span>. <span
+class="math inline">\(l\sigma\lesssim r\sigma\)</span> and <span
+class="math inline">\(l\sigma\gtrsim r\sigma\)</span> in tree automata
+completion is equivalent to <span class="math inline">\(l\sigma \approx
+r\sigma\)</span> in equality saturation, and in such cases <span
+class="math inline">\(l\sigma\)</span> and <span
+class="math inline">\(r\sigma\)</span> can be viewed as one state.
+Moreover, tree automata completion guarantees that if <span
+class="math inline">\(t[a]\)</span> is in the tree automaton and <span
+class="math inline">\(a\lesssim b\)</span>, then <span
+class="math inline">\(t[b]\)</span> is also in the tree automaton and
+<span class="math inline">\(t[a]\lesssim t[b]\)</span>.</p>
+<p><em>Implementation of tree automata completion</em>. I have not
+implemented tree automata completion, but it would be interesting to see
+how to implement tree automata completion in an EqSat framework like
+egg. It seems we only need to make two modifications: First, during
+rewrite, instead of merging left-hand side and right-hand side, adding
+an edge (that is, an <span
+class="math inline">\(\epsilon\)</span>-transition) from the left-hand
+side to the right-hand side. As an optimization, we can merge two states
+together if they are in the same strongly connected component. Second,
+modify the matching procedure so that it will also “follow” these <span
+class="math inline">\(\epsilon\)</span>-transitions. The new matching
+procedure can no longer be expressed as a conjunctive query, as opposed
+to EqSat, and is more expensive to compute. In general, though, tree
+automata completion has a higher time complexity than equality
+saturation, since dealing with DAGs / SCCs are more difficult than
+dealing with equivalences.</p>
+<p><em>The termination problem of TA completion</em>. We have shown
+above that given a terminating TRS <span
+class="math inline">\(R\)</span> and an initial term <span
+class="math inline">\(t\)</span>, tree automata completion is always
+terminating but EqSat may not terminate, which shows that the
+termination of tree automata completion does not imply the termination
+of EqSat. But is the other direction true? Indeed, the termination of
+EqSat does not imply the termination of tree automata completion as
+well. To see this, consider <span class="math display">\[\begin{align*}
+f(x)&amp;\rightarrow_R g(f(h(x)))\\
+h(x)&amp;\rightarrow_R b
+\end{align*}\]</span> For tree automata completion to terminate, the set
+of reachable terms must be regular. However, for initial term <span
+class="math inline">\(f(a)\)</span>, the set of reachable terms is <span
+class="math display">\[\{g^n(f(h^n(a)))\mid n\in \mathbb{N}\}\cup
+\{g^n(f(h^m(b)))\mid n&gt;m\},\]</span> which is not regular. In EqSat,
+because equivalence is bidirectional, all the <span
+class="math inline">\(h(x)\)</span> are in the same E-class as <span
+class="math inline">\(b\)</span>, so the first rewrite rule can be
+effectively viewed as <span class="math inline">\(f(x)\rightarrow_R
+g(f(b))\)</span>, where the right-hand side is a ground term. As a
+result, there are only a finite number of equivalence classes in the
+theory defined by the rewrite rules, which implies the termination of
+equality saturation.</p>
+<h2 id="practical-approaches-to-termination">Practical approaches to
+termination</h2>
+<h3 id="depth-bounded-equality-saturation">Depth-bounded equality
+saturation</h3>
+<h3 id="merge-only-rules">Merge-only rules</h3>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
@@ -549,6 +622,9 @@ href="https://en.wikipedia.org/wiki/K%C5%91nig%27s_lemma">König’s lemma
 for trees</a>. Notice that TRSs are always finitely branching and
 rewriting in terminating TRSs will not contain cycles.<a href="#fnref2"
 class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Relations with these properties are known as partial
+strong congruences.<a href="#fnref3" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </body>

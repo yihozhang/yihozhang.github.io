@@ -45,7 +45,8 @@ One fascinating thing I found during this journey is that,
   researchers working on tree automata indeed developed a technique almost identical to EqSat,
   known as Tree Automata (TA) completion.
 Different from EqSat, TA Completion does not have the problem in (2) and is exactly the algorithm we will show in (3).
-Moreover, there is a beautiful connection between EqSat and TA completion.
+Moreover, there is a beautiful connection between EqSat and TA completion:
+ TA completion is the "preorder" version of EqSat.
 
 ## Term rewriting 101: Ground theories are decidable via congruence closure
 
@@ -222,7 +223,7 @@ The issue is because EqSat is not exactly term rewriting:
  the equivalence in EqSat is bidirectional.
 For example, in our last example, the rewrite from $f(a)$ to $a$ does not only make the E-graph represent these two terms, but also $f(f(a))$ and $f(f(f(a)))$ and so on.
 
-Before going further, 
+Before going further,
  let us first formally define the related problem where we expect terminating TRSs to enjoy the termination property.
 For a TRS $R$, we define the set of reachable terms
  $R^*(s)=\{t\mid s\rightarrow_R^* t\}$.
@@ -291,23 +292,80 @@ As a consequence, $f(b)$ is represented by the E-graph,
  since $$f(b)\rightarrow f(q_b)\rightarrow f(q_a)\rightarrow q_f,$$
  while $g(a)$ is not in the E-graph.
 
-It is this single difference that guarantees that tree automata completion
+This difference guarantees that tree automata completion
  will only contain terms that can is reachable by the TRS at any moment.
 Moreover, if tree automata completion terminates, 
  it will compute exactly $R^*(s)$.
-The actual tree automata completion is slightly more general than this.
-Instead of considering the set of reachable terms of a single initial term,
+The actual tree automata completion is slightly more general than this:
+ instead of considering the set of reachable terms of a single initial term,
  it considers the set of reachable terms of an initial tree automaton,
  which may contain an infinite set of terms.
 It turns out, although the set of reachable terms of a single term $R^*(s)$
  is always finite (and thus regular) if $R$ is terminating,
  it is [undecidable](https://www.sciencedirect.com/science/article/pii/S2352220815000504) 
- if the set of reachable terms is regular or not
- even if $R$ is terminating and confluent.
+ if the set of reachable terms is regular or not given an initial tree automaton
+ even when $R$ is terminating and confluent.
 To ensure the termination of tree automata completion even when the reachable set is not regular,
  researchers have proposed approximation algorithms for tree automata completion,
  which are useful for applications like program verification.
 
+### Discussions on tree automata completion
 
-TODO: talk about matching is hard.
-TODO: talk about the expressive power of EqSat and Regular reachability.
+*Equivalence and pre-order*.
+One interesting way of viewing tree automata completion is that
+ *it generalizes the equivalence relation in EqSat to a preorder*:
+EqSat maintains an equivalence relation $\approx$ between terms and
+ asserts $l\sigma \approx r\sigma$ for every left-hand side $l\sigma$ and right-hand side $r\sigma$.
+EqSat also guarantees that 
+ if $t[a]$ is in the E-graph and $a\approx b$,
+ then $t[b]$ is also in the E-graph and $t[a]\approx t[b]$^[Relations with these properties are known as partial strong congruences.].
+Tree automata completion, instead,
+ maintains a *preorder* relation $\lesssim$ and asserts $l\sigma\lesssim r\sigma$ for every left-hand side $l\sigma$ and right-hand side $r\sigma$.
+$l\sigma\lesssim r\sigma$ and $l\sigma\gtrsim r\sigma$ in tree automata completion is equivalent to $l\sigma \approx r\sigma$ in equality saturation, and in such cases $l\sigma$ and $r\sigma$ can be viewed as one state.
+Moreover, tree automata completion guarantees that if $t[a]$ is in the tree automaton and $a\lesssim b$, then $t[b]$ is also in the tree automaton and $t[a]\lesssim t[b]$.
+
+*Implementation of tree automata completion*.
+I have not implemented tree automata completion,
+ but it would be interesting to see how to implement tree automata completion in an EqSat framework like egg.
+It seems we only need to make two modifications:
+First, during rewrite, instead of merging left-hand side
+ and right-hand side, adding an edge (that is, an $\epsilon$-transition)
+ from the left-hand side to the right-hand side.
+As an optimization,
+ we can merge two states together if they are in the same strongly connected component.
+Second, modify the matching procedure so that it will also "follow"
+ these $\epsilon$-transitions.
+The new matching procedure can no longer be expressed as a conjunctive query,
+ as opposed to EqSat, and is more expensive to compute.
+In general, though, tree automata completion has a higher time complexity than equality saturation,
+ since dealing with DAGs / SCCs are more difficult than dealing with equivalences.
+
+*The termination problem of TA completion*.
+We have shown above that given a terminating TRS $R$ and an initial term $t$,
+ tree automata completion is always terminating but EqSat may not terminate,
+ which shows that the termination of tree automata completion does not imply
+ the termination of EqSat.
+But is the other direction true?
+Indeed, the termination of EqSat does not imply the termination of tree automata completion as well.
+To see this, consider
+\begin{align*}
+f(x)&\rightarrow_R g(f(h(x)))\\
+h(x)&\rightarrow_R b
+\end{align*}
+For tree automata completion to terminate,
+ the set of reachable terms must be regular.
+However, for initial term $f(a)$, the set of reachable terms is 
+  $$\{g^n(f(h^n(a)))\mid n\in \mathbb{N}\}\cup \{g^n(f(h^m(b)))\mid n>m\},$$
+which is not regular.
+In EqSat, because equivalence is bidirectional, all the $h(x)$ are in the same E-class
+ as $b$, so the first rewrite rule can be effectively viewed as
+ $f(x)\rightarrow_R g(f(b))$, where the right-hand side is a ground term.
+As a result, there are only a finite number of equivalence classes
+ in the theory defined by the rewrite rules,
+ which implies the termination of equality saturation.
+
+## Practical approaches to termination
+
+### Depth-bounded equality saturation
+
+### Merge-only rules
