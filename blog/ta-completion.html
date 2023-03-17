@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Yihong Zhang" />
-  <title>Ensuring the Termination of EqSat over Terminating Term Rewriting System</title>
+  <title>Ensuring the Termination of EqSat over a Terminating Term Rewriting System</title>
   <style>
     html {
       line-height: 1.5;
@@ -168,7 +168,7 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Ensuring the Termination of EqSat over Terminating
+<h1 class="title">Ensuring the Termination of EqSat over a Terminating
 Term Rewriting System</h1>
 <p class="author">Yihong Zhang</p>
 </header>
@@ -584,7 +584,7 @@ terminating but EqSat may not terminate, which shows that the
 termination of tree automata completion does not imply the termination
 of EqSat. But is the other direction true? Indeed, the termination of
 EqSat does not imply the termination of tree automata completion as
-well. To see this, consider <span class="math display">\[\begin{align*}
+well! To see this, consider <span class="math display">\[\begin{align*}
 f(x)&amp;\rightarrow_R g(f(h(x)))\\
 h(x)&amp;\rightarrow_R b
 \end{align*}\]</span> For tree automata completion to terminate, the set
@@ -612,11 +612,11 @@ role="doc-endnotes">
 <li id="fn1"><p> The reader should treat E-graphs and tree automata as
 two interchangeable terms. An E-graph is just a deterministic finite
 tree automaton with no <span class="math inline">\(\epsilon\)</span>
-transitions and no unreachable states. The only place the difference
-matters is in describing tree automata completion, where we need <span
-class="math inline">\(\epsilon\)</span>-transitions to denote the
-preorder relation between E-nodes/states.<a href="#fnref1"
-class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+transitions and no unreachable states. Moreover, all tree automata in
+this post contain no unreachable states.
+<!-- The only place the difference matters is in describing tree automata completion,
+  where we need $\epsilon$-transitions to denote the preorder relation between E-nodes/states. --><a
+href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn2"><p>This can be shown via <a
 href="https://en.wikipedia.org/wiki/K%C5%91nig%27s_lemma">König’s lemma
 for trees</a>. Notice that TRSs are always finitely branching and

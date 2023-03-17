@@ -1,5 +1,5 @@
 ---
-title: Ensuring the Termination of EqSat over Terminating Term Rewriting System
+title: Ensuring the Termination of EqSat over a Terminating Term Rewriting System
 author: Yihong Zhang
 ---
 
@@ -13,8 +13,10 @@ In EqSat, all the rules are applied at the same time,
   The reader should treat E-graphs and tree automata as two interchangeable terms.
   An E-graph is just a deterministic finite tree automaton
   with no $\epsilon$ transitions and no unreachable states.
-  The only place the difference matters is in describing tree automata completion,
-  where we need $\epsilon$-transitions to denote the preorder relation between E-nodes/states.
+  Moreover,
+  all tree automata in this post contain no unreachable states.
+  <!-- The only place the difference matters is in describing tree automata completion,
+  where we need $\epsilon$-transitions to denote the preorder relation between E-nodes/states. -->
 ].
 
 EqSat has been shown to be very successful for program optimizations and program equivalence checking,
@@ -346,7 +348,7 @@ We have shown above that given a terminating TRS $R$ and an initial term $t$,
  which shows that the termination of tree automata completion does not imply
  the termination of EqSat.
 But is the other direction true?
-Indeed, the termination of EqSat does not imply the termination of tree automata completion as well.
+Indeed, the termination of EqSat does not imply the termination of tree automata completion as well!
 To see this, consider
 \begin{align*}
 f(x)&\rightarrow_R g(f(h(x)))\\
