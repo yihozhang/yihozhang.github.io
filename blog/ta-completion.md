@@ -331,8 +331,9 @@ I have not implemented tree automata completion,
  but it would be interesting to see how to implement tree automata completion in an EqSat framework like egg.
 It seems we only need to make two modifications:
 First, during rewrite, instead of merging left-hand side
- and right-hand side, adding an edge (that is, an $\epsilon$-transition)
- from the left-hand side to the right-hand side.
+ and right-hand side, adding an edge
+ from the left-hand side to the right-hand side
+ (or equivalently, an $\epsilon$-edge from the right-hand side to the left-hand side).
 As an optimization,
  we can merge two states together if they are in the same strongly connected component.
 Second, modify the matching procedure so that it will also "follow"
