@@ -2,6 +2,7 @@
 title: A tutorial on the imaginary Gogi language
 author: Yihong Zhang
 toc: true
+date: Jul 19, 2022
 ---
 
 Welcome to the tutorial on Gogi (short for eg**g**l**ogi**sh), a made-up language that attempts to generalize

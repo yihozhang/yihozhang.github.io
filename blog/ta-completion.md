@@ -322,7 +322,7 @@ To ensure the termination of tree automata completion even when the reachable se
 
 ### Discussions on tree automata completion
 
-*Equivalence and pre-order*.
+*Equivalence and preorder*.
 One interesting way of viewing tree automata completion is that
  *it generalizes the equivalence relation in EqSat to a preorder*:
 EqSat maintains an equivalence relation $\approx$ between terms and
@@ -378,6 +378,69 @@ As a result, there are only a finite number of equivalence classes
 
 ## Practical approaches to termination
 
-### Depth-bounded equality saturation
+So far we have shown that tree automata completion 
+ is a variant of EqSat that is terminating for terminating TRS.
+But besides this we still have not shown anything positive 
+ about the termination of EqSat itself.
+In particular, although there have been research on
+ when term rewriting terminates and when tree automata completion terminates,
+ neither of them implies the termination of EqSat (and vice versa).
+My collaborators and I 
+ have been thinking about the termination problem for a while,
+ and we have yet to come up with some non-trivial criteria^[
+  There are some simple syntactic criteria that we can borrow from
+  the ones for tree automata completion.
+  For example, if all rules have right-hand side with depth $1$, 
+  equality saturation will always terminate
+  because applying rules won't create new E-classes.
+  Similarly, if the right-hand sides are ground terms only,
+  equality saturation will also terminate.
+  The two criteria can be further combined: 
+  if the variables of the right-hand side terms only occur
+  at depth $1$,
+  equality saturation will always terminate.
+ ].
+Despite this, 
+ in practice there are many tricks people can use to stop EqSat early 
+ and still get relatively "complete" e-graphs.
+I will briefly mention two of them below.
 
-### Merge-only rules
+*Depth-bounded equality saturation*. 
+Let us define the depth of an E-class $\mathit{depth}(c)$ to be the smallest depth possible
+ among terms represented by the E-graph, namely $\text{arg\,max}_{t\rightarrow^* c}\mathit{depth}(c)$.
+This is well-defined as we require all E-classes to represent some terms.
+Now, given a limit on depth $N$, depth-bounded equality saturation maintains $\mathit{depth}(c)$ for each E-class
+ during equality saturation, 
+ and only apply a rewrite rule when any of the created E-classes does not 
+ have a depth greater than $N$.
+Because there's only finite number of E-graphs with bounded depth^[
+  Every distinct e-class contains (at least) one distinct term of depth $N$. There are only finitely many depth-$N$ terms, 
+  so finitely many E-classes. Finally, there are finitely many ways to connect finitely many E-classes.], 
+depth-bounded EqSat always terminates for any given $N$.
+
+There is something nice about depth-bounded EqSat.
+If two terms can be proved equivalent without using any term with depth $>N$,
+ depth-bounded EqSat can eventually show their equivalence.
+This is also useful in program optimization, 
+ where the optimal term is unlikely to be, say, 10$\times$ larger
+ than the original term.
+However, as I prototyped depth-bounded equality saturation a while ago,
+ I found depth-bounded EqSat still took a very long time to terminate 
+ even for a reasonable $N$.
+This somehow makes sense, 
+ since the number of trees with bounded depths
+ grows [rapidly](https://oeis.org/A003095).
+
+*Merge-only equality saturation*.
+This idea has been around for a while 
+ and I think was first came up with by [Remy](https://remy.wang).
+It is also very natural:
+ We only apply the subset of rewrite rules
+ if both the left-hand side and the right-hand side are already present in the E-graph.
+These rewrite rules essentially merge E-classes in the E-graphs together without
+ creating any new E-nodes and are obviously terminating.
+They are useful when you have run EqSat for several iterations, want to stop there,
+ but still want some relatively complete result.
+Merge-only EqSat provides the guarantee that if two terms can be proven equivalent 
+ using only terms in an E-graph $G$, they can be proven equivalent by running
+ merge-only EqSat over $G$.

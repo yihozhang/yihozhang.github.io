@@ -530,7 +530,7 @@ proposed approximation algorithms for tree automata completion, which
 are useful for applications like program verification.</p>
 <h3 id="discussions-on-tree-automata-completion">Discussions on tree
 automata completion</h3>
-<p><em>Equivalence and pre-order</em>. One interesting way of viewing
+<p><em>Equivalence and preorder</em>. One interesting way of viewing
 tree automata completion is that <em>it generalizes the equivalence
 relation in EqSat to a preorder</em>: EqSat maintains an equivalence
 relation <span class="math inline">\(\approx\)</span> between terms and
@@ -601,9 +601,59 @@ theory defined by the rewrite rules, which implies the termination of
 equality saturation.</p>
 <h2 id="practical-approaches-to-termination">Practical approaches to
 termination</h2>
-<h3 id="depth-bounded-equality-saturation">Depth-bounded equality
-saturation</h3>
-<h3 id="merge-only-rules">Merge-only rules</h3>
+<p>So far we have shown that tree automata completion is a variant of
+EqSat that is terminating for terminating TRS. But besides this we still
+have not shown anything positive about the termination of EqSat itself.
+In particular, although there have been research on when term rewriting
+terminates and when tree automata completion terminates, neither of them
+implies the termination of EqSat (and vice versa). My collaborators and
+I have been thinking about the termination problem for a while, and we
+have yet to come up with some non-trivial criteria<a href="#fn4"
+class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.
+Despite this, in practice there are many smart tricks people can use to
+stop EqSat early and still get relatively “complete” e-graphs. I will
+briefly mention two of them below.</p>
+<p><em>Depth-bounded equality saturation</em>. Let us define the depth
+of an E-class <span class="math inline">\(\mathit{depth}(c)\)</span> to
+be the smallest depth possible among terms represented by the E-graph,
+namely <span class="math inline">\(\text{arg\,max}_{t\rightarrow^*
+c}\mathit{depth}(c)\)</span>. This is well-defined as we require all
+E-classes to represent some terms. Now, given a limit on depth <span
+class="math inline">\(N\)</span>, depth-bounded equality saturation
+maintains <span class="math inline">\(\mathit{depth}(c)\)</span> for
+each E-class during equality saturation, and only apply a rewrite rule
+when any of the created E-classes does not have a depth greater than
+<span class="math inline">\(N\)</span>. Because there’s only finite
+number of E-graphs with bounded depth<a href="#fn5" class="footnote-ref"
+id="fnref5" role="doc-noteref"><sup>5</sup></a>, depth-bounded EqSat
+always terminates for any given <span
+class="math inline">\(N\)</span>.</p>
+<p>There is something nice about depth-bounded EqSat. If two terms can
+be proved equivalent without using any term with depth <span
+class="math inline">\(&gt;N\)</span>, depth-bounded EqSat can eventually
+show their equivalence. This is also useful in program optimization,
+where the optimal term is unlikely to be, say, 10<span
+class="math inline">\(\times\)</span> larger than the original term.
+However, as I prototyped depth-bounded equality saturation a while ago,
+I found depth-bounded EqSat still took a very long time to terminate
+even for a reasonable <span class="math inline">\(N\)</span>. This
+somehow makes sense, since the number of trees with bounded depths grows
+<a href="https://oeis.org/A003095">rapidly</a>.</p>
+<p><em>Merge-only equality saturation</em>. This idea has been around
+for a while and I think was first came up with by <a
+href="https://remy.wang">Remy</a>. It is also very natural: We only
+apply the subset of rewrite rules if both the left-hand side and the
+right-hand side are already present in the E-graph. These rewrite rules
+essentially merge E-classes in the E-graphs together without creating
+any new E-nodes and are obviously terminating. They are useful when you
+have run EqSat for several iterations, want to stop there, but still
+want some relatively complete result. Merge-only EqSat provides the
+guarantee that if two terms can be proven equivalent using only terms in
+an E-graph <span class="math inline">\(G\)</span>, they can be proven
+equivalent by running merge-only EqSat over <span
+class="math inline">\(G\)</span>.</p>
+<p>There are several variants of merge-only EqSat that share the same
+idea: identify subset of rules</p>
 <section class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
@@ -625,6 +675,24 @@ class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn3" role="doc-endnote"><p>Relations with these properties are
 known as partial strong congruences.<a href="#fnref3"
 class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4" role="doc-endnote"><p> There are some simple syntactic
+criteria that we can borrow from the ones for tree automata completion.
+For example, if all rules have right-hand side with depth <span
+class="math inline">\(1\)</span>, equality saturation will always
+terminate because applying rules won’t create new E-classes. If the
+right-hand sides are ground terms only, equality saturation will also
+terminate. The two criteria can be further combined: if the variables of
+the right-hand side term only occur at depth <span
+class="math inline">\(1\)</span>, equality saturation will always
+terminate. <a href="#fnref4" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn5" role="doc-endnote"><p> Every distinct e-class contains (at
+least) one distinct term of depth <span
+class="math inline">\(N\)</span>. There are only finitely many
+depth-<span class="math inline">\(N\)</span> terms, so finitely many
+E-classes. Finally, there are finitely many ways to connect finitely
+many E-classes.<a href="#fnref5" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </body>
