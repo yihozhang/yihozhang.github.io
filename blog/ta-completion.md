@@ -322,7 +322,7 @@ To ensure the termination of tree automata completion even when the reachable se
 
 ### Discussions on tree automata completion
 
-*Equivalence and preorder*.
+***Equivalence and preorder***.
 One interesting way of viewing tree automata completion is that
  *it generalizes the equivalence relation in EqSat to a preorder*:
 EqSat maintains an equivalence relation $\approx$ between terms and
@@ -335,7 +335,7 @@ Tree automata completion, instead,
 $l\sigma\lesssim r\sigma$ and $l\sigma\gtrsim r\sigma$ in tree automata completion is equivalent to $l\sigma \approx r\sigma$ in equality saturation, and in such cases $l\sigma$ and $r\sigma$ can be viewed as one state.
 Moreover, tree automata completion guarantees that if $t[a]$ is in the tree automaton and $a\lesssim b$, then $t[b]$ is also in the tree automaton and $t[a]\lesssim t[b]$.
 
-*Implementation of tree automata completion*.
+***Implementation of tree automata completion***.
 I have not implemented tree automata completion,
  but it would be interesting to see how to implement tree automata completion in an EqSat framework like egg.
 It seems we only need to make two modifications:
@@ -352,7 +352,7 @@ The new matching procedure can no longer be expressed as a conjunctive query,
 In general, though, tree automata completion has a higher time complexity than equality saturation,
  since dealing with DAGs / SCCs are more difficult than dealing with equivalences.
 
-*The termination problem of TA completion*.
+***The termination problem of TA completion***.
 We have shown above that given a terminating TRS $R$ and an initial term $t$,
  tree automata completion is always terminating but EqSat may not terminate,
  which shows that the termination of tree automata completion does not imply
@@ -390,7 +390,7 @@ My collaborators and I
  and we have yet to come up with some non-trivial criteria^[
   There are some simple syntactic criteria that we can borrow from
   the ones for tree automata completion.
-  For example, if all rules have right-hand side with depth $1$, 
+  For example, if all rules have right-hand sides with depth $1$, 
   equality saturation will always terminate
   because applying rules won't create new E-classes.
   Similarly, if the right-hand sides are ground terms only,
@@ -405,7 +405,7 @@ Despite this,
  and still get relatively "complete" e-graphs.
 I will briefly mention two of them below.
 
-*Depth-bounded equality saturation*. 
+***Depth-bounded equality saturation***. 
 Let us define the depth of an E-class $\mathit{depth}(c)$ to be the smallest depth possible
  among terms represented by the E-graph, namely $\text{arg\,max}_{t\rightarrow^* c}\mathit{depth}(c)$.
 This is well-defined as we require all E-classes to represent some terms.
@@ -431,7 +431,7 @@ This somehow makes sense,
  since the number of trees with bounded depths
  grows [rapidly](https://oeis.org/A003095).
 
-*Merge-only equality saturation*.
+***Merge-only equality saturation***.
 This idea has been around for a while 
  and I think was first came up with by [Remy](https://remy.wang).
 It is also very natural:

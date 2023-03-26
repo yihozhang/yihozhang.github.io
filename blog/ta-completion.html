@@ -530,15 +530,16 @@ proposed approximation algorithms for tree automata completion, which
 are useful for applications like program verification.</p>
 <h3 id="discussions-on-tree-automata-completion">Discussions on tree
 automata completion</h3>
-<p><em>Equivalence and preorder</em>. One interesting way of viewing
-tree automata completion is that <em>it generalizes the equivalence
-relation in EqSat to a preorder</em>: EqSat maintains an equivalence
-relation <span class="math inline">\(\approx\)</span> between terms and
-asserts <span class="math inline">\(l\sigma \approx r\sigma\)</span> for
-every left-hand side <span class="math inline">\(l\sigma\)</span> and
-right-hand side <span class="math inline">\(r\sigma\)</span>. EqSat also
-guarantees that if <span class="math inline">\(t[a]\)</span> is in the
-E-graph and <span class="math inline">\(a\approx b\)</span>, then <span
+<p><strong><em>Equivalence and preorder</em></strong>. One interesting
+way of viewing tree automata completion is that <em>it generalizes the
+equivalence relation in EqSat to a preorder</em>: EqSat maintains an
+equivalence relation <span class="math inline">\(\approx\)</span>
+between terms and asserts <span class="math inline">\(l\sigma \approx
+r\sigma\)</span> for every left-hand side <span
+class="math inline">\(l\sigma\)</span> and right-hand side <span
+class="math inline">\(r\sigma\)</span>. EqSat also guarantees that if
+<span class="math inline">\(t[a]\)</span> is in the E-graph and <span
+class="math inline">\(a\approx b\)</span>, then <span
 class="math inline">\(t[b]\)</span> is also in the E-graph and <span
 class="math inline">\(t[a]\approx t[b]\)</span><a href="#fn3"
 class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.
@@ -558,15 +559,15 @@ class="math inline">\(t[a]\)</span> is in the tree automaton and <span
 class="math inline">\(a\lesssim b\)</span>, then <span
 class="math inline">\(t[b]\)</span> is also in the tree automaton and
 <span class="math inline">\(t[a]\lesssim t[b]\)</span>.</p>
-<p><em>Implementation of tree automata completion</em>. I have not
-implemented tree automata completion, but it would be interesting to see
-how to implement tree automata completion in an EqSat framework like
-egg. It seems we only need to make two modifications: First, during
-rewrite, instead of merging left-hand side and right-hand side, adding
-an edge from the left-hand side to the right-hand side (or equivalently,
-an <span class="math inline">\(\epsilon\)</span>-edge from the
-right-hand side to the left-hand side). As an optimization, we can merge
-two states together if they are in the same strongly connected
+<p><strong><em>Implementation of tree automata completion</em></strong>.
+I have not implemented tree automata completion, but it would be
+interesting to see how to implement tree automata completion in an EqSat
+framework like egg. It seems we only need to make two modifications:
+First, during rewrite, instead of merging left-hand side and right-hand
+side, adding an edge from the left-hand side to the right-hand side (or
+equivalently, an <span class="math inline">\(\epsilon\)</span>-edge from
+the right-hand side to the left-hand side). As an optimization, we can
+merge two states together if they are in the same strongly connected
 component. Second, modify the matching procedure so that it will also
 “follow” these <span
 class="math inline">\(\epsilon\)</span>-transitions. The new matching
@@ -575,8 +576,8 @@ to EqSat, and is more expensive to compute. In general, though, tree
 automata completion has a higher time complexity than equality
 saturation, since dealing with DAGs / SCCs are more difficult than
 dealing with equivalences.</p>
-<p><em>The termination problem of TA completion</em>. We have shown
-above that given a terminating TRS <span
+<p><strong><em>The termination problem of TA completion</em></strong>.
+We have shown above that given a terminating TRS <span
 class="math inline">\(R\)</span> and an initial term <span
 class="math inline">\(t\)</span>, tree automata completion is always
 terminating but EqSat may not terminate, which shows that the
@@ -610,13 +611,14 @@ implies the termination of EqSat (and vice versa). My collaborators and
 I have been thinking about the termination problem for a while, and we
 have yet to come up with some non-trivial criteria<a href="#fn4"
 class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>.
-Despite this, in practice there are many smart tricks people can use to
-stop EqSat early and still get relatively “complete” e-graphs. I will
-briefly mention two of them below.</p>
-<p><em>Depth-bounded equality saturation</em>. Let us define the depth
-of an E-class <span class="math inline">\(\mathit{depth}(c)\)</span> to
-be the smallest depth possible among terms represented by the E-graph,
-namely <span class="math inline">\(\text{arg\,max}_{t\rightarrow^*
+Despite this, in practice there are many tricks people can use to stop
+EqSat early and still get relatively “complete” e-graphs. I will briefly
+mention two of them below.</p>
+<p><strong><em>Depth-bounded equality saturation</em></strong>. Let us
+define the depth of an E-class <span
+class="math inline">\(\mathit{depth}(c)\)</span> to be the smallest
+depth possible among terms represented by the E-graph, namely <span
+class="math inline">\(\text{arg\,max}_{t\rightarrow^*
 c}\mathit{depth}(c)\)</span>. This is well-defined as we require all
 E-classes to represent some terms. Now, given a limit on depth <span
 class="math inline">\(N\)</span>, depth-bounded equality saturation
@@ -639,8 +641,8 @@ I found depth-bounded EqSat still took a very long time to terminate
 even for a reasonable <span class="math inline">\(N\)</span>. This
 somehow makes sense, since the number of trees with bounded depths grows
 <a href="https://oeis.org/A003095">rapidly</a>.</p>
-<p><em>Merge-only equality saturation</em>. This idea has been around
-for a while and I think was first came up with by <a
+<p><strong><em>Merge-only equality saturation</em></strong>. This idea
+has been around for a while and I think was first came up with by <a
 href="https://remy.wang">Remy</a>. It is also very natural: We only
 apply the subset of rewrite rules if both the left-hand side and the
 right-hand side are already present in the E-graph. These rewrite rules
@@ -652,8 +654,6 @@ guarantee that if two terms can be proven equivalent using only terms in
 an E-graph <span class="math inline">\(G\)</span>, they can be proven
 equivalent by running merge-only EqSat over <span
 class="math inline">\(G\)</span>.</p>
-<p>There are several variants of merge-only EqSat that share the same
-idea: identify subset of rules</p>
 <section class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
@@ -677,12 +677,12 @@ known as partial strong congruences.<a href="#fnref3"
 class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn4" role="doc-endnote"><p> There are some simple syntactic
 criteria that we can borrow from the ones for tree automata completion.
-For example, if all rules have right-hand side with depth <span
+For example, if all rules have right-hand sides with depth <span
 class="math inline">\(1\)</span>, equality saturation will always
-terminate because applying rules won’t create new E-classes. If the
-right-hand sides are ground terms only, equality saturation will also
-terminate. The two criteria can be further combined: if the variables of
-the right-hand side term only occur at depth <span
+terminate because applying rules won’t create new E-classes. Similarly,
+if the right-hand sides are ground terms only, equality saturation will
+also terminate. The two criteria can be further combined: if the
+variables of the right-hand side terms only occur at depth <span
 class="math inline">\(1\)</span>, equality saturation will always
 terminate. <a href="#fnref4" class="footnote-back"
 role="doc-backlink">↩︎</a></p></li>
