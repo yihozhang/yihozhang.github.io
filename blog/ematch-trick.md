@@ -1,6 +1,7 @@
 ---
 title: A Trick that Makes Classical E-Matching Faster
 author: Yihong Zhang
+date: Mar 9, 2022
 ---
 
 You might have seen our POPL 2022 paper on [Relational E-matching](https://arxiv.org/abs/2108.02290), where we use [database techniques](https://gitlab.com/remywang/blog/-/blob/master/posts/wcoj.md) to improve an important procedure in e-graphs, namely e-matching. We made e-matching orders of magnitude faster, proved theoretical bounds of e-matching, and opened the door for all kinds of wild things you can do with databases and e-graphs. I’m very proud of this work, not only because it is elegant, fast, and theoretically (worst-case) optimal, but also because it is the kind of work I’d like to work on: building connections across areas.
