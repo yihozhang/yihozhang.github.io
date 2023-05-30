@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>trs-regularity</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<h1 id="termination-of-equality-saturation">Termination of Equality
+Saturation</h1>
+<p><strong>Theorem:</strong> The following problem is R.E.-complete:</p>
+<pre><code>Instance: a set of rewrite rules R, a term t.
+Question: does EqSat terminate with R and t?</code></pre>
+<p><strong>Proof.</strong> First, this problem is in R.E. since we can
+simply run EqSat with <span class="math inline">\(R\)</span> and <span
+class="math inline">\(t\)</span> to test whether it terminates. To show
+this problem is R.E.-hard, we reduce the termination problem of Turing
+machines to the termination of EqSat. We use the technique by <span
+class="citation"
+data-cites="NARENDRAN1985343">[@NARENDRAN1985343]</span>. In particular,
+for each Turing machine <span class="math inline">\(M\)</span>, we
+produce a string rewriting system <span class="math inline">\(R\)</span>
+such that the equivalence closure of <span
+class="math inline">\(R\)</span>, <span
+class="math inline">\((\approx_R)=\left(R\cup R^{-1}\right)^*\)</span>,
+satisfies that each equivalence class of <span
+class="math inline">\(\approx_R\)</span> corresponds to a trace of of
+running the Turing machine on certain input. As a result, the Turing
+machine halts if and only if the trace is finite if and only if EqSat
+terminates.</p>
+<p>A Turing machine <span class="math inline">\(M=(K,\Sigma,
+\Pi,\mu,q_0,\beta)\)</span> consists of a set of states <span
+class="math inline">\(K\)</span>, the input and the tape alphabet <span
+class="math inline">\(\Sigma\)</span> and <span
+class="math inline">\(\Pi\)</span> (with <span
+class="math inline">\(\Sigma\subseteq \Pi\)</span>), a set of
+transitions <span class="math inline">\(\mu\)</span>, an initial state
+<span class="math inline">\(q_0\in K\)</span>, and a special blanket
+symbol <span class="math inline">\(\beta\in\Pi\)</span>. Each transition
+in <span class="math inline">\(\mu\)</span> is a quintuple in $K{L,R} K
+$. For example, transition <span
+class="math inline">\(q_iabRq_j\)</span> means if the current state is
+<span class="math inline">\(q_i\)</span> and the symbol being scanned is
+<span class="math inline">\(a\)</span>, then replace <span
+class="math inline">\(a\)</span> with <span
+class="math inline">\(b\)</span>, move the head to the right, and
+transit to state <span class="math inline">\(q_j\)</span>. We assume the
+Turing machine is two-way infinite, so that the head can move in both
+directions indefinitely. Each configuration of <span
+class="math inline">\(M\)</span> can be expressed as <span
+class="math inline">\(\rhd uq_i av \lhd\)</span>, where <span
+class="math inline">\(\rhd\)</span>,<span
+class="math inline">\(\lhd\)</span> are left and right end markers,
+<span class="math inline">\(u\)</span> is the string to the left of the
+read/write head, <span class="math inline">\(q_i\)</span> is the current
+state, <span class="math inline">\(a\)</span> is the symbol being
+scanned, and <span class="math inline">\(v\)</span> is the string to the
+right.</p>
+<p>We will encode each configuration of <span
+class="math inline">\(M\)</span> as a string. For each such <span
+class="math inline">\(M\)</span>, we define <span
+class="math inline">\(\overline K=\{\overline q\mid q\in K\}\)</span>.
+We also define <span class="math inline">\(\overline \Sigma\)</span>,
+<span class="math inline">\(\overline \Pi\)</span> in a similar way. In
+our encoding, we use <span class="math inline">\(\overline K\)</span> to
+denote states where the symbol being scanned is to the left of the
+state, and we use <span class="math inline">\(\overline \Sigma\)</span>
+and <span class="math inline">\(\overline \Pi\)</span> to denote
+alphabets that are to the left of the states. Moreover, we introduce two
+sets of “dummy” symbols <span class="math inline">\(L_z\)</span> and
+<span class="math inline">\(R_z\)</span> for <span
+class="math inline">\(z\)</span> ranges over <span
+class="math inline">\(K\times (\{\lhd\}\cup \Pi)\)</span> and <span
+class="math inline">\((\{\rhd\}\cup \overline\Pi)\times \overline
+K\)</span>. Let <span class="math inline">\(D_L\)</span> and <span
+class="math inline">\(D_R\)</span> be the set of all <span
+class="math inline">\(L_z\)</span> and <span
+class="math inline">\(R_z\)</span> respectively. The rewriting system we
+are going to define works over the set of strings <span
+class="math inline">\(\textit{CONFIG}=\rhd (\overline\Pi\cup
+D_L)^*(K\cup \overline K)(\Pi\cup D_R)^*\lhd\)</span> Finally, we define
+a mapping from strings in the rewriting system to configurations of a
+Turing machine: <span class="math inline">\(\pi(w)\)</span> converts
+each <span class="math inline">\(\overline a\overline q_i\)</span> to
+<span class="math inline">\(q_ia\)</span>, removes dummy symbols <span
+class="math inline">\(L_z\)</span> and <span
+class="math inline">\(R_z\)</span>, and replace <span
+class="math inline">\(\overline a\)</span> with <span
+class="math inline">\(a\)</span>.</p>
+<p>Now, for the given set of transitions, we define our string rewriting
+system <span class="math inline">\(R\)</span> as follows:</p>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>transitions in <span class="math inline">\(M\)</span></th>
+<th>rewrites in <span class="math inline">\(R\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(q_iabRq_j\)</span></td>
+<td><span class="math inline">\(q_ia\leftarrow L_{q_ia}\overline
+bq_j\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\overline a\overline q_i\leftarrow
+L_{\overline aq_i}\overline bq_j\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(q_i\beta bRq_j\)</span></td>
+<td><span class="math inline">\(q_i\lhd\leftarrow L_{q_i\lhd}\overline b
+q_j\lhd\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\rhd \overline q_i\leftarrow \rhd
+L_{\rhd\overline q_i}\overline bq_j\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(q_iabLq_j\)</span></td>
+<td><span class="math inline">\(q_ia\leftarrow \overline q_j b
+R_{q_ia}\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\overline a\overline q_i\leftarrow
+\overline q_j b R_{\overline a\overline q_i}\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(q_i\beta bLq_j\)</span></td>
+<td><span class="math inline">\(q_i\lhd\leftarrow \overline
+q_jbR_{q_i\lhd}\lhd\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\rhd \overline q_i\leftarrow
+\rhd\overline q_j b R_{\rhd\overline q_i}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Moreover, for each <span class="math inline">\(z\)</span>, we add the
+following two rewrite rules <span class="math display">\[\begin{align*}
+q_iR_z&amp;\leftarrow L_zL_zq_i\\
+L_z\overline q_i&amp;\leftarrow \overline q_iR_zR_z
+\end{align*}\]</span></p>
+<p>Now, we define two types of strings. Type-A strings are strings where
+the symbol being scanned is to the immediate right of <span
+class="math inline">\(q_i\)</span> or to the immediate left of <span
+class="math inline">\(\overline {q_i}\)</span>. In other words, we call
+a string <span class="math inline">\(s\)</span> a type-A string if <span
+class="math inline">\(s\)</span> contains <span
+class="math inline">\(q_ia\)</span> or <span
+class="math inline">\(\overline{aq_i}\)</span>. Type-B strings are
+strings that are not type-A: they are strings where there are dummy
+symbols in between the state and the symbol being scanned.</p>
+<p>Now, we observe that <span class="math inline">\(R\)</span> has
+several properties: * <span class="math inline">\(R\)</span> is
+convergent: it is obviously terminating since the size of each rule is
+decreasing. <span class="math inline">\(R\)</span> is confluent by
+noticing that it has no critical pairs and is terminating. * For each
+type-A string <span class="math inline">\(w\)</span>, there exists a
+unique <span class="math inline">\(w&#39;\)</span> such that <span
+class="math inline">\(w&#39;\rightarrow w\)</span> and <span
+class="math inline">\(\pi(w)\vdash \pi(w&#39;)\)</span>, where <span
+class="math inline">\(\vdash\)</span> denotes one transition in running
+the Turing machine. * If <span
+class="math inline">\(w_0,w_1,\ldots\)</span> is a sequence of type-B
+strings in . such that <span class="math inline">\(w_{i+1}\rightarrow_R
+w_{i}\)</span>, then</p>
+<h1 id="references">References</h1>
+</body>
+</html>
