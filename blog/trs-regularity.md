@@ -55,19 +55,19 @@ Now, for the given set of transitions, we define our string rewriting system $R$
 
 | transitions in $M$ | rewrites in $R$ |
 |--------------------|----------------|
-| $q_iabRq_j$        | $q_ia\leftarrow L_{q_ia}\overline bq_j$      |
-|                    | $\overline a\overline q_i\leftarrow L_{\overline aq_i}\overline bq_j$      |
-| $q_i\beta bRq_j$   | $q_i\lhd\leftarrow L_{q_i\lhd}\overline b q_j\lhd$      |
-|                    | $\rhd \overline q_i\leftarrow \rhd L_{\rhd\overline q_i}\overline bq_j$      |
-| $q_iabLq_j$        | $q_ia\leftarrow \overline q_j b R_{q_ia}$      |
-|                    | $\overline a\overline q_i\leftarrow \overline q_j b R_{\overline a\overline q_i}$      |
-| $q_i\beta bLq_j$    |  $q_i\lhd\leftarrow \overline q_jbR_{q_i\lhd}\lhd$      |
-|                    | $\rhd \overline q_i\leftarrow \rhd\overline q_j b R_{\rhd\overline q_i}$      |
+| $q_iabRq_j$        | $q_ia\leftarrow_R L_{q_ia}\overline bq_j$      |
+|                    | $\overline a\overline q_i\leftarrow_R L_{\overline aq_i}\overline bq_j$      |
+| $q_i\beta bRq_j$   | $q_i\lhd\leftarrow_R L_{q_i\lhd}\overline b q_j\lhd$      |
+|                    | $\rhd \overline q_i\leftarrow_R \rhd L_{\rhd\overline q_i}\overline bq_j$      |
+| $q_iabLq_j$        | $q_ia\leftarrow_R \overline q_j b R_{q_ia}$      |
+|                    | $\overline a\overline q_i\leftarrow_R \overline q_j b R_{\overline a\overline q_i}$      |
+| $q_i\beta bLq_j$    |  $q_i\lhd\leftarrow_R \overline q_jbR_{q_i\lhd}\lhd$      |
+|                    | $\rhd \overline q_i\leftarrow_R \rhd\overline q_j b R_{\rhd\overline q_i}$      |
 
 Moreover, for each $z$, we have the following two additional rewrite rules
 \begin{align*}
-q_iR_z&\leftarrow L_zL_zq_i\\
-L_z\overline q_i&\leftarrow \overline q_iR_zR_z
+q_iR_z&\leftarrow_R L_zL_zq_i\\
+L_z\overline q_i&\leftarrow_R \overline q_iR_zR_z
 \end{align*}
 
 We define two types of strings. Type-A strings are strings where the symbol being scanned
@@ -91,45 +91,31 @@ Now, we observe that $R$ has several properties:
 
 **Lemma.** Let $w_0=\rhd q_0s\lhd$ be an initial configuration.
 $w_0$ is obviously in *CONFIG*. 
-Turing machine halts on $w_0$ if and only if $[w_0]_R$ is finite.
+Moreover, Turing machine halts on $w_0$ if and only if $[w_0]_R$ is finite.
 
 Proof.
 
+Consider a sequence of *CONFIG* starting with $w_0$,
+ $w_0\leftarrow_R w_1\leftarrow_R \ldots$.
+By the above observations,
+ because any type-B sequence is bounded and preserves the value mapped by $\pi$,
+ it must have a subsequence of type-A strings
+ $w_0\leftarrow_R^* w_{i_1}\leftarrow_R^* w_{i_2}\leftarrow_R^*\ldots$ with 
+ $$\pi(w_0)=\ldots =\pi(w_{i_1}-1)\vdash \pi(w_{i_1})=\ldots=\pi(w_{i_2-1})\vdash \pi(w_{i_2})= \ldots.$$
+ Moreover, the subsequence is bounded if and only if the original sequence is bounded.
+
+Now we prove the claim:
 * $\Leftarrow$:
- Suppose the Turing machine does not halt on $w_0$, then there's an infinite sequence of
- $w_0=c_0\vdash c_1\vdash \ldots$.
+ If $[w_0]_R$ is finite, then there is a unique finite sequence of $w_0\leftarrow_R w_1\leftarrow_R \ldots\leftarrow_R w_n$, where $\pi(w_i)\vdash\pi(w_{i+1})$ and $\pi(w_n)$ is a halting configuration and there exists no $w'$ with $w'\rightarrow_R w_n$.
+ This implies a finite trace $w_0\vdash \pi(w_{i_1})\vdash\ldots\vdash \pi(w_{i_n})$.
+ Since we only consider deterministic Turing machines, the Turing machine halts on $w_0$ with the final state $\pi(w_{i_n})$.
 * $\Rightarrow$:
- Suppose otherwise $[w_0]_R$ is infinite. Note that $w_0$ is a normal form of $R$,
- so there must exist an infinite rewriting sequence
- $w_0\leftarrow w_1\leftarrow \ldots$.
- Because any type-B sequence is bounded 
- and preserves the value mapped by $\pi$, there must be an infinite subsequence of type A
- $w_0\leftarrow^* w_{i_1}\leftarrow^* w_{i_2}\leftarrow^*\ldots$ 
- with $$\pi(w_0)=\ldots =\pi(w_{i_1}-1)\vdash \pi(w_{i_1})=\ldots=\pi(w_{i_2-1})\vdash \pi(w_{i_2})= \ldots.$$
+ Suppose otherwise $[w_0]_R$ is infinite. 
+ Because $R$ is convergent, there must exist an infinite rewriting sequence
+ to the unique normal form (that is, $w_0$): $w_0\leftarrow_R w_1 \leftarrow_R\ldots$.
+ Therefore, there is an infinite subsequence
+ $w_0\vdash \pi(w_{i_1})\vdash\ldots$
  This contradicts the fact that $w_0$ is halting.
-
-We want to show w --> w0, if and only if w0 |= w
-<!-- Moreover, let $u$ be a string in *CONFIG*, 
- $u\in[w_0]_R$ if and only if $\pi(u)\vdash^* w_0$.
-
-**Proof.** 
-
-* $\Rightarrow$: 
-  We observe that $w_0$ is a normal form of $R$.
-  If $u\approx_R w_0$, because $R$ is convergent, 
-  $u$ has a unique normal form which is $w_0$, 
-  so we have $u\rightarrow^* w_0$. By observation 2 and 3 above,
-  we have $\pi(u)$\vdash^* w_0$.
-* $\Leftarrow$
-  Suppose $\pi(u)\vdash^* w_0$. We induct on the transition from $\pi(u)$ to $w_0$.
-    * Base case: If $\pi(u)=w_0$, then obviously 
-
-
-By the observations above, we have $\pi(n)\vdash^* \pi(u)$ and $\pi(n)\vdash^* \pi(v)$. 
-Because we are only considering deterministic Turing machine,
-it must be the case either $\pi(u)\vdash^* \pi(v)$ or $\pi(v)\vdash^*\pi(u)$.
-
-Given input $s$, we construct string $\lhd q_0s\rhd$. -->
 
 
 # References
