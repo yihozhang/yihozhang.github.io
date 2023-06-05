@@ -5,7 +5,7 @@ csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
 
 # Termination of Equality Saturation
 
-**Theorem:** The following problem is R.E.-complete:
+**Theorem 1.** The following problem is R.E.-complete:
 
     Instance: a set of rewrite rules R, a term t.
     Question: does EqSat terminate with R and t?
@@ -93,12 +93,10 @@ Now, we observe that $R$ has several properties:
 $w_0$ is obviously in *CONFIG*. 
 Moreover, Turing machine halts on $w_0$ if and only if $[w_0]_R$ is finite.
 
-Proof.
-
+**Proof.**
 Consider a sequence of *CONFIG* starting with $w_0$,
  $w_0\leftarrow_R w_1\leftarrow_R \ldots$.
 By the above observations,
- because any type-B sequence is bounded and preserves the value mapped by $\pi$,
  it must have a subsequence of type-A strings
  $w_0\leftarrow_R^* w_{i_1}\leftarrow_R^* w_{i_2}\leftarrow_R^*\ldots$ with 
  $$\pi(w_0)=\ldots =\pi(w_{i_1}-1)\vdash \pi(w_{i_1})=\ldots=\pi(w_{i_2-1})\vdash \pi(w_{i_2})= \ldots.$$
@@ -115,7 +113,38 @@ Now we prove the claim:
  to the unique normal form (that is, $w_0$): $w_0\leftarrow_R w_1 \leftarrow_R\ldots$.
  Therefore, there is an infinite subsequence
  $w_0\vdash \pi(w_{i_1})\vdash\ldots$
- This contradicts the fact that $w_0$ is halting.
+ This contradicts the fact that $w_0$ is halting. $\blacksquare$
 
+Now we are ready to prove Theorem 1:
+
+**Proof.**
+Given a Turing machine $M$. We construct the following two-tape Turing machine $M'$:
+
+```
+M' alternates between the following two steps:
+1. Simulate one transition of M on its first tape.
+2. Read the string on its second tape as a number, compute the next prime number, 
+  and write it to the second tape.
+M' halts when M reachs an accepting state.
+```
+It is known that a two-tape Turing machine can be simulated using a standard Turing machine,
+ so we assume $M'$ is a standard Turing machine and takes input string $(s_1,s_2)$, 
+ where $s_1$ is the input on its first tape and $s_2$ is the input on its second tape.
+Let $R'$ be the term rewriting system derived from $M'$ using the above encoding.
+COMMENT: Above we are working with string rewriting system but here 
+ it becomes a term rewriting system.
+Given a string $s$, 
+ $M$ halts on $s$ $\Leftrightarrow$ $[w]_{R'}$ is finite, where $w=q_0(s, 2)$. 
+Now running EqSat with initial term $w$ and rewriting system $\leftrightarrow_{R'}$, we show EqSat terminates iff $M$ halts on $s$:
+
+* $\Rightarrow$
+Suppose EqSat terminates with output E-graph $G$. 
+We have $[w]_G=[w]_{R'}$.
+Moreover, $[w]_G$ is regular, so $[w]_G$ is finite.
+* $\Leftarrow$
+Suppose $M$ halts on $s$. This implies $[w]_{R'}$ is finite.
+Because EqSat monotonically enlarge the set of represented terms, it has to stop in a finite number of iterations.
+
+Because the halting problem of a Turing machine is undecidable, the termination problem of EqSat is undecidable as well. $\blacksquare$
 
 # References
