@@ -137,11 +137,11 @@ Given a string $s$,
  $M$ halts on $s$ $\Leftrightarrow$ $[w]_{R'}$ is finite, where $w=q_0(s, 2)$. 
 Now running EqSat with initial term $w$ and rewriting system $\leftrightarrow_{R'}$, we show EqSat terminates iff $M$ halts on $s$:
 
-* $\Rightarrow$
+* $\Rightarrow$:
 Suppose EqSat terminates with output E-graph $G$. 
 We have $[w]_G=[w]_{R'}$.
 Moreover, $[w]_G$ is regular, so $[w]_G$ is finite.
-* $\Leftarrow$
+* $\Leftarrow$:
 Suppose $M$ halts on $s$. This implies $[w]_{R'}$ is finite.
 Because EqSat monotonically enlarge the set of represented terms, it has to stop in a finite number of iterations.
 
