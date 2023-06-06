@@ -156,11 +156,42 @@ Because EqSat monotonically enlarge the set of represented terms, it has to stop
 
 Because the halting problem of a Turing machine is undecidable, the termination problem of EqSat is undecidable as well. $\blacksquare$
 
-**Theorem 2.** The following problem is problem is undecidable.
+**Theorem 2.** The following problem is undecidable.
 
     Instance: a set of rewrite rules R, a term w.
     Problem: Is [w]_R regular?
 
 **Proof.**
+
+We reduce the halting problem of Turing machines to this problem.
+Given a Turing machine $M$, we derive $M'$ and $R'$ as in Theorem 1.
+$M$ halts on an input $s$ if and only if $[w]_{R'}$ is finite
+if and only if $[w]_{R'}$ is regular for $w=q_0(s, 2)$.
+
+<span style="color:red">We need to better structure this document and give names to our different encodings</span>
+
+**Theorem 3.** The following problem is R.E.-complete.
+
+    Instance: a set of left-linear, convergent rewrite rules R, a term w.
+    Problem: Is [w]_R regular?
+
+**Proof.**
+
+This problem is undecidable by noticing that the term rewriting system 
+ we constructed in theorem 1 and 2 is left-linear and convergent.
+We show this problem is in R.E. by constructing a semi-decision procedure.
+
+<p style="color:red">TODO: More work needed here:<br>
+Define what does it mean to be saturated.<br>
+Show how to check the set of normal forms of $L(G)$<br>
+Show why this work.</p>
+
+We enumerate E-graphs and for each enumerated E-graph $G$ that represents $w$, 
+ we check the following three conditions:
+* $w\in L(G)$.
+* $[w]_R \subseteq [w]_G $: to check this, we can check if $[w]_G$ is saturated with respect to $\leftrightarrow_R$.
+* $[w]_G\subseteq [w]_R$: to check this, we can check if $[w]_G$ has only one normal form.
+
+
 
 # References
