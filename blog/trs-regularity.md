@@ -45,6 +45,9 @@ Moreover, we introduce two sets of "dummy" symbols $L_z$ and $R_z$
  and $(\{\rhd\}\cup \overline\Pi)\times \overline K$.
 Let $D_L$ and $D_R$ be the set of all $L_z$ and $R_z$ respectively.
 
+<span style="color: red">TODO: mention that string rewriting system is a special case
+ of term rewriting systems</span>
+
 The rewriting system we are going to define works over the set of strings 
  $\textit{CONFIG}=\rhd (\overline\Pi\cup D_L)^*(K\cup \overline K)(\Pi\cup D_R)^*\lhd$.
 We define a mapping from strings in the rewriting system to configurations of a Turing machine: 
@@ -115,9 +118,8 @@ Now we prove the claim:
  $w_0\vdash \pi(w_{i_1})\vdash\ldots$
  This contradicts the fact that $w_0$ is halting. $\blacksquare$
 
-Now we are ready to prove Theorem 1:
+Now we are ready to prove the undecidability of the termination problem of EqSat:
 
-**Proof.**
 Given a Turing machine $M$. We construct the following two-tape Turing machine $M'$:
 
 ```
@@ -130,21 +132,35 @@ M' halts when M reachs an accepting state.
 It is known that a two-tape Turing machine can be simulated using a standard Turing machine,
  so we assume $M'$ is a standard Turing machine and takes input string $(s_1,s_2)$, 
  where $s_1$ is the input on its first tape and $s_2$ is the input on its second tape.
-Let $R'$ be the term rewriting system derived from $M'$ using the above encoding.
-COMMENT: Above we are working with string rewriting system but here 
- it becomes a term rewriting system.
-Given a string $s$, 
- $M$ halts on $s$ $\Leftrightarrow$ $[w]_{R'}$ is finite, where $w=q_0(s, 2)$. 
+Let $R'$ be the string rewriting system derived from $M'$ using the above encoding.
+<!-- <span style="color:red">COMMENT: Above we are working with string rewriting system but here 
+ it becomes a term rewriting system.</span> -->
+Given a string $s$,
+ the following conditions are equivalent to each other:
+* $M$ halts on $s$.
+* $M'$ halts on $(s, 2)$
+* $[w]_{R'}$ is finite, where $w=q_0(s, 2)$.
+* $[w]_{R'}$ is regular.
+
 Now running EqSat with initial term $w$ and rewriting system $\leftrightarrow_{R'}$, we show EqSat terminates iff $M$ halts on $s$:
+<span style="color:red">The proof below is a sketch and needs to be refined.</span>
 
 * $\Rightarrow$:
 Suppose EqSat terminates with output E-graph $G$. 
-We have $[w]_G=[w]_{R'}$.
+The set of terms equivalent to $w$ in $G$ is exactly 
+ the equivalence class of $w$, i.e.,  $[w]_G=[w]_{R'}$.
 Moreover, $[w]_G$ is regular, so $[w]_G$ is finite.
 * $\Leftarrow$:
 Suppose $M$ halts on $s$. This implies $[w]_{R'}$ is finite.
 Because EqSat monotonically enlarge the set of represented terms, it has to stop in a finite number of iterations.
 
 Because the halting problem of a Turing machine is undecidable, the termination problem of EqSat is undecidable as well. $\blacksquare$
+
+**Theorem 2.** The following problem is problem is undecidable.
+
+    Instance: a set of rewrite rules R, a term w.
+    Problem: Is [w]_R regular?
+
+**Proof.**
 
 # References
