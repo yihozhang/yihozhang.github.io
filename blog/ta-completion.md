@@ -412,7 +412,7 @@ I will briefly mention two of them below.
 
 ***Depth-bounded equality saturation***. 
 Let us define the depth of an E-class $\mathit{depth}(c)$ to be the smallest depth possible
- among terms represented by the E-graph, namely $\text{arg\,max}_{t\rightarrow^* c}\mathit{depth}(c)$.
+ among terms represented by the E-graph, namely $\text{min}_{t\rightarrow^* c}\mathit{depth}(t)$.
 This is well-defined as we require all E-classes to represent some terms.
 Now, given a limit on depth $N$, depth-bounded equality saturation maintains $\mathit{depth}(c)$ for each E-class
  during equality saturation, 
