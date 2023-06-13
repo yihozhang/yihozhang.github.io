@@ -13,8 +13,18 @@
     <!-- <script>var clicky_site_ids = clicky_site_ids || []; clicky_site_ids.push(101294496);</script> -->
     <!-- <script async src="//static.getclicky.com/js"></script> -->
 </head>
-
 <body>
+    <style>
+        .highlighted-tag {
+        padding: 3px 7px;
+        background-color: #62c370;
+        color: black;
+        border-radius: 5px;
+        font-size: smaller;
+        border: 1px solid #256d44;
+        margin-right: 5px;
+        }
+    </style>
     <script>
         if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) {
             document.body.classList.add('mobile');
@@ -32,8 +42,18 @@
             <hr>
             <h3>About me</h3>
             <p>
-                I am a PhD student studying Computer Science at UW Seattle. I am broadly interested in the theories and
-                applications of programming languages.
+                I am a first-year PhD student studying Computer Science at UW Seattle, co-advised by <a href="https://ztatlock.net">Zachary Tatlock</a>
+                 and <a href="https://homes.cs.washington.edu/~suciu">Dan Suciu</a>.
+                I am broadly interested in the theories and applications of programming languages and data management.
+            </p>
+            <p>
+                Currently, I work on a program optimization technique called Equality Saturation (EqSat):
+                <ul>
+                    <li>Theory: I try to answer questions like "when does EqSat terminate?".</li>
+                    <li>System: I am working on a new system called <a href="https://github.com/egraphs-good/egglog">egglog</a> that unifies Datalog and EqSat.</li>
+                    <li>Technique: I am interested in techniques that make EqSat better. In our POPL 2022 <a href="doc/popl-2022-gj/paper.pdf">paper</a> we made pattern matching in EqSat asymptotically faster.</li>
+                    <li>Application: I am always looking to apply EqSat to emerging domains.</li>
+                </ul>
             </p>
             <a href="blog/index.html">Blog</a>
             &ensp;|&ensp;
@@ -44,9 +64,23 @@
             <a href="https://github.com/yihozhang">GitHub</a>
 
             <h3>Papers and Talks</h3>
-            <ul>
+            <ul class="cv">
                 <li>
-                    <b>Better Together: Unifying Datalog and Equality Saturation</b><br>
+                    <b>Ensuring the Termination of EqSat for Terminating Term Rewriting Systems (Contributed Talk)</b><br>
+                    <span class="me">Yihong Zhang</span>,
+                    <a href="https://oflatt.com">Oliver Flatt</a><br>
+                    EGRAPHS 2023<br>
+                    <a href="doc/egraphs-2023-theory/paper.pdf">[paper]</a>
+                </li>
+                <li>
+                    <b>egglog In Practice: Automatically Improving Floating-point Error (Contributed Talk)</b><br>
+                    <a href="https://oflatt.com">Oliver Flatt</a>,
+                    <span class="me">Yihong Zhang</span><br>
+                    EGRAPHS 2023<br>
+                    <a href="doc/egraphs-2023-egglog/paper.pdf">[paper]</a>
+                </li>
+                <li>
+                    <b>Better Together: Unifying Datalog and Equality Saturation</b> <span class="highlighted-tag"> Conference </span>  <br>
                     <span class="me">Yihong Zhang</span>,
                     <a href="https://remy.wang">Yisu Remy Wang</a>,
                     <a href="https://oflatt.com">Oliver Flatt</a>,
@@ -55,8 +89,8 @@
                     <a href="https://www.linkedin.com/in/eli-rosenthal-79230264/">Eli Rosenthal</a>,
                     <a href="https://ztatlock.net">Zachary Tatlock</a>,
                     <a href="https://mwillsey.com">Max Willsey</a><br>
-                    PLDI 2023 (conditionally accepted)<br>
-                    <!-- <a href="doc/popl-2022-gj/paper.pdf">[paper]</a> -->
+                    PLDI 2023<br>
+                    <a href="doc/pldi-2023-egglog/paper.pdf">[paper]</a>
                 </li>
                 <li>
                     <b>Chasing an Egg (Contributed Talk)</b><br>
@@ -65,7 +99,7 @@
                     <a href="doc/pldi-2022-egraphs/abstract.pdf">[abstract]</a>
                 </li>
                 <li>
-                    <b>Relational E-Matching</b><br>
+                    <b>Relational E-Matching</b> <span class="highlighted-tag">Conference</span>  <br>
                     <span class="me">Yihong Zhang</span>,
                     <a href="https://remy.wang">Yisu Remy Wang</a>,
                     <a href="https://mwillsey.com">Max Willsey</a>,
@@ -84,7 +118,7 @@
                     <a href="doc/pldi-2021-src/grandfinals.pdf">[grand-finals]</a>
                 </li>
                 <li>
-                    <b>GeCo: Quality Counterfactual Explanations in Real Time</b> <br>
+                    <b>GeCo: Quality Counterfactual Explanations in Real Time</b> <span class="highlighted-tag">Conference</span>  <br>
                     <a href="https://mjschleich.github.io/">Maximilian Schleich</a>,
                     <a href="https://www.linkedin.com/in/zixuan-gibbs-geng-4969181a2">Zixuan Geng</a>,
                     <span class="me">Yihong Zhang</span>,
@@ -95,8 +129,8 @@
                 </li>
             </ul>
 
-            <h3>Theses</h3>
-            <ul>
+            <!-- <h3>Theses</h3>
+            <ul class="cv">
                 <li>
                     <b>Faster and Worst-Case Optimal E-Matching</b><br>
                     Undergraduate Honor Thesis<br>
@@ -104,12 +138,12 @@
                     <a href="doc/ug-thesis/thesis.pdf">[thesis]</a>
                     <a href="doc/ug-thesis/talk.pdf">[slides]</a>
                 </li>
-            </ul>
+            </ul> -->
 
-            <h3>Graduate course projects</h3>
-            <ul>
+            <h3>Other projects</h3>
+            <ul class="cv">
                 <li><b>A Staged Datalog Compiler using Lightweight Modular Staging</b><br>
-                    CSE 544 Principles of DBMS <br>
+                    Course project of "CSE 544 Principles of DBMS"<br>
                     <!--                     In this project, I build a staged Datalog compiler using Lightweight Modular Staging (LMS). Experiments show that it achieves up to 10x speedup compared to Souffle Datalog tool. <br> -->
                     <a href="doc/course-projects/sdl.pdf">[report]</a> <a
                         href="https://github.com/zyh3838438zyh/sdl">[src]</a>
@@ -117,15 +151,15 @@
 
                 <li><b>Combining Statistical Top-down Deductions and Bottom-up Enumerations for Programming by
                         Example</b><br>
-                    CSE 573 Artificial Intelligence <br>
+                    Course project of "CSE 573 Artificial Intelligence" <br>
                     <!--                     In this project, I add support for enumerative search to MaxFlash for PBE solving. The enumerated programs are used to directly solve the synthesis problem and guide the witness functions during probabilistic deductions. This is an attempt to unify enumerative search, deductive search, and stochastic search into a framework for program synthesis. Experiments on the SyGuS benchmarks shows mixed (aka negative) results. <br> -->
                     <a href="doc/course-projects/maxduet.pdf">[report]</a> <a
                         href="https://github.com/yihozhang/maxduet">[src]</a>
                 </li>
 
                 <li><b>Cornelius: Killing Equivalent and Redundant Mutants with E-graphs</b><br>
-                    CSE 503: Software Engineering,
-                    with <a href="https://bkushigian.github.io/">Ben Kushigian</a>, <a
+                    Course project of "CSE 503: Software Engineering"<br>
+                    With <a href="https://bkushigian.github.io/">Ben Kushigian</a>, <a
                         href="https://scholar.google.com/citations?user=CdUDJxoAAAAJ&hl=en">Ishan Chatterjee</a>, and
                     Gabrielle Strandquist. <br>
                     <!--                         We propose to utilize E-graph to eliminate equivalent and redundant mutants for mutation testing. This addresses the phase-ordering problem faced by Trivial Compiler Equivalence (TCE), a known technique for eliminating equivalent mutants. Experiments on a pure Java subset show that it discovers much more equivalent and redundant mutants than TCE in less time. <br> -->
@@ -134,21 +168,22 @@
                 </li>
 
                 <li><b>Sager: A Demonic Graph Synthesizer for Worst-Case Performance</b><br>
-                    CSE 507 Computer-Aided Reasoning for Software,
-                    with <a href="https://ad1024.space/about">Mike He</a>. <br>
+                    Course project of "CSE 507 Computer-Aided Reasoning for Software"<br>
+                    With <a href="https://ad1024.space/about">Mike He</a>. <br>
                     <!--                         We propose to use symbolic evaluations to synthesize input instances that determine the worst-case complexity of a given algorithm. We build a prototype implementation with Rosette and show that it makes Shortest-Path Faster Algorithm (SPFA) and its several variants asymptotically worse. <br> -->
                     <a href="https://github.com/AD1024/Sager">[src]</a>
                 </li>
 
+                <li><b>Hatafun: Embedding Datafun (ICFP 2016) in Haskell</b><br>
+                    <a href="https://github.com/yihozhang/Hatafun">[src]</a>
+                </li>
+
+                <li><b>egraph-sqlite: Equality Saturation on top of SQLite</b><br>
+                    <a href="https://github.com/yihozhang/egraphs-sqlite">[src]</a>
+                </li>
             </ul>
 
-            <h3>Programming for fun</h3>
-            <ul>
-                <li><b><a href="https://github.com/zyh3838438zyh/Hatafun">Hatafun</a>:</b> Embedding the type system of
-                    Datafun (ICFP 2016) in Haskell.</li>
-                <!--                     <li><b><a href="https://github.com/zyh3838438zyh/2TBF">2TBF</a>:</b> A proof-of-concept compiler from (our favorite) Pascal to an extension of brainfuck lang with two tapes.</li> -->
-            </ul>
-
+<!-- 
             <h3>Teaching</h3>
 
             <p>During my undergrad, I TAed 3 classes: CSE 341, an introductory PL class for in-major undergrads; CSE
@@ -157,7 +192,7 @@
             <br>
             <br>
             <br>
-            <br>
+            <br> -->
         </div>
 </body>
 
