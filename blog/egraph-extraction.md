@@ -31,10 +31,10 @@ The smallest subset of $S$ that covers all of the elements is \{ \{1, 2, 3\}, \{
 Our construction is as follows:
 
 1. For each $j\in U$, we create a corresponding E-class $c_{j}$.
-2. For each collection $S_i$, we create an E-class $c_{S_i}$ with a singleton E-node $S_i$. 
-3. For each $S_i={j_1, \ldots, j_{l_m}}$, we create in E-class $C_{j_k}$ for all $j_k$ a new E-node $u(c_{S_i})$.
+2. For each collection $S_i$, we create an E-class $c_{S_i}$ with a singleton E-node $S_i$.
+3. For each $S_i=\{j_1, \ldots, j_{l_m}\}$, we create  a new E-node $u_{j_k}(c_{S_i})$ in E-class $c_{j_k}$ for all $j_k$.
 4. We create a root E-class with a special E-node whose children include all $C_{j_k}$.
-5. Every E-node has a uniform cost of 1.^[In fact, the costs of the root E-node and $c_{j}$'s do not matter and can be set as zero, as these E-nodes will be in the extracted DAG anyway. We (arbitrarily) set their cost to be 1 (instead of say 0) to make sure the cost model is strictly monotonic.]
+5. Every E-node has a uniform cost of 1.^[In fact, the costs of the root E-node and $u_{j_k}$'s do not matter and can be set as zero, as these E-nodes will be in the extracted DAG anyway. We (arbitrarily) set their cost to be 1 (instead of say 0) to make sure the cost model is strictly monotonic.]
 
 This will produce the following E-graph for our example.
 
@@ -43,7 +43,7 @@ This will produce the following E-graph for our example.
 The intuition behind this construction is that, 
  to extract the root E-class, 
  we have to cover all the elements in the universe,
- so we need to pick an E-node from each of $c_{j}$.
+ so we need to pick an E-node from each $c_{j}$.
 To cover all $c_{j}$s with the smallest cost means picking 
  as fewer $S_i$ E-nodes as possible, 
  which corresponds to a minimum set cover.

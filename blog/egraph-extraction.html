@@ -208,11 +208,11 @@ corresponding E-class <span class="math inline">\(c_{j}\)</span>.</li>
 <li>For each collection <span class="math inline">\(S_i\)</span>, we
 create an E-class <span class="math inline">\(c_{S_i}\)</span> with a
 singleton E-node <span class="math inline">\(S_i\)</span>.</li>
-<li>For each <span class="math inline">\(S_i={j_1, \ldots,
-j_{l_m}}\)</span>, we create in E-class <span
-class="math inline">\(C_{j_k}\)</span> for all <span
-class="math inline">\(j_k\)</span> a new E-node <span
-class="math inline">\(u(c_{S_i})\)</span>.</li>
+<li>For each <span class="math inline">\(S_i=\{j_1, \ldots,
+j_{l_m}\}\)</span>, we create a new E-node <span
+class="math inline">\(u_{j_k}(c_{S_i})\)</span> in E-class <span
+class="math inline">\(c_{j_k}\)</span> for all <span
+class="math inline">\(j_k\)</span>.</li>
 <li>We create a root E-class with a special E-node whose children
 include all <span class="math inline">\(C_{j_k}\)</span>.</li>
 <li>Every E-node has a uniform cost of 1.<a href="#fn2"
@@ -228,11 +228,11 @@ optimal extraction</figcaption>
 </figure>
 <p>The intuition behind this construction is that, to extract the root
 E-class, we have to cover all the elements in the universe, so we need
-to pick an E-node from each of <span
-class="math inline">\(c_{j}\)</span>. To cover all <span
-class="math inline">\(c_{j}\)</span>s with the smallest cost means
-picking as fewer <span class="math inline">\(S_i\)</span> E-nodes as
-possible, which corresponds to a minimum set cover.</p>
+to pick an E-node from each <span class="math inline">\(c_{j}\)</span>.
+To cover all <span class="math inline">\(c_{j}\)</span>s with the
+smallest cost means picking as fewer <span
+class="math inline">\(S_i\)</span> E-nodes as possible, which
+corresponds to a minimum set cover.</p>
 <p>As a side note, the construction here uses function symbols with
 non-constant arities (i.e., the root E-node). This can be fixed by
 replacing the root E-node with <span class="math inline">\(O(n)\)</span>
@@ -249,7 +249,7 @@ an E-graph and a cost function, does there exist a DAG represented by
 the E-graph with a given cost <span class="math inline">\(n\)</span>?<a
 href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 <li id="fn2"><p>In fact, the costs of the root E-node and <span
-class="math inline">\(c_{j}\)</span>’s do not matter and can be set as
+class="math inline">\(u_{j_k}\)</span>’s do not matter and can be set as
 zero, as these E-nodes will be in the extracted DAG anyway. We
 (arbitrarily) set their cost to be 1 (instead of say 0) to make sure the
 cost model is strictly monotonic.<a href="#fnref2" class="footnote-back"
