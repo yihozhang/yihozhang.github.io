@@ -2,6 +2,10 @@
 title: Blog
 author: Yihong Zhang
 ---
+Jun 22, 2023
+
+* [The E-graph extraction problem is NP-complete](egraph-extraction.html) [\[PDF version\]](egraph-extraction.pdf)
+
 Mar 17, 2023
 
 * [Ensuring the Termination of EqSat over Terminating TRS](ta-completion.html) [\[PDF version\]](ta-completion.pdf)
