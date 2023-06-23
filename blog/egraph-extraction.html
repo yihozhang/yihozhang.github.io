@@ -150,10 +150,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
@@ -175,10 +180,11 @@ is NP-complete.</p>
         to positive numbers.
 Output: A DAG t represented by G such that t has the
         lowest cost possible.</code></pre>
-<p>First, the extraction problem is in NP because it can be <a
-href="https://arxiv.org/abs/2101.01332">reduced</a> to integer linear
-programming (ILP). Moreover, we show the extraction problem is NP-hard
-by reducing <a
+<p>First, the extraction problem is in NP<a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>
+because it can be <a href="https://arxiv.org/abs/2101.01332">reduced</a>
+to integer linear programming (ILP). Moreover, we show the extraction
+problem is NP-hard by reducing <a
 href="https://en.wikipedia.org/wiki/Set_cover_problem">the minimum set
 cover problem</a> to it.</p>
 <p>The minimum set cover problem is defined as follows (adapted from the
@@ -197,7 +203,7 @@ class="math inline">\(S\)</span> that covers all of the elements is {
 {1, 2, 3}, {4, 5} }.</p>
 <p>Our construction is as follows:</p>
 <ol type="1">
-<li>For each <span class="math inline">\(j\in U\)</span>, we create an
+<li>For each <span class="math inline">\(j\in U\)</span>, we create a
 corresponding E-class <span class="math inline">\(c_{j}\)</span>.</li>
 <li>For each collection <span class="math inline">\(S_i\)</span>, we
 create an E-class <span class="math inline">\(c_{S_i}\)</span> with a
@@ -209,7 +215,9 @@ class="math inline">\(j_k\)</span> a new E-node <span
 class="math inline">\(u(c_{S_i})\)</span>.</li>
 <li>We create a root E-class with a special E-node whose children
 include all <span class="math inline">\(C_{j_k}\)</span>.</li>
-<li>Every E-node has a uniform cost of 1.</li>
+<li>Every E-node has a uniform cost of 1.<a href="#fn2"
+class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a></li>
 </ol>
 <p>This will produce the following E-graph for our example.</p>
 <figure>
@@ -226,10 +234,27 @@ class="math inline">\(c_{j}\)</span>s with the smallest cost means
 picking as fewer <span class="math inline">\(S_i\)</span> E-nodes as
 possible, which corresponds to a minimum set cover.</p>
 <p>As a side note, the construction here uses function symbols with
-non-constant arity (i.e., the root E-node). This can be fixed by
+non-constant arities (i.e., the root E-node). This can be fixed by
 replacing the root E-node with <span class="math inline">\(O(n)\)</span>
 many E-nodes with binary function symbols forming a depth-<span
 class="math inline">\(O(\log n)\)</span> binary tree, so our reduction
 only requires unary and binary function symbols.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Here we consider the optimization variant of the NP
+complexity class. The decision version of the extract problem is, given
+an E-graph and a cost function, does there exist a DAG represented by
+the E-graph with a given cost <span class="math inline">\(n\)</span>?<a
+href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>In fact, the costs of the root E-node and <span
+class="math inline">\(c_{j}\)</span>’s do not matter and can be set as
+zero, as these E-nodes will be in the extracted DAG anyway. We
+(arbitrarily) set their cost to be 1 (instead of say 0) to make sure the
+cost model is strictly monotonic.<a href="#fnref2" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
 </body>
 </html>
