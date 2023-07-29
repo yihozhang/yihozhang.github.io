@@ -1,6 +1,8 @@
 ---
 bibliography: main.bib
 csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
+geometry: margin=2cm
+title: The Termination Problem of Equality Saturation is Undecidable
 ---
 
 # Termination of Equality Saturation
@@ -17,9 +19,20 @@ To show this problem is R.E.-hard, we reduce the termination problem of Turing m
 We use the technique by [@NARENDRAN1985343].
 In particular, for each Turing machine $M$, 
  we produce a string rewriting system $R$ such that the equivalence closure of $R$, $(\approx_R)=\left(R\cup R^{-1}\right)^*$, satisfies that each equivalence class of $\approx_R$ 
- corresponds to a trace of of running the Turing machine on certain input.
-As a result, the Turing machine halts if and only if the trace is finite if and only if
- EqSat terminates.
+ corresponds to a trace of the Turing machine.
+As a result, the Turing machine halts
+ iff its trace is finite
+ iff the corresponding equivalence class in $R$ is finite
+ iff EqSat terminates.
+
+In this proof, we consider a degenerate form of EqSat that works with *string* rewriting systems
+ instead of term rewriting systems.
+Every string corresponds to a term, and every string rewrite rule corresponds to a rewrite rule.
+For example, the string $uvw$ corresponds to a term $u(v(w(\epsilon)))$, where $u(\cdot), v(\cdot), w(\cdot)$
+ are unary functions and $\epsilon$ is a constant,
+ and a string rewrite rule $uvw\rightarrow vuw$ corresponds to a (linear) term rewriting rule $u(v(w(x)))\rightarrow v(u(w(x)))$
+ where $x$ is a variable.
+
 
 A Turing machine $M=(K,\Sigma, \Pi,\mu,q_0,\beta)$ consists of a set of states $K$, 
  the input and the tape alphabet $\Sigma$ and $\Pi$ (with $\Sigma\subseteq \Pi$), a set of transitions $\mu$, an initial state $q_0\in K$,
@@ -33,8 +46,10 @@ Each configuration of $M$ can be represented as $\rhd uq_i av \lhd$,
  where $\rhd$,$\lhd$ are left and right end  markers, 
  $u$ is the string to the left of the read/write head, $q_i$ is the current state,
  $a$ is the symbol being scanned, and $v$ is the string to the right.
+We say $w_1\vdash_M w_2$ if configuration $w_1$ can transit to configuration $w_2$ in a Turing machine $M$, and we omit $M$ when it's clear from the context.
 
-For each such $M$, we define $\overline K=\{\overline q\mid q\in K\}$.
+It is useful to define several sets of symbols for our construction.
+For each Turing machine $M$, we define $\overline K=\{\overline q\mid q\in K\}$.
 We also define $\overline \Sigma$, $\overline \Pi$ in a similar way. 
 In our encoding, we use $\overline K$ to denote states 
  where the symbol being scanned is to the left of the state,
@@ -44,17 +59,15 @@ Moreover, we introduce two sets of "dummy" symbols $L_z$ and $R_z$
  for $z$ ranges over $K\times (\{\lhd\}\cup \Pi)$
  and $(\{\rhd\}\cup \overline\Pi)\times \overline K$.
 Let $D_L$ and $D_R$ be the set of all $L_z$ and $R_z$ respectively.
-
-<span style="color: red">TODO: mention that string rewriting system is a special case
- of term rewriting systems</span>
+We use these dummy symbols to make the string rewriting system that we will later define Church-Rosser.
 
 The rewriting system we are going to define works over the set of strings 
  $\textit{CONFIG}=\rhd (\overline\Pi\cup D_L)^*(K\cup \overline K)(\Pi\cup D_R)^*\lhd$.
-We define a mapping from strings in the rewriting system to configurations of a Turing machine: 
- $\pi(w)$ converts each $\overline a\overline q_i$ to $q_ia$, removes dummy symbols $L_z$ and $R_z$, and replace $\overline a$ with $a$.
+ Strings in *CONFIG* is in a many-to-one mapping, denoted as $\pi$, to configurations of a Turing machine.
+$\pi(w)$ converts each $\overline a\overline q_i$ to $q_ia$, removes dummy symbols $L_z$ and $R_z$, and replace $\overline a$ with $a$.
+For example $\pi(\rhd L_{q_0,a}\overline{b} L_{q_1,b} \overline{cq_3}dR_{q_i,\lhd}\lhd)=\rhd bq_3cd\lhd$
 
-
-Now, for the given set of transitions, we define our string rewriting system $R$ as follows:
+Now, the  transitions in $M$, we define our string rewriting system $R$ as follows. Note that we define the rewriting system in a "reverse" order.
 
 | transitions in $M$ | rewrites in $R$ |
 |--------------------|----------------|
@@ -67,34 +80,44 @@ Now, for the given set of transitions, we define our string rewriting system $R$
 | $q_i\beta bLq_j$    |  $q_i\lhd\leftarrow_R \overline q_jbR_{q_i\lhd}\lhd$      |
 |                    | $\rhd \overline q_i\leftarrow_R \rhd\overline q_j b R_{\rhd\overline q_i}$      |
 
-Moreover, for each $z$, we have the following two additional rewrite rules
+Moreover, for each $z$, we have the following two additional (sets of) rewrite rules
 \begin{align*}
 q_iR_z&\leftarrow_R L_zL_zq_i\\
 L_z\overline q_i&\leftarrow_R \overline q_iR_zR_z
 \end{align*}
+for any $z$.
 
-We define two types of strings. Type-A strings are strings where the symbol being scanned
+To explain what these two rules do, let us define two types of strings. Type-A strings are strings where the symbol being scanned
  is to the immediate right of $q_i$ or to the immediate left of $\overline {q_i}$. 
 In other words, 
  we call a string $s$ a type-A string if $s$ contains $q_ia$ or $\overline{aq_i}$.
 Type-B strings are strings that are not type-A: 
  they are strings where there are dummy symbols in between the state and 
  the symbol being scanned.
+The rewrite rules above convert any type-B strings into type-A in a finite number of steps.
 
 Now, we observe that $R$ has several properties:
 
-1. $R$ is convergent: it is obviously terminating since the size of each rule is decreasing.
- $R$ is also confluent by noticing that it has no critical pairs and is terminating.
-2. For each type-A string $w$, then either
+1. Convergence: the critical pair lemma implies that
+   if a rewriting system is terminating and all its critical pairs are convergent,
+   it is convergent.
+   $R$ is terminating since the size of each rewrite rule decreases, and $R$ has no critical pairs.
+   Therefore, $R$ is convergent.
+1. For each type-A string $w$, then either
    * there exists no $w'$ with $w'\rightarrow_R w$ and $\pi(w)$ is a halting configuration.
    * there exists a unique $w'$ such that $w'\rightarrow_R w$ and $\pi(w)\vdash \pi(w')$, where $\vdash$ denotes one transition of the Turing machine.
-3. If $w_0,w_1,\ldots$ is a sequence of type-B strings in *CONFIG*. such that $w_{i+1}\rightarrow_R w_{i}$,
- then $\pi(w_i)=\pi(w_{i+1})$ and the sequence is bounded in length, 
- since the state symbols $q_i$ and $\overline q_i$ move towards one end.
+2. If $w_0,w_1,\ldots$ is a sequence of type-B strings in *CONFIG*. such that $w_{i+1}\rightarrow_R w_{i}$,
+   then $\pi(w_i)=\pi(w_{i+1})$.
+   Moreover, the sequence is bounded in length, 
+   since the state symbols $q_i$ and $\overline q_i$ move towards one end.
+
+These observations allows us to prove the following lemma
 
 **Lemma.** Let $w_0=\rhd q_0s\lhd$ be an initial configuration.
 $w_0$ is obviously in *CONFIG*. 
-Moreover, Turing machine halts on $w_0$ if and only if $[w_0]_R$ is finite.
+Moreover, given a Turing machine $M$, construct a string rewriting system $R$ as above.
+$M$ halts on $w_0$ if and only if $[w_0]_R$, the equivalence class of $w_0$ in $R$, is finite.
+
 
 **Proof.**
 Consider a sequence of *CONFIG* starting with $w_0$,
@@ -102,23 +125,39 @@ Consider a sequence of *CONFIG* starting with $w_0$,
 By the above observations,
  it must have a subsequence of type-A strings
  $w_0\leftarrow_R^* w_{i_1}\leftarrow_R^* w_{i_2}\leftarrow_R^*\ldots$ with 
- $$\pi(w_0)=\ldots =\pi(w_{i_1}-1)\vdash \pi(w_{i_1})=\ldots=\pi(w_{i_2-1})\vdash \pi(w_{i_2})= \ldots.$$
+ $$\pi(w_0)=\ldots =\pi(w_{i_1-1})\vdash \pi(w_{i_1})=\ldots=\pi(w_{i_2-1})\vdash \pi(w_{i_2})= \ldots.$$
  Moreover, the subsequence is bounded if and only if the original sequence is bounded.
 
-Now we prove the claim:
-* $\Leftarrow$:
- If $[w_0]_R$ is finite, then there is a unique finite sequence of $w_0\leftarrow_R w_1\leftarrow_R \ldots\leftarrow_R w_n$, where $\pi(w_i)\vdash\pi(w_{i+1})$ and $\pi(w_n)$ is a halting configuration and there exists no $w'$ with $w'\rightarrow_R w_n$.
- This implies a finite trace $w_0\vdash \pi(w_{i_1})\vdash\ldots\vdash \pi(w_{i_n})$.
- Since we only consider deterministic Turing machines, the Turing machine halts on $w_0$ with the final state $\pi(w_{i_n})$.
-* $\Rightarrow$:
- Suppose otherwise $[w_0]_R$ is infinite. 
- Because $R$ is convergent, there must exist an infinite rewriting sequence
- to the unique normal form (that is, $w_0$): $w_0\leftarrow_R w_1 \leftarrow_R\ldots$.
- Therefore, there is an infinite subsequence
- $w_0\vdash \pi(w_{i_1})\vdash\ldots$
- This contradicts the fact that $w_0$ is halting. $\blacksquare$
+An overview of the trace $w_0,w_{i_1},w_{i_2},\ldots$ and its properties is shown below:
 
-Now we are ready to prove the undecidability of the termination problem of EqSat:
+|        |                     |                |                                                                             |                |                         |                                                                                   |                |                         |          |
+|:-:|:-:|:-:|:------------:|:-:|:-:|:-------------:|:-:|:-:|:-:|
+|   Rw   |    ${w_0}$   | $\leftarrow_R$ | $\underbrace{w_1\leftarrow_R\ldots \leftarrow_R w_{i_1-1}}_{\text{finite}}$ | $\leftarrow_R$ |    ${w_{i_1}}$   | $\underbrace{w_{i_1+1}\leftarrow_R\ldots \leftarrow_R w_{i_2-1}}_{\text{finite}}$ | $\leftarrow_R$ |    ${w_{i_2}}$   | $\ldots$ |
+|  Type  |          A          |                |                                 B $\ldots$ B                                |                |            A            |                                    B $\ldots$ B                                   |                |            A            |          |
+| Config | ${\pi(w_0)}$ |       $=$      |                      $\pi(w_1)=\ldots =\pi(w_{i_1-1})$                      |    $\vdash_M$    | ${\pi(w_{i_1})}$ |                      $\pi(w_{i_1+1})=\ldots =\pi(w_{i_2-1})$                      |    $\vdash_M$    | ${\pi(w_{i_2})}$ | $\ldots$ |
+
+Now we prove the claim:
+
+* $\Leftarrow$:
+  Suppose $[w_0]_R$ is finite. We will show that there is a unique finite sequence of $w_0\leftarrow_R w_1\leftarrow_R \ldots\leftarrow_R w_n$ satisfying (1) $\pi(w_i)\vdash\pi(w_{i+1})$, (2) $\pi(w_n)$ is a halting configuration,
+  and (3) there exists no $w'$ with $w'\rightarrow_R w_n$.
+  This implies a finite trace $w_0\vdash \pi(w_{i_1})\vdash\ldots\vdash \pi(w_{i_n})$.
+  Since we only consider deterministic Turing machines, the Turing machine halts on $w_0$ with the final state $\pi(w_{i_n})$.
+
+  Now, we show the existence and uniqueness of the above finite sequence $w_0\leftarrow_R w_1\leftarrow_R \ldots\leftarrow_R w_n$.
+  To show the existence, we simply pick the longest type-A sequences of 
+  First, since $\leftarrow_R$ strictly increases the size of the term, no $w_i=w_j$ for any $i\neq j$. Because $[w_0]_R$ is finite, the sequence has to be finite.
+  Second, to show the existence of the sequence, suppose otherwise there are two such sequences.
+
+* $\Rightarrow$:
+  Suppose otherwise $[w_0]_R$ is infinite. 
+  Because $R$ is convergent, there must exist an infinite rewriting sequence
+  to the unique normal form (that is, $w_0$): $w_0\leftarrow_R w_1 \leftarrow_R\ldots$.
+  Therefore, there is an infinite subsequence
+  $w_0\vdash \pi(w_{i_1})\vdash\ldots$
+  This contradicts the fact that $w_0$ is halting. $\blacksquare$
+
+We are ready to prove the undecidability of the termination problem of EqSat:
 
 Given a Turing machine $M$. We construct the following two-tape Turing machine $M'$:
 
@@ -137,6 +176,7 @@ Let $R'$ be the string rewriting system derived from $M'$ using the above encodi
  it becomes a term rewriting system.</span> -->
 Given a string $s$,
  the following conditions are equivalent to each other:
+
 * $M$ halts on $s$.
 * $M'$ halts on $(s, 2)$
 * $[w]_{R'}$ is finite, where $w=q_0(s, 2)$.
@@ -188,8 +228,9 @@ Show why this work.</p>
 
 We enumerate E-graphs and for each enumerated E-graph $G$ that represents $w$, 
  we check the following three conditions:
+
 * $w\in L(G)$.
-* $[w]_R \subseteq [w]_G $: to check this, we can check if $[w]_G$ is saturated with respect to $\leftrightarrow_R$.
+* $[w]_R \subseteq [w]_G$: to check this, we can check if $[w]_G$ is saturated with respect to $\leftrightarrow_R$.
 * $[w]_G\subseteq [w]_R$: to check this, we can check if $[w]_G$ has only one normal form.
 
 
