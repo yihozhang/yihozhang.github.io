@@ -4,7 +4,7 @@ author: Yihong Zhang
 date: Mar 9, 2022
 ---
 
-You might have seen our POPL 2022 paper on [Relational E-matching](https://arxiv.org/abs/2108.02290), where we use [database techniques](https://gitlab.com/remywang/blog/-/blob/master/posts/wcoj.md) to improve an important procedure in e-graphs, namely e-matching. We made e-matching orders of magnitude faster, proved theoretical bounds of e-matching, and opened the door for all kinds of wild things you can do with databases and e-graphs. I’m very proud of this work, not only because it is elegant, fast, and theoretically (worst-case) optimal, but also because it is the kind of work I’d like to work on: building connections across areas.
+You might have seen our POPL 2022 paper on [Relational E-matching](https://arxiv.org/abs/2108.02290), where we use [database techniques](https://gitlab.com/remywang/blog/-/blob/master/posts/wcoj.md) to improve an important procedure in e-graphs, namely e-matching. We made e-matching orders of magnitude faster, proved the theoretical bounds of e-matching, and opened the door for all kinds of wild things you can do with databases and e-graphs. I’m very proud of this work, not only because it is elegant, fast, and theoretically (worst-case) optimal, but also because it is the kind of work I’d like to work on: building connections across areas.
 
 However, the relational e-matching approach also has some secret pitfalls. In particular, to have the best of both efficient e-graph maintenance and efficient e-matching, one has to switch back and forth between the e-graph to its relational representation. Our [prototype implementation](https://github.com/egraphs-good/egg/tree/relational) builds a relational database and associated indices from scratch for each match-apply iteration. This is acceptable in the equality saturation setting. E-matching and updates always alternate in batches, so the cost of building the database is amortized. Plus, since building databases and indices are both linear time costs, they are often subsumed by the time spent on e-matching.
 
@@ -44,14 +44,14 @@ It takes a pattern $p$, an e-class $c$, and current substitutions $S$, and retur
 
 The algorithm is straightforward:
 
-1. If the pattern is a variable, and
+1. If the pattern is variable, and
     1. if this variable is fresh in the domain of the substitution, then it’s safe to extend the substitutions with $\{x\mapsto c\}$, or
     2. if this variable is not fresh, we keep only these substitutions that are consistent with the mapping $\{x\mapsto c\}$.
-2. If the pattern is a function symbol of the form $f(p_1,\ldots,p_k)$, the algorithm iterates over $f$-nodes $f(c_1,\ldots, c_k)$ in the e-class, and fold over the sub patterns and sub e-classes with $\textit{match}$, to accumulate set of valid substitutions.
+2. If the pattern is a function symbol of the form $f(p_1,\ldots,p_k)$, the algorithm iterates over $f$-nodes $f(c_1,\ldots, c_k)$ in the e-class, and fold over the sub-patterns and sub-e-classes with $\textit{match}$, to accumulate sets of valid substitutions.
 
 The trick is to generalize case 1.b. In case 1.b, we know the substitution for a pattern is unique when the pattern is a non-fresh variable, but we *also* know this when the variables of the pattern are in the domain of the substitution (i.e., $\text{fv}(p)\subseteq\text{dom}(S)$), thanks to canonicalization. In that case, the pattern after substitution is a ground term, which can be efficiently looked up in a bottom-up fashion.
 
-To implement this idea, we lift case 1.b to the top-level of the algorithm. During e-matching, the algorithm will first check whether the free vars of the input pattern is contained in the domain of the substitution. If yes, then instead of looking further into the pattern, the algorithm will lookup the substituted term for comparison. The following definition shows this:
+To implement this idea, we lift case 1.b to the top level of the algorithm. During e-matching, the algorithm will first check whether the free vars of the input pattern are contained in the domain of the substitution. If yes, then instead of looking further into the pattern, the algorithm will look up the substituted term for comparison. The following definition shows this:
 
 \begin{align*}
     \textit{match}(p, c, S) = & \begin{cases}
@@ -69,7 +69,7 @@ To implement this idea, we lift case 1.b to the top-level of the algorithm. Duri
 
 In the above definition, we also drop the check of $x\not\in\text{dom}(\sigma)$ for the variable case, which is guaranteed not to happen.
 
-As an example, consider $f(\alpha, g(\alpha))$ again. E-matching will enumerate through each $f$-node and bind $\alpha$ to the first child of the $f$-node. Here, the classical e-matching algorithm will then enumerate though the second child e-class of the $f$-node for possible $g$-nodes. However, because $g(\alpha)$ is a ground term after substituting $\alpha$ with $\sigma(\alpha)$, we can effectively lookup $g(\alpha)$ and compare it with the e-class id of the second child. The pseudocode:
+As an example, consider $f(\alpha, g(\alpha))$ again. E-matching will enumerate through each $f$-node and bind $\alpha$ to the first child of the $f$-node. Here, the classical e-matching algorithm will then enumerate through the second child e-class of the $f$-node for possible $g$-nodes. However, because $g(\alpha)$ is a ground term after substituting $\alpha$ with $\sigma(\alpha)$, we can effectively look up $g(\alpha)$ and compare it with the e-class id of the second child. The pseudocode:
 
 ```python
 # classical e-matching
@@ -91,21 +91,21 @@ Implementation-wise, egg adds a new operator to the e-matching virtual machine c
 
 # A Relational View of the Trick
 
-How effective is this trick? To have a better understanding of this trick, let’s take a relational lens. The classical e-matching can be viewed as a relational query plan where hash joins only index one column (the link between parent and child) and potentially prune using the rest of equality columns (the equality constraint). At first I thought this optimization will make classical e-matching equivalent to some efficient hash join-based query plans, and by efficient I specifically mean that the hash joins will index all the columns known to be equivalent. But this is false. Consider the pattern $f(\alpha, g(\alpha,\beta))$. The relational version of it is $Q(r, \alpha,\beta)\gets R_f(r, \alpha, x),R_g(x,\alpha,\beta)$. An efficient plan with hash joins will index both $\alpha$ and $x$. However, our trick can’t use the $\alpha$ in $f$ to prune the $\alpha$ in $g$, because there could be multiple satisfying $g$-nodes (due to the unbound variable $\beta$). In this case, our optimization does not offer any speedup.
+How effective is this trick? To have a better understanding of this trick, let’s take a relational lens. The classical e-matching can be viewed as a relational query plan where hash joins only index one column (the link between parent and child) and potentially prune using the rest of the equality columns (the equality constraint). At first, I thought this optimization will make classical e-matching equivalent to some efficient hash join-based query plans, and by efficient I specifically mean that the hash joins will index all the columns known to be equivalent. But this is false. Consider the pattern $f(\alpha, g(\alpha,\beta))$. The relational version of it is $Q(r, \alpha,\beta)\gets R_f(r, \alpha, x),R_g(x,\alpha,\beta)$. An efficient plan with hash joins will index both $\alpha$ and $x$. However, our trick can’t use the $\alpha$ in $f$ to prune the $\alpha$ in $g$, because there could be multiple satisfying $g$-nodes (due to the unbound variable $\beta$). In this case, our optimization does not offer any speedup.
 
 Now I think of this trick relationally as the kind of query optimizations that leverage functional dependencies. In the relational representation of e-graphs, there is a functional dependency from the children columns to the id column. For example, in relation $R_f(x, c_1, c_2)$, the relational representation of binary function symbol $f$, every combination of $c_1$ and $c_2$ uniquely determines $x$ thanks to e-graph canonicalization. Our trick uses this information to immediately determine the value of $x$ once $c_1$ and $c_2$ are known, without looking at obviously unsatisfying candidates.
 
 In the relational e-matching paper, we also described how we use functional dependency to speed up queries. In fact, if the variable ordering of generic joins follows the topological order of the (acyclic) functional dependency, the run-time complexity will be worst-case optimal [under the presence of FDs](https://dl.acm.org/doi/10.1145/3196959.3196990), a stronger guarantee than the original [AGM](https://www.computer.org/csdl/proceedings-article/focs/2008/3436a739/12OmNy4IEUo) bound. Functional dependencies are also [exploited](https://link.springer.com/article/10.1007/s00778-021-00676-3) for query optimization in databases.
 
-How does this compare to relational e-matching? First, as we saw above, it is not as powerful as relational e-matching. Moreover, the graph representation has the fundamental restriction that makes it very hard to do advanced optimizations, e.g., one that uses cardinality information. It’s also limited in the kind of join it is able to (conceptually) perform (only hash joins). However, I think this trick is cute and integrates well with an existing non-relational e-graph framework.
+How does this compare to relational e-matching? First, as we saw above, it is not as powerful as relational e-matching. Moreover, the graph representation has a fundamental restriction that makes it very hard to do advanced optimizations, e.g., one that uses cardinality information. It’s also limited in the kind of join it is able to (conceptually) perform (only hash joins). However, I think this trick is cute and integrates well with an existing non-relational e-graph framework.
 
 # Query planning
 
 This trick also poses a new question for classical e-matching planning: what visit order shall we use? In the above definition of our algorithm, we assumed a depth-first style order of processing, but this is not necessary. For example, after enumerating the top-level $f$-node in pattern $f(g(\alpha), h(\alpha, \beta))$, it will be most efficient to enumerate the $h$-node and lookup $[\sigma]g(\alpha)$ later. If however we first enumerate $g(\alpha)$, we still can’t avoid enumerating $h(\alpha,\beta)$ later on.
 
-If we assume the cost of enumerating each node is the same, this problem can be viewed as finding the smallest connected component (CC) in the pattern tree that contains the root, such that the CC covers all distinct variables. This does not sound like an easy problem. I currently have two ways for solving this problem in my mind: 1) do a dynamic programming on trees with exponential states, and 2) reduce it to an ILP problem. Both sound like overkill for realistic queries though.
+If we assume the cost of enumerating each node is the same, this problem can be viewed as finding the smallest connected component (CC) in the pattern tree that contains the root, such that the CC covers all distinct variables. This does not sound like an easy problem. I currently have two ways for solving this problem in my mind: 1) do dynamic programming on trees with exponential states, and 2) reduce it to an ILP problem. Both sound like overkill for realistic queries though.
 
-I’m not sure what is a practically good planning heuristic. The one used in egg prioritizes sub-patterns with more free vars, but I’m skeptical how good it is: consider pattern $f(f(g(\alpha),\beta)),g(h(\alpha), h(\beta)))$. This heuristics yield the following plan for this pattern:
+I’m not sure what is practically good planning heuristic. The one used in egg prioritizes sub-patterns with more free vars, but I’m skeptical about how good it is: consider pattern $f(f(g(\alpha),\beta)),g(h(\alpha), h(\beta)))$. This heuristic yields the following plan for this pattern:
 
 ```python
 for f1 in c: # f(f(g(a), g(b))), g(h(a), h(b)))
@@ -122,7 +122,7 @@ for f1 in c: # f(f(g(a), g(b))), g(h(a), h(b)))
           yield {...}
 ```
 
-This is complicated, but it suffices to only look at the first three loops: It does a cross product over the first and the second child of the top-level $f$-node. It seems a good strategy is instead to prefer fewer free vars, and performs the search in a depth-first search, so that $g(h(a), h(b))$ can be looked up all at once after $f(g(a), g(b))$ is enumerated. But is preferring fewer free vars the right way to go? I don’t know. Also realistic patterns I’ve seen so far tend to be small and simple, so cases like the above may be rare.
+This is complicated, but it suffices to only look at the first three loops: It does a cross-product over the first and the second child of the top-level $f$-node. It seems a good strategy is instead to prefer fewer free vars, and performs the search in a depth-first search, so that $g(h(a), h(b))$ can be looked up all at once after $f(g(a), g(b))$ is enumerated. But is preferring fewer free vars the right way to go? I don’t know. Also realistic patterns I’ve seen so far tend to be small and simple, so cases like the above may be rare.
 
 # Miscellaneous
 
