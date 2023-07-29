@@ -44,7 +44,7 @@ The intuition behind this construction is that,
  to extract the root E-class, 
  we have to cover all the elements in the universe,
  so we need to pick an E-node from each $c_{j}$.
-To cover all $c_{j}$s with the smallest cost means picking 
+To cover all $c_{j}$'s with the smallest cost means picking 
  as fewer $S_i$ E-nodes as possible, 
  which corresponds to a minimum set cover.
 
