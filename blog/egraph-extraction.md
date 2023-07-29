@@ -16,7 +16,7 @@ The E-graph extraction problem is defined as follows:
 First, the extraction problem is in NP^[Here we consider the optimization variant of the NP complexity class. The decision version of the extract problem is, given an E-graph and a cost function, does there exist a DAG represented by the E-graph with a given cost $n$?] because it can be [reduced](https://arxiv.org/abs/2101.01332) to integer linear programming (ILP).
 Moreover, we show the extraction problem is NP-hard by reducing [the minimum set cover problem](https://en.wikipedia.org/wiki/Set_cover_problem) to it.
 
-The minimum set cover problem is defined as follows (adapted from the Wikipedia):
+The minimum set cover problem is defined as follows (adapted from Wikipedia):
 
      Input: A set of elements {1, 2, ..., n} (called the universe)
             and a collection S of m sets whose union equals the 
@@ -49,5 +49,5 @@ To cover all $c_{j}$'s with the smallest cost means picking
  which corresponds to a minimum set cover.
 
 As a side note, the construction here uses function symbols with non-constant arities (i.e., the root E-node).
-This can be fixed by replacing the root E-node with $O(n)$ many E-nodes with binary function symbols forming a depth-$O(\log n)$ binary tree,
+This can be fixed by replacing the root E-node with $O(n)$ many E-nodes with binary function symbols forming a depth $O(\log n)$ binary tree,
  so our reduction only requires unary and binary function symbols.
