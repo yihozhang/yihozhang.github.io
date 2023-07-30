@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>trs-regularity</title>
+  <title>The Termination Problem of Equality Saturation is Undecidable</title>
   <style>
     html {
       line-height: 1.5;
@@ -148,10 +148,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
@@ -161,9 +166,14 @@
   <![endif]-->
 </head>
 <body>
+<header id="title-block-header">
+<h1 class="title">The Termination Problem of Equality Saturation is
+Undecidable</h1>
+</header>
 <h1 id="termination-of-equality-saturation">Termination of Equality
 Saturation</h1>
-<p><strong>Theorem:</strong> The following problem is R.E.-complete:</p>
+<p><strong>Theorem 1.</strong> The following problem is
+R.E.-complete:</p>
 <pre><code>Instance: a set of rewrite rules R, a term t.
 Question: does EqSat terminate with R and t?</code></pre>
 <p><strong>Proof.</strong> First, this problem is in R.E. since we can
@@ -179,10 +189,23 @@ such that the equivalence closure of <span
 class="math inline">\(R\)</span>, <span
 class="math inline">\((\approx_R)=\left(R\cup R^{-1}\right)^*\)</span>,
 satisfies that each equivalence class of <span
-class="math inline">\(\approx_R\)</span> corresponds to a trace of of
-running the Turing machine on certain input. As a result, the Turing
-machine halts if and only if the trace is finite if and only if EqSat
-terminates.</p>
+class="math inline">\(\approx_R\)</span> corresponds to a trace of the
+Turing machine. As a result, the Turing machine halts iff its trace is
+finite iff the corresponding equivalence class in <span
+class="math inline">\(R\)</span> is finite iff EqSat terminates.</p>
+<p>In this proof, we consider a degenerate form of EqSat that works with
+<em>string</em> rewriting systems instead of term rewriting systems.
+Every string corresponds to a term, and every string rewrite rule
+corresponds to a rewrite rule. For example, the string <span
+class="math inline">\(uvw\)</span> corresponds to a term <span
+class="math inline">\(u(v(w(\epsilon)))\)</span>, where <span
+class="math inline">\(u(\cdot), v(\cdot), w(\cdot)\)</span> are unary
+functions and <span class="math inline">\(\epsilon\)</span> is a
+constant, and a string rewrite rule <span
+class="math inline">\(uvw\rightarrow vuw\)</span> corresponds to a
+(linear) term rewriting rule <span
+class="math inline">\(u(v(w(x)))\rightarrow v(u(w(x)))\)</span> where
+<span class="math inline">\(x\)</span> is a variable.</p>
 <p>A Turing machine <span class="math inline">\(M=(K,\Sigma,
 \Pi,\mu,q_0,\beta)\)</span> consists of a set of states <span
 class="math inline">\(K\)</span>, the input and the tape alphabet <span
@@ -192,8 +215,9 @@ class="math inline">\(\Sigma\subseteq \Pi\)</span>), a set of
 transitions <span class="math inline">\(\mu\)</span>, an initial state
 <span class="math inline">\(q_0\in K\)</span>, and a special blanket
 symbol <span class="math inline">\(\beta\in\Pi\)</span>. Each transition
-in <span class="math inline">\(\mu\)</span> is a quintuple in $K{L,R} K
-$. For example, transition <span
+in <span class="math inline">\(\mu\)</span> is a quintuple in <span
+class="math inline">\(K\times \Pi\times \Pi\times \{L,R\} \times
+K\)</span>. For example, transition <span
 class="math inline">\(q_iabRq_j\)</span> means if the current state is
 <span class="math inline">\(q_i\)</span> and the symbol being scanned is
 <span class="math inline">\(a\)</span>, then replace <span
@@ -202,7 +226,7 @@ class="math inline">\(b\)</span>, move the head to the right, and
 transit to state <span class="math inline">\(q_j\)</span>. We assume the
 Turing machine is two-way infinite, so that the head can move in both
 directions indefinitely. Each configuration of <span
-class="math inline">\(M\)</span> can be expressed as <span
+class="math inline">\(M\)</span> can be represented as <span
 class="math inline">\(\rhd uq_i av \lhd\)</span>, where <span
 class="math inline">\(\rhd\)</span>,<span
 class="math inline">\(\lhd\)</span> are left and right end markers,
@@ -210,40 +234,50 @@ class="math inline">\(\lhd\)</span> are left and right end markers,
 read/write head, <span class="math inline">\(q_i\)</span> is the current
 state, <span class="math inline">\(a\)</span> is the symbol being
 scanned, and <span class="math inline">\(v\)</span> is the string to the
-right.</p>
-<p>We will encode each configuration of <span
-class="math inline">\(M\)</span> as a string. For each such <span
-class="math inline">\(M\)</span>, we define <span
-class="math inline">\(\overline K=\{\overline q\mid q\in K\}\)</span>.
-We also define <span class="math inline">\(\overline \Sigma\)</span>,
-<span class="math inline">\(\overline \Pi\)</span> in a similar way. In
-our encoding, we use <span class="math inline">\(\overline K\)</span> to
-denote states where the symbol being scanned is to the left of the
-state, and we use <span class="math inline">\(\overline \Sigma\)</span>
-and <span class="math inline">\(\overline \Pi\)</span> to denote
-alphabets that are to the left of the states. Moreover, we introduce two
-sets of “dummy” symbols <span class="math inline">\(L_z\)</span> and
-<span class="math inline">\(R_z\)</span> for <span
+right. We say <span class="math inline">\(w_1\vdash_M w_2\)</span> if
+configuration <span class="math inline">\(w_1\)</span> can transit to
+configuration <span class="math inline">\(w_2\)</span> in a Turing
+machine <span class="math inline">\(M\)</span>, and we omit <span
+class="math inline">\(M\)</span> when it’s clear from the context.</p>
+<p>It is useful to define several sets of symbols for our construction.
+For each Turing machine <span class="math inline">\(M\)</span>, we
+define <span class="math inline">\(\overline K=\{\overline q\mid q\in
+K\}\)</span>. We also define <span class="math inline">\(\overline
+\Sigma\)</span>, <span class="math inline">\(\overline \Pi\)</span> in a
+similar way. In our encoding, we use <span
+class="math inline">\(\overline K\)</span> to denote states where the
+symbol being scanned is to the left of the state, and we use <span
+class="math inline">\(\overline \Sigma\)</span> and <span
+class="math inline">\(\overline \Pi\)</span> to denote alphabets that
+are to the left of the states. Moreover, we introduce two sets of
+“dummy” symbols <span class="math inline">\(L_z\)</span> and <span
+class="math inline">\(R_z\)</span> for <span
 class="math inline">\(z\)</span> ranges over <span
 class="math inline">\(K\times (\{\lhd\}\cup \Pi)\)</span> and <span
 class="math inline">\((\{\rhd\}\cup \overline\Pi)\times \overline
 K\)</span>. Let <span class="math inline">\(D_L\)</span> and <span
 class="math inline">\(D_R\)</span> be the set of all <span
 class="math inline">\(L_z\)</span> and <span
-class="math inline">\(R_z\)</span> respectively. The rewriting system we
-are going to define works over the set of strings <span
-class="math inline">\(\textit{CONFIG}=\rhd (\overline\Pi\cup
-D_L)^*(K\cup \overline K)(\Pi\cup D_R)^*\lhd\)</span> Finally, we define
-a mapping from strings in the rewriting system to configurations of a
-Turing machine: <span class="math inline">\(\pi(w)\)</span> converts
-each <span class="math inline">\(\overline a\overline q_i\)</span> to
-<span class="math inline">\(q_ia\)</span>, removes dummy symbols <span
+class="math inline">\(R_z\)</span> respectively. We use these dummy
+symbols to make the string rewriting system that we will later define
+Church-Rosser.</p>
+<p>The rewriting system we are going to define works over the set of
+strings <span class="math inline">\(\textit{CONFIG}=\rhd
+(\overline\Pi\cup D_L)^*(K\cup \overline K)(\Pi\cup D_R)^*\lhd\)</span>.
+Strings in <em>CONFIG</em> is in a many-to-one mapping, denoted as <span
+class="math inline">\(\pi\)</span>, to configurations of a Turing
+machine. <span class="math inline">\(\pi(w)\)</span> converts each <span
+class="math inline">\(\overline a\overline q_i\)</span> to <span
+class="math inline">\(q_ia\)</span>, removes dummy symbols <span
 class="math inline">\(L_z\)</span> and <span
 class="math inline">\(R_z\)</span>, and replace <span
 class="math inline">\(\overline a\)</span> with <span
-class="math inline">\(a\)</span>.</p>
-<p>Now, for the given set of transitions, we define our string rewriting
-system <span class="math inline">\(R\)</span> as follows:</p>
+class="math inline">\(a\)</span>. For example <span
+class="math inline">\(\pi(\rhd L_{q_0,a}\overline{b} L_{q_1,b}
+\overline{cq_3}dR_{q_i,\lhd}\lhd)=\rhd bq_3cd\lhd\)</span></p>
+<p>Now, the transitions in <span class="math inline">\(M\)</span>, we
+define our string rewriting system <span
+class="math inline">\(R\)</span> as follows.</p>
 <table>
 <colgroup>
 <col style="width: 55%" />
@@ -258,75 +292,363 @@ system <span class="math inline">\(R\)</span> as follows:</p>
 <tbody>
 <tr class="odd">
 <td><span class="math inline">\(q_iabRq_j\)</span></td>
-<td><span class="math inline">\(q_ia\leftarrow L_{q_ia}\overline
+<td><span class="math inline">\(q_ia\rightarrow_R L_{q_ia}\overline
 bq_j\)</span></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><span class="math inline">\(\overline a\overline q_i\leftarrow
+<td><span class="math inline">\(\overline a\overline q_i\rightarrow_R
 L_{\overline aq_i}\overline bq_j\)</span></td>
 </tr>
 <tr class="odd">
 <td><span class="math inline">\(q_i\beta bRq_j\)</span></td>
-<td><span class="math inline">\(q_i\lhd\leftarrow L_{q_i\lhd}\overline b
-q_j\lhd\)</span></td>
+<td><span class="math inline">\(q_i\lhd\rightarrow_R
+L_{q_i\lhd}\overline b q_j\lhd\)</span></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><span class="math inline">\(\rhd \overline q_i\leftarrow \rhd
+<td><span class="math inline">\(\rhd \overline q_i\rightarrow_R \rhd
 L_{\rhd\overline q_i}\overline bq_j\)</span></td>
 </tr>
 <tr class="odd">
 <td><span class="math inline">\(q_iabLq_j\)</span></td>
-<td><span class="math inline">\(q_ia\leftarrow \overline q_j b
+<td><span class="math inline">\(q_ia\rightarrow_R \overline q_j b
 R_{q_ia}\)</span></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><span class="math inline">\(\overline a\overline q_i\leftarrow
+<td><span class="math inline">\(\overline a\overline q_i\rightarrow_R
 \overline q_j b R_{\overline a\overline q_i}\)</span></td>
 </tr>
 <tr class="odd">
 <td><span class="math inline">\(q_i\beta bLq_j\)</span></td>
-<td><span class="math inline">\(q_i\lhd\leftarrow \overline
+<td><span class="math inline">\(q_i\lhd\rightarrow_R \overline
 q_jbR_{q_i\lhd}\lhd\)</span></td>
 </tr>
 <tr class="even">
 <td></td>
-<td><span class="math inline">\(\rhd \overline q_i\leftarrow
+<td><span class="math inline">\(\rhd \overline q_i\rightarrow_R
 \rhd\overline q_j b R_{\rhd\overline q_i}\)</span></td>
 </tr>
 </tbody>
 </table>
-<p>Moreover, for each <span class="math inline">\(z\)</span>, we add the
-following two rewrite rules <span class="math display">\[\begin{align*}
-q_iR_z&amp;\leftarrow L_zL_zq_i\\
-L_z\overline q_i&amp;\leftarrow \overline q_iR_zR_z
-\end{align*}\]</span></p>
-<p>Now, we define two types of strings. Type-A strings are strings where
-the symbol being scanned is to the immediate right of <span
-class="math inline">\(q_i\)</span> or to the immediate left of <span
-class="math inline">\(\overline {q_i}\)</span>. In other words, we call
-a string <span class="math inline">\(s\)</span> a type-A string if <span
+<p>Moreover, for each <span class="math inline">\(z\)</span>, we have
+the following two additional (sets of) auxiliary rewrite rules <span
+class="math display">\[\begin{align*}
+q_iR_z&amp;\rightarrow_R L_zL_zq_i\\
+L_z\overline q_i&amp;\rightarrow_R \overline q_iR_zR_z
+\end{align*}\]</span> for any <span
+class="math inline">\(z\)</span>.</p>
+<p>To explain what these two rules do, let us define two types of
+strings. Type-A strings are strings where the symbol being scanned is to
+the immediate right of <span class="math inline">\(q_i\)</span> or to
+the immediate left of <span class="math inline">\(\overline
+{q_i}\)</span>. In other words, we call a string <span
+class="math inline">\(s\)</span> a type-A string if <span
 class="math inline">\(s\)</span> contains <span
 class="math inline">\(q_ia\)</span> or <span
 class="math inline">\(\overline{aq_i}\)</span>. Type-B strings are
 strings that are not type-A: they are strings where there are dummy
-symbols in between the state and the symbol being scanned.</p>
+symbols in between the state and the symbol being scanned. The rewrite
+rules above convert any type-B strings into type-A in a finite number of
+steps.</p>
 <p>Now, we observe that <span class="math inline">\(R\)</span> has
-several properties: * <span class="math inline">\(R\)</span> is
-convergent: it is obviously terminating since the size of each rule is
-decreasing. <span class="math inline">\(R\)</span> is confluent by
-noticing that it has no critical pairs and is terminating. * For each
-type-A string <span class="math inline">\(w\)</span>, there exists a
-unique <span class="math inline">\(w&#39;\)</span> such that <span
-class="math inline">\(w&#39;\rightarrow w\)</span> and <span
-class="math inline">\(\pi(w)\vdash \pi(w&#39;)\)</span>, where <span
-class="math inline">\(\vdash\)</span> denotes one transition in running
-the Turing machine. * If <span
-class="math inline">\(w_0,w_1,\ldots\)</span> is a sequence of type-B
-strings in . such that <span class="math inline">\(w_{i+1}\rightarrow_R
-w_{i}\)</span>, then</p>
+several properties:</p>
+<ol type="1">
+<li>Reverse convergence: the critical pair lemma implies that if a
+rewriting system is terminating and all its critical pairs are
+convergent, it is convergent. Define <span
+class="math inline">\(\leftarrow_R=\left(\rightarrow_R\right)^{-1}\)</span>.
+<span class="math inline">\(\leftarrow_R\)</span> is terminating since
+rewrite rules in <span class="math inline">\(\leftarrow_R\)</span>
+decreases the sizes of terms (that is, rewrite rules in <span
+class="math inline">\(\rightarrow_R\)</span> increases the sizes of
+terms), and <span class="math inline">\(\leftarrow_R\)</span> has no
+critical pairs. Therefore, <span
+class="math inline">\(\leftarrow_R\)</span> is convergent.</li>
+<li>For each type-A string <span class="math inline">\(w\)</span>, then
+either
+<ul>
+<li>there exists no <span class="math inline">\(w&#39;\)</span> with
+<span class="math inline">\(w\rightarrow_R w&#39;\)</span> and <span
+class="math inline">\(\pi(w)\)</span> is a halting configuration;</li>
+<li>there exists a unique <span class="math inline">\(w&#39;\)</span>
+such that <span class="math inline">\(w\rightarrow_R w&#39;\)</span> and
+<span class="math inline">\(\pi(w)\vdash \pi(w&#39;)\)</span>.</li>
+</ul></li>
+<li>For each type-B string <span class="math inline">\(w\)</span>, there
+exists a unique <span class="math inline">\(w&#39;\)</span> such that
+<span class="math inline">\(w\rightarrow_R w&#39;\)</span>, and <span
+class="math inline">\(\pi(w)=\pi(w&#39;)\)</span>. Moreover, if <span
+class="math inline">\(w_0\rightarrow_R w_1\rightarrow_R\ldots\)</span>
+is a sequence of type-B strings, the sequence must be bounded in length,
+since the state symbols <span class="math inline">\(q_i\)</span> and
+<span class="math inline">\(\overline q_i\)</span> move towards one end
+according to the auxillary rules above.</li>
+<li>By 2 and 3, <span class="math inline">\(w\rightarrow_R w_1\)</span>
+and <span class="math inline">\(w\rightarrow_R w_2\)</span> implies
+<span class="math inline">\(w_1=w_2\)</span>. In other words, <span
+class="math inline">\(\rightarrow_R\)</span> is a function.</li>
+</ol>
+<p>These observations allows us to prove the following lemma</p>
+<p><strong>Lemma 2.</strong> Let <span class="math inline">\(w_0=\rhd
+q_0s\lhd\)</span> be an initial configuration. <span
+class="math inline">\(w_0\)</span> is obviously in <em>CONFIG</em>.
+Moreover, given a Turing machine <span class="math inline">\(M\)</span>,
+construct a string rewriting system <span
+class="math inline">\(R\)</span> as above. <span
+class="math inline">\(M\)</span> halts on <span
+class="math inline">\(w_0\)</span> if and only if <span
+class="math inline">\([w_0]_R\)</span>, the equivalence class of <span
+class="math inline">\(w_0\)</span> in <span
+class="math inline">\(R\)</span>, is finite.</p>
+<p><strong>Proof.</strong> Consider <span class="math inline">\(S:
+w_0\rightarrow_R w_1\rightarrow_R \ldots\)</span>, a sequence of
+<em>CONFIG</em> starting with <span class="math inline">\(w_0\)</span>.
+By the above observations, <span class="math inline">\(S\)</span> must
+have a subsequence of type-A strings <span
+class="math inline">\(w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*
+w_{a_2}\rightarrow_R^*\ldots\)</span> with <span
+class="math display">\[\pi(w_0)=\ldots =\pi(w_{a_1-1})\vdash
+\pi(w_{a_1})=\ldots=\pi(w_{a_2-1})\vdash \pi(w_{a_2})= \ldots.\]</span>
+<!-- IS THIS TRUE? -->
+<!-- Moreover, if the original sequence is bounded, the subsequence is bounded. --></p>
+<p>An overview of the trace <span
+class="math inline">\(w_0,w_{a_1},w_{a_2},\ldots\)</span> and its
+properties is shown below:</p>
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 25%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 30%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">Rw</td>
+<td style="text-align: center;"><span
+class="math inline">\({w_0}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\rightarrow_R\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\underbrace{w_1\rightarrow_R\ldots \rightarrow_R
+w_{a_1-1}}_{\text{finite}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\rightarrow_R\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({w_{a_1}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\underbrace{w_{a_1+1}\rightarrow_R\ldots
+\rightarrow_R w_{a_2-1}}_{\text{finite}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\rightarrow_R\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({w_{a_2}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\ldots\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Type</td>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">B <span
+class="math inline">\(\ldots\)</span> B</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;">B <span
+class="math inline">\(\ldots\)</span> B</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">Config</td>
+<td style="text-align: center;"><span
+class="math inline">\({\pi(w_0)}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(=\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\pi(w_1)=\ldots =\pi(w_{a_1-1})\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\vdash_M\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({\pi(w_{a_1})}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\pi(w_{a_1+1})=\ldots
+=\pi(w_{a_2-1})\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\vdash_M\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({\pi(w_{a_2})}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\ldots\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Now we prove the claim:</p>
+<ul>
+<li><p><span class="math inline">\(\Leftarrow\)</span>: Suppose <span
+class="math inline">\([w_0]_R\)</span> is finite. We show that there
+exists a <em>finite</em> sequence <span class="math inline">\(S\)</span>
+of <span class="math inline">\(w_0\rightarrow_R w_1\rightarrow_R \ldots
+\rightarrow_R w_n\)</span> such that there is no <span
+class="math inline">\(w&#39;\)</span> such that <span
+class="math inline">\(w_n\rightarrow_R w&#39;\)</span>. If this is not
+the case, then an infinite rewriting sequence <span
+class="math inline">\(w_0\rightarrow_R w_1\rightarrow\ldots\)</span>
+must exist. Because <span class="math inline">\([w_0]_R\)</span> is
+finite, for the sequence to be infinite, there must exist distinct <span
+class="math inline">\(i,j\)</span> such that <span
+class="math inline">\(w_i=w_j\)</span> in the sequence. However, this is
+impossible, because <span class="math inline">\(\rightarrow_R\)</span>
+always increases the sizes of terms.</p>
+<p>By our observation above, if there is no such <span
+class="math inline">\(w&#39;\)</span> that <span
+class="math inline">\(w_n\rightarrow_R w&#39;\)</span> in sequence <span
+class="math inline">\(S\)</span>, it has to be the case that <span
+class="math inline">\(w_n\)</span> is type-A and <span
+class="math inline">\(\pi(w)\)</span> is a halting configuration.</p>
+<p>Now, take the subsequence of <span class="math inline">\(S\)</span>
+that contains every type-A string: <span
+class="math display">\[w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*\ldots
+\rightarrow_R^*w_{a_k}=w_n.\]</span> We have <span
+class="math inline">\(\pi(w_{a_i})\vdash\pi(w_{a_{i+1}})\)</span> for
+all <span class="math inline">\(i\)</span> and <span
+class="math inline">\(\pi(w_{a_k})\)</span> is a halting configuration.
+This implies a finite trace of the Turing machine: <span
+class="math display">\[w_0\vdash \pi(w_{a_1})\vdash\ldots\vdash
+\pi(w_{a_n}).\]</span> Since we only consider deterministic Turing
+machines, the Turing machine halts on <span
+class="math inline">\(w_0\)</span>.</p></li>
+<li><p><span class="math inline">\(\Rightarrow\)</span>: Suppose
+otherwise <span class="math inline">\(M\)</span> halts on <span
+class="math inline">\(w_0\)</span> and <span
+class="math inline">\([w_0]_R\)</span> is infinite.</p>
+<p>By definition, <span class="math inline">\(w_0\)</span> is a normal
+form with respect to <span class="math inline">\(\leftarrow_R\)</span>,
+and because <span class="math inline">\(\leftarrow_R\)</span> is
+convergent, if there exists a <span class="math inline">\(w\)</span>
+such that <span class="math inline">\(w\approx_Rw_0\)</span>, then <span
+class="math inline">\(w_0\rightarrow_R^* w\)</span>. The fact that <span
+class="math inline">\([w_0]_R\)</span> is infinite implies <span
+class="math inline">\(w_0\)</span> can be rewritten to infinitely many
+strings <span class="math inline">\(w\)</span>. Because <span
+class="math inline">\(\rightarrow_R\)</span> satisfies the functional
+dependency, it has to be the case that there exists an infinite
+rewriting sequence: <span class="math inline">\(S:w_0\rightarrow_R
+w_1\rightarrow_R \ldots\)</span>. Taking the subsequence of <span
+class="math inline">\(S\)</span> consisting of every type-A strings:
+<span class="math display">\[w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*
+\ldots.\]</span> This implies an infinite trace of the Turing machine:
+<span class="math display">\[w_0\vdash
+\pi(w_{a_1})\vdash\ldots,\]</span> which is a contradiction.</p></li>
+</ul>
+<p>We are ready to prove the undecidability of the termination problem
+of EqSat:</p>
+<p>Given a Turing machine <span class="math inline">\(M\)</span>. We
+construct the following two-tape Turing machine <span
+class="math inline">\(M&#39;\)</span>:</p>
+<pre><code>M&#39; alternates between the following two steps:
+1. Simulate one transition of M on its first tape.
+2. Read the string on its second tape as a number, compute the next prime number, 
+  and write it to the second tape.
+M&#39; halts when the simulation of M reaches an accepting state.</code></pre>
+<p>It is known that a two-tape Turing machine can be simulated using a
+standard Turing machine, so we assume <span
+class="math inline">\(M&#39;\)</span> is a standard Turing machine and
+takes input string <span class="math inline">\((s_1,s_2)\)</span>, where
+<span class="math inline">\(s_1\)</span> is the input on its first tape
+and <span class="math inline">\(s_2\)</span> is the input on its second
+tape. Let <span class="math inline">\(R&#39;\)</span> be the string
+rewriting system derived from <span
+class="math inline">\(M&#39;\)</span> using the encoding we introduced
+in the lemma.</p>
+<p>Given a string <span class="math inline">\(s\)</span>, let <span
+class="math inline">\(w\)</span> be the initial configuration <span
+class="math inline">\(\rhd q_0(s, 2)\lhd\)</span>. The following
+conditions are equivalent to each other:</p>
+<ol type="1">
+<li><span class="math inline">\(M\)</span> halts on input <span
+class="math inline">\(s\)</span>.</li>
+<li><span class="math inline">\(M&#39;\)</span> halts on input <span
+class="math inline">\((s, 2)\)</span>.</li>
+<li><span class="math inline">\([w]_{R&#39;}\)</span> is finite.</li>
+<li><span class="math inline">\([w]_{R&#39;}\)</span> is regular.</li>
+</ol>
+<p>Note that (3) implies (4) trivially, and (4) implies (3) because if
+<span class="math inline">\([w]_{R&#39;}\)</span> is infinite, it must
+not be regular since the trace of <span
+class="math inline">\(M&#39;\)</span> computes every prime number.</p>
+<p>Now run EqSat with initial string <span
+class="math inline">\(w\)</span> and rewriting system <span
+class="math inline">\(\leftrightarrow_{R&#39;}\)</span>. EqSat
+terminates if and only if <span class="math inline">\(M\)</span> halts
+on <span class="math inline">\(s\)</span>:</p>
+<ul>
+<li><span class="math inline">\(\Rightarrow\)</span>: Suppose EqSat
+terminates with output E-graph <span class="math inline">\(G\)</span>.
+Strings equivalent to <span class="math inline">\(w\)</span> in <span
+class="math inline">\(G\)</span> is exactly the equivalence class of
+<span class="math inline">\(w\)</span>, i.e., <span
+class="math inline">\([w]_G=[w]_{R&#39;}\)</span>. Moreover, every
+e-class in an E-graph represents a regular language, so <span
+class="math inline">\([w]_G\)</span> is regular. Therefore, <span
+class="math inline">\([w]_G\)</span> is finite.</li>
+<li><span class="math inline">\(\Leftarrow\)</span>: Suppose <span
+class="math inline">\(M\)</span> halts on <span
+class="math inline">\(s\)</span>. This implies <span
+class="math inline">\([w]_{R&#39;}\)</span> is finite. Because EqSat
+monotonically enlarges the set of represented terms, it has to stop in a
+finite number of iterations.</li>
+</ul>
+<p>Because the halting problem of a Turing machine is undecidable, the
+termination problem of EqSat is undecidable as well. <span
+class="math inline">\(\blacksquare\)</span></p>
+<p><strong>Theorem 3.</strong> The following problem is undecidable.</p>
+<pre><code>Instance: a set of rewrite rules R, a term w.
+Problem: Is [w]_R regular?</code></pre>
+<p><strong>Proof.</strong></p>
+<p>To show the undecidability, we reduce the halting problem of Turing
+machines to this problem. As shown in Theorem 1, given a Turing machine
+<span class="math inline">\(M\)</span>, <span
+class="math inline">\(M\)</span> halts on an input <span
+class="math inline">\(s\)</span> if and only if <span
+class="math inline">\([w]_{R&#39;}\)</span> is regular for <span
+class="math inline">\(w=\rhd q_0(s, 2)\lhd\)</span>. <span
+class="math inline">\(\blacksquare\)</span></p>
+<p>For a particular kind of rewrite systems, we show this regularity
+problem is R.E.-complete.</p>
+<p><strong>Theorem 4.</strong> The following problem is
+R.E.-complete.</p>
+<pre><code>Instance: a set of left-linear, convergent rewrite rules R, a term w.
+Problem: Is [w]_R regular?</code></pre>
+<p><strong>Proof.</strong></p>
+<p><span class="math inline">\(\leftarrow_R\)</span>, the inverse of
+<span class="math inline">\(rightarrow_R\)</span> defined in Theorem 1,
+is convergent. Moreover, every string rewriting system is a linear term
+rewriting system and therefore a left-linear term rewriting system, so
+the regularity of a left-linear, convergent term rewriting system is
+undecidable. Additionally, we show this problem is in R.E. by showing a
+semi-decision procedure for this problem.</p>
+<p>We enumerate E-graphs and for each E-graph <span
+class="math inline">\(G\)</span>, we check the following three
+conditions:</p>
+<ul>
+<li><span class="math inline">\(w\in L(G)\)</span>.</li>
+<li><span class="math inline">\([w]_R \subseteq [w]_G\)</span>: to check
+this, we can check if <span class="math inline">\([w]_G\)</span> is
+saturated with respect to <span
+class="math inline">\(\leftrightarrow_R\)</span>.</li>
+<li><span class="math inline">\([w]_G\subseteq [w]_R\)</span>: to check
+this, we can check if <span class="math inline">\([w]_G\)</span> has
+only one normal form.</li>
+</ul>
 <h1 id="references">References</h1>
 </body>
 </html>

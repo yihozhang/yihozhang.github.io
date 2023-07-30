@@ -118,7 +118,7 @@ Now, we observe that $R$ has several properties:
 
 These observations allows us to prove the following lemma
 
-**Lemma.** Let $w_0=\rhd q_0s\lhd$ be an initial configuration.
+**Lemma 2.** Let $w_0=\rhd q_0s\lhd$ be an initial configuration.
 $w_0$ is obviously in *CONFIG*. 
 Moreover, given a Turing machine $M$, construct a string rewriting system $R$ as above.
 $M$ halts on $w_0$ if and only if $[w_0]_R$, the equivalence class of $w_0$ in $R$, is finite.
@@ -138,7 +138,7 @@ By the above observations,
 An overview of the trace $w_0,w_{a_1},w_{a_2},\ldots$ and its properties is shown below:
 
 |        |                     |                |                                                                             |                |                         |                                                                                   |                |                         |          |
-|:-:|:-:|:-:|:------------:|:-:|:-:|:-------------:|:-:|:-:|:-:|
+|:-:|:-:|:-:|:------------:|:-:|:-:|:---------------:|:-:|:-:|:-:|
 |   Rw   |    ${w_0}$   | $\rightarrow_R$ | $\underbrace{w_1\rightarrow_R\ldots \rightarrow_R w_{a_1-1}}_{\text{finite}}$ | $\rightarrow_R$ |    ${w_{a_1}}$   | $\underbrace{w_{a_1+1}\rightarrow_R\ldots \rightarrow_R w_{a_2-1}}_{\text{finite}}$ | $\rightarrow_R$ |    ${w_{a_2}}$   | $\ldots$ |
 |  Type  |          A          |                |                                 B $\ldots$ B                                |                |            A            |                                    B $\ldots$ B                                   |                |            A            |          |
 | Config | ${\pi(w_0)}$ |       $=$      |                      $\pi(w_1)=\ldots =\pi(w_{a_1-1})$                      |    $\vdash_M$    | ${\pi(w_{a_1})}$ |                      $\pi(w_{a_1+1})=\ldots =\pi(w_{a_2-1})$                      |    $\vdash_M$    | ${\pi(w_{a_2})}$ | $\ldots$ |
@@ -171,7 +171,7 @@ Now we prove the claim:
   to infinitely many strings $w$.
   Because $\rightarrow_R$ satisfies the functional dependency,
   it has to be the case that there exists an infinite rewriting sequence: $S:w_0\rightarrow_R w_1\rightarrow_R \ldots$.
-  Taking the subsequence of $S$ consisting of every $type-A$ strings: $S:w_0\rightarrow_R w_{a_1}\rightarrow_R \ldots$. This implies an infinite trace of the Turing machine: $$w_0\vdash \pi(w_{a_1})\vdash\ldots,$$
+  Taking the subsequence of $S$ consisting of every type-A strings: $$w_0\rightarrow_R^* w_{a_1}\rightarrow_R^* \ldots.$$ This implies an infinite trace of the Turing machine: $$w_0\vdash \pi(w_{a_1})\vdash\ldots,$$
   which is a contradiction.
 
 We are ready to prove the undecidability of the termination problem of EqSat:
@@ -183,67 +183,72 @@ M' alternates between the following two steps:
 1. Simulate one transition of M on its first tape.
 2. Read the string on its second tape as a number, compute the next prime number, 
   and write it to the second tape.
-M' halts when M reachs an accepting state.
+M' halts when the simulation of M reaches an accepting state.
 ```
 It is known that a two-tape Turing machine can be simulated using a standard Turing machine,
  so we assume $M'$ is a standard Turing machine and takes input string $(s_1,s_2)$, 
  where $s_1$ is the input on its first tape and $s_2$ is the input on its second tape.
-Let $R'$ be the string rewriting system derived from $M'$ using the above encoding.
-<!-- <span style="color:red">COMMENT: Above we are working with string rewriting system but here 
- it becomes a term rewriting system.</span> -->
+Let $R'$ be the string rewriting system derived from $M'$ using the encoding we introduced in the lemma.
+
 Given a string $s$,
- the following conditions are equivalent to each other:
+ let $w$ be the initial configuration $\rhd q_0(s, 2)\lhd$.
+The following conditions are equivalent to each other:
 
-* $M$ halts on $s$.
-* $M'$ halts on $(s, 2)$
-* $[w]_{R'}$ is finite, where $w=q_0(s, 2)$.
-* $[w]_{R'}$ is regular.
+1. $M$ halts on input $s$.
+2. $M'$ halts on input $(s, 2)$.
+3. $[w]_{R'}$ is finite.
+4. $[w]_{R'}$ is regular.
 
-Now running EqSat with initial string $w$ and rewriting system $\leftrightarrow_{R'}$, we show EqSat terminates iff $M$ halts on $s$:
-<span style="color:red">The proof below is a sketch and needs to be refined.</span>
+Note that (3) implies (4) trivially, and (4) implies (3) because if $[w]_{R'}$ is infinite, it must not be regular since the trace of $M'$ computes every prime number.
+
+Now run EqSat with initial string $w$ and rewriting system $\leftrightarrow_{R'}$.
+EqSat terminates if and only if $M$ halts on $s$:
 
 * $\Rightarrow$:
-Suppose EqSat terminates with output E-graph $G$. 
-The set of strings equivalent to $w$ in $G$ is exactly 
- the equivalence class of $w$, i.e.,  $[w]_G=[w]_{R'}$.
-Moreover, $[w]_G$ is regular, so $[w]_G$ is finite.
+  Suppose EqSat terminates with output E-graph $G$. 
+  Strings equivalent to $w$ in $G$ is exactly 
+   the equivalence class of $w$, i.e.,  $[w]_G=[w]_{R'}$.
+  Moreover, 
+   every e-class in an E-graph represents a regular language,
+   so $[w]_G$ is regular.
+  Therefore, $[w]_G$ is finite.
 * $\Leftarrow$:
-Suppose $M$ halts on $s$. This implies $[w]_{R'}$ is finite.
-Because EqSat monotonically enlarge the set of represented terms, it has to stop in a finite number of iterations.
+  Suppose $M$ halts on $s$.
+  This implies $[w]_{R'}$ is finite.
+  Because EqSat monotonically enlarges the set of represented terms, it has to stop in a finite number of iterations.
 
 Because the halting problem of a Turing machine is undecidable, the termination problem of EqSat is undecidable as well. $\blacksquare$
 
-**Theorem 2.** The following problem is undecidable.
+**Theorem 3.** The following problem is undecidable.
 
     Instance: a set of rewrite rules R, a term w.
     Problem: Is [w]_R regular?
 
 **Proof.**
 
-We reduce the halting problem of Turing machines to this problem.
-Given a Turing machine $M$, we derive $M'$ and $R'$ as in Theorem 1.
-$M$ halts on an input $s$ if and only if $[w]_{R'}$ is finite
-if and only if $[w]_{R'}$ is regular for $w=q_0(s, 2)$.
+To show the undecidability, 
+ we reduce the halting problem of Turing machines to this problem.
+As shown in Theorem 1, given a Turing machine $M$,
+$M$ halts on an input $s$ if and only
+ if $[w]_{R'}$ is regular for $w=\rhd q_0(s, 2)\lhd$.
+$\blacksquare$
 
-<span style="color:red">We need to better structure this document and give names to our different encodings</span>
+For a particular kind of rewrite systems, we show this regularity problem is R.E.-complete.
 
-**Theorem 3.** The following problem is R.E.-complete.
+**Theorem 4.** The following problem is R.E.-complete.
 
     Instance: a set of left-linear, convergent rewrite rules R, a term w.
     Problem: Is [w]_R regular?
 
 **Proof.**
 
-This problem is undecidable by noticing that the term rewriting system 
- we constructed in theorem 1 and 2 is left-linear and convergent.
-We show this problem is in R.E. by constructing a semi-decision procedure.
+$\leftarrow_R$, the inverse of $rightarrow_R$ defined in Theorem 1, is convergent.
+Moreover, every string rewriting system is a linear term rewriting system 
+ and therefore a left-linear term rewriting system, 
+ so the regularity of a left-linear, convergent term rewriting system is undecidable.
+Additionally, we show this problem is in R.E. by showing a semi-decision procedure for this problem.
 
-<p style="color:red">TODO: More work needed here:<br>
-Define what does it mean to be saturated.<br>
-Show how to check the set of normal forms of $L(G)$<br>
-Show why this work.</p>
-
-We enumerate E-graphs and for each enumerated E-graph $G$ that represents $w$, 
+We enumerate E-graphs and for each  E-graph $G$, 
  we check the following three conditions:
 
 * $w\in L(G)$.
