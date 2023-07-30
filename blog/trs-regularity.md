@@ -67,23 +67,23 @@ The rewriting system we are going to define works over the set of strings
 $\pi(w)$ converts each $\overline a\overline q_i$ to $q_ia$, removes dummy symbols $L_z$ and $R_z$, and replace $\overline a$ with $a$.
 For example $\pi(\rhd L_{q_0,a}\overline{b} L_{q_1,b} \overline{cq_3}dR_{q_i,\lhd}\lhd)=\rhd bq_3cd\lhd$
 
-Now, the  transitions in $M$, we define our string rewriting system $R$ as follows. Note that we define the rewriting system in a "reverse" order.
+Now, the  transitions in $M$, we define our string rewriting system $R$ as follows.
 
 | transitions in $M$ | rewrites in $R$ |
 |--------------------|----------------|
-| $q_iabRq_j$        | $q_ia\leftarrow_R L_{q_ia}\overline bq_j$      |
-|                    | $\overline a\overline q_i\leftarrow_R L_{\overline aq_i}\overline bq_j$      |
-| $q_i\beta bRq_j$   | $q_i\lhd\leftarrow_R L_{q_i\lhd}\overline b q_j\lhd$      |
-|                    | $\rhd \overline q_i\leftarrow_R \rhd L_{\rhd\overline q_i}\overline bq_j$      |
-| $q_iabLq_j$        | $q_ia\leftarrow_R \overline q_j b R_{q_ia}$      |
-|                    | $\overline a\overline q_i\leftarrow_R \overline q_j b R_{\overline a\overline q_i}$      |
-| $q_i\beta bLq_j$    |  $q_i\lhd\leftarrow_R \overline q_jbR_{q_i\lhd}\lhd$      |
-|                    | $\rhd \overline q_i\leftarrow_R \rhd\overline q_j b R_{\rhd\overline q_i}$      |
+| $q_iabRq_j$        | $q_ia\rightarrow_R L_{q_ia}\overline bq_j$      |
+|                    | $\overline a\overline q_i\rightarrow_R L_{\overline aq_i}\overline bq_j$      |
+| $q_i\beta bRq_j$   | $q_i\lhd\rightarrow_R L_{q_i\lhd}\overline b q_j\lhd$      |
+|                    | $\rhd \overline q_i\rightarrow_R \rhd L_{\rhd\overline q_i}\overline bq_j$      |
+| $q_iabLq_j$        | $q_ia\rightarrow_R \overline q_j b R_{q_ia}$      |
+|                    | $\overline a\overline q_i\rightarrow_R \overline q_j b R_{\overline a\overline q_i}$      |
+| $q_i\beta bLq_j$    |  $q_i\lhd\rightarrow_R \overline q_jbR_{q_i\lhd}\lhd$      |
+|                    | $\rhd \overline q_i\rightarrow_R \rhd\overline q_j b R_{\rhd\overline q_i}$      |
 
-Moreover, for each $z$, we have the following two additional (sets of) rewrite rules
+Moreover, for each $z$, we have the following two additional (sets of) auxiliary rewrite rules
 \begin{align*}
-q_iR_z&\leftarrow_R L_zL_zq_i\\
-L_z\overline q_i&\leftarrow_R \overline q_iR_zR_z
+q_iR_z&\rightarrow_R L_zL_zq_i\\
+L_z\overline q_i&\rightarrow_R \overline q_iR_zR_z
 \end{align*}
 for any $z$.
 
@@ -98,18 +98,23 @@ The rewrite rules above convert any type-B strings into type-A in a finite numbe
 
 Now, we observe that $R$ has several properties:
 
-1. Convergence: the critical pair lemma implies that
+1. Reverse convergence: the critical pair lemma implies that
    if a rewriting system is terminating and all its critical pairs are convergent,
    it is convergent.
-   $R$ is terminating since the size of each rewrite rule decreases, and $R$ has no critical pairs.
-   Therefore, $R$ is convergent.
-1. For each type-A string $w$, then either
-   * there exists no $w'$ with $w'\rightarrow_R w$ and $\pi(w)$ is a halting configuration.
-   * there exists a unique $w'$ such that $w'\rightarrow_R w$ and $\pi(w)\vdash \pi(w')$, where $\vdash$ denotes one transition of the Turing machine.
-2. If $w_0,w_1,\ldots$ is a sequence of type-B strings in *CONFIG*. such that $w_{i+1}\rightarrow_R w_{i}$,
-   then $\pi(w_i)=\pi(w_{i+1})$.
-   Moreover, the sequence is bounded in length, 
-   since the state symbols $q_i$ and $\overline q_i$ move towards one end.
+   Define $\leftarrow_R=\left(\rightarrow_R\right)^{-1}$.
+   $\leftarrow_R$ is terminating since rewrite rules in $\leftarrow_R$
+   decreases the sizes of terms (that is, rewrite rules in $\rightarrow_R$ increases the sizes of terms), and $\leftarrow_R$ has no critical pairs.
+   Therefore, $\leftarrow_R$ is convergent.
+2. For each type-A string $w$, then either
+   * there exists no $w'$ with $w\rightarrow_R w'$ and $\pi(w)$ is a halting configuration;
+   * there exists a unique $w'$ such that $w\rightarrow_R w'$ and $\pi(w)\vdash \pi(w')$.
+3. For each type-B string $w$, there exists a unique $w'$ such that $w\rightarrow_R w'$,
+   and $\pi(w)=\pi(w')$.
+   Moreover, 
+   if $w_0\rightarrow_R w_1\rightarrow_R\ldots$ is a sequence of type-B strings,
+   the sequence must be bounded in length,
+   since the state symbols $q_i$ and $\overline q_i$ move towards one end according to the auxillary rules above.
+4. By 2 and 3, $w\rightarrow_R w_1$ and $w\rightarrow_R w_2$ implies $w_1=w_2$. In other words, $\rightarrow_R$ is a function.
 
 These observations allows us to prove the following lemma
 
@@ -120,42 +125,54 @@ $M$ halts on $w_0$ if and only if $[w_0]_R$, the equivalence class of $w_0$ in $
 
 
 **Proof.**
-Consider a sequence of *CONFIG* starting with $w_0$,
- $w_0\leftarrow_R w_1\leftarrow_R \ldots$.
+Consider
+ $S: w_0\rightarrow_R w_1\rightarrow_R \ldots$,
+ a sequence of *CONFIG* starting with $w_0$.
 By the above observations,
- it must have a subsequence of type-A strings
- $w_0\leftarrow_R^* w_{i_1}\leftarrow_R^* w_{i_2}\leftarrow_R^*\ldots$ with 
- $$\pi(w_0)=\ldots =\pi(w_{i_1-1})\vdash \pi(w_{i_1})=\ldots=\pi(w_{i_2-1})\vdash \pi(w_{i_2})= \ldots.$$
- Moreover, the subsequence is bounded if and only if the original sequence is bounded.
+ $S$ must have a subsequence of type-A strings
+ $w_0\rightarrow_R^* w_{a_1}\rightarrow_R^* w_{a_2}\rightarrow_R^*\ldots$ with 
+ $$\pi(w_0)=\ldots =\pi(w_{a_1-1})\vdash \pi(w_{a_1})=\ldots=\pi(w_{a_2-1})\vdash \pi(w_{a_2})= \ldots.$$
+ <!-- IS THIS TRUE? -->
+ <!-- Moreover, if the original sequence is bounded, the subsequence is bounded. -->
 
-An overview of the trace $w_0,w_{i_1},w_{i_2},\ldots$ and its properties is shown below:
+An overview of the trace $w_0,w_{a_1},w_{a_2},\ldots$ and its properties is shown below:
 
 |        |                     |                |                                                                             |                |                         |                                                                                   |                |                         |          |
 |:-:|:-:|:-:|:------------:|:-:|:-:|:-------------:|:-:|:-:|:-:|
-|   Rw   |    ${w_0}$   | $\leftarrow_R$ | $\underbrace{w_1\leftarrow_R\ldots \leftarrow_R w_{i_1-1}}_{\text{finite}}$ | $\leftarrow_R$ |    ${w_{i_1}}$   | $\underbrace{w_{i_1+1}\leftarrow_R\ldots \leftarrow_R w_{i_2-1}}_{\text{finite}}$ | $\leftarrow_R$ |    ${w_{i_2}}$   | $\ldots$ |
+|   Rw   |    ${w_0}$   | $\rightarrow_R$ | $\underbrace{w_1\rightarrow_R\ldots \rightarrow_R w_{a_1-1}}_{\text{finite}}$ | $\rightarrow_R$ |    ${w_{a_1}}$   | $\underbrace{w_{a_1+1}\rightarrow_R\ldots \rightarrow_R w_{a_2-1}}_{\text{finite}}$ | $\rightarrow_R$ |    ${w_{a_2}}$   | $\ldots$ |
 |  Type  |          A          |                |                                 B $\ldots$ B                                |                |            A            |                                    B $\ldots$ B                                   |                |            A            |          |
-| Config | ${\pi(w_0)}$ |       $=$      |                      $\pi(w_1)=\ldots =\pi(w_{i_1-1})$                      |    $\vdash_M$    | ${\pi(w_{i_1})}$ |                      $\pi(w_{i_1+1})=\ldots =\pi(w_{i_2-1})$                      |    $\vdash_M$    | ${\pi(w_{i_2})}$ | $\ldots$ |
+| Config | ${\pi(w_0)}$ |       $=$      |                      $\pi(w_1)=\ldots =\pi(w_{a_1-1})$                      |    $\vdash_M$    | ${\pi(w_{a_1})}$ |                      $\pi(w_{a_1+1})=\ldots =\pi(w_{a_2-1})$                      |    $\vdash_M$    | ${\pi(w_{a_2})}$ | $\ldots$ |
 
 Now we prove the claim:
 
 * $\Leftarrow$:
-  Suppose $[w_0]_R$ is finite. We will show that there is a unique finite sequence of $w_0\leftarrow_R w_1\leftarrow_R \ldots\leftarrow_R w_n$ satisfying (1) $\pi(w_i)\vdash\pi(w_{i+1})$, (2) $\pi(w_n)$ is a halting configuration,
-  and (3) there exists no $w'$ with $w'\rightarrow_R w_n$.
-  This implies a finite trace $w_0\vdash \pi(w_{i_1})\vdash\ldots\vdash \pi(w_{i_n})$.
-  Since we only consider deterministic Turing machines, the Turing machine halts on $w_0$ with the final state $\pi(w_{i_n})$.
+  Suppose $[w_0]_R$ is finite.
+  We show that there exists a *finite* sequence $S$ of $w_0\rightarrow_R w_1\rightarrow_R \ldots \rightarrow_R w_n$ such that
+  there is no $w'$ such that $w_n\rightarrow_R w'$.
+  If this is not the case, then an infinite rewriting sequence $w_0\rightarrow_R w_1\rightarrow\ldots$ must exist.
+  Because $[w_0]_R$ is finite, for the sequence to be infinite, there must exist distinct $i,j$ such that $w_i=w_j$ in the sequence.
+  However, this is impossible, because $\rightarrow_R$ always increases the sizes of terms.
 
-  Now, we show the existence and uniqueness of the above finite sequence $w_0\leftarrow_R w_1\leftarrow_R \ldots\leftarrow_R w_n$.
-  To show the existence, we simply pick the longest type-A sequences of 
-  First, since $\leftarrow_R$ strictly increases the size of the term, no $w_i=w_j$ for any $i\neq j$. Because $[w_0]_R$ is finite, the sequence has to be finite.
-  Second, to show the existence of the sequence, suppose otherwise there are two such sequences.
-
+  By our observation above, if there is no such $w'$ that $w_n\rightarrow_R w'$ in sequence $S$,
+  it has to be the case that $w_n$ is type-A and $\pi(w)$ is a halting configuration.
+  
+  Now, take the subsequence of $S$ that contains every type-A string: $$w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*\ldots \rightarrow_R^*w_{a_k}=w_n.$$
+  We have $\pi(w_{a_i})\vdash\pi(w_{a_{i+1}})$ for all $i$ and $\pi(w_{a_k})$ is a halting configuration.
+  This implies a finite trace of the Turing machine: $$w_0\vdash \pi(w_{a_1})\vdash\ldots\vdash \pi(w_{a_n}).$$
+  Since we only consider deterministic Turing machines, the Turing machine halts on $w_0$.
 * $\Rightarrow$:
-  Suppose otherwise $[w_0]_R$ is infinite. 
-  Because $R$ is convergent, there must exist an infinite rewriting sequence
-  to the unique normal form (that is, $w_0$): $w_0\leftarrow_R w_1 \leftarrow_R\ldots$.
-  Therefore, there is an infinite subsequence
-  $w_0\vdash \pi(w_{i_1})\vdash\ldots$
-  This contradicts the fact that $w_0$ is halting. $\blacksquare$
+  Suppose otherwise $M$ halts on $w_0$ and $[w_0]_R$ is infinite.
+
+  By definition, $w_0$ is a normal form with respect to $\leftarrow_R$,
+  and because $\leftarrow_R$ is convergent,
+  if there exists a $w$ such that $w\approx_Rw_0$,
+  then $w_0\rightarrow_R^* w$.
+  The fact that $[w_0]_R$ is infinite implies $w_0$ can be rewritten
+  to infinitely many strings $w$.
+  Because $\rightarrow_R$ satisfies the functional dependency,
+  it has to be the case that there exists an infinite rewriting sequence: $S:w_0\rightarrow_R w_1\rightarrow_R \ldots$.
+  Taking the subsequence of $S$ consisting of every $type-A$ strings: $S:w_0\rightarrow_R w_{a_1}\rightarrow_R \ldots$. This implies an infinite trace of the Turing machine: $$w_0\vdash \pi(w_{a_1})\vdash\ldots,$$
+  which is a contradiction.
 
 We are ready to prove the undecidability of the termination problem of EqSat:
 
@@ -182,12 +199,12 @@ Given a string $s$,
 * $[w]_{R'}$ is finite, where $w=q_0(s, 2)$.
 * $[w]_{R'}$ is regular.
 
-Now running EqSat with initial term $w$ and rewriting system $\leftrightarrow_{R'}$, we show EqSat terminates iff $M$ halts on $s$:
+Now running EqSat with initial string $w$ and rewriting system $\leftrightarrow_{R'}$, we show EqSat terminates iff $M$ halts on $s$:
 <span style="color:red">The proof below is a sketch and needs to be refined.</span>
 
 * $\Rightarrow$:
 Suppose EqSat terminates with output E-graph $G$. 
-The set of terms equivalent to $w$ in $G$ is exactly 
+The set of strings equivalent to $w$ in $G$ is exactly 
  the equivalence class of $w$, i.e.,  $[w]_G=[w]_{R'}$.
 Moreover, $[w]_G$ is regular, so $[w]_G$ is finite.
 * $\Leftarrow$:
