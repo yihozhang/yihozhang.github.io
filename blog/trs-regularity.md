@@ -3,6 +3,7 @@ bibliography: main.bib
 csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
 geometry: margin=2cm
 title: The Termination Problem of Equality Saturation is Undecidable
+author: Yihong Zhang
 ---
 
 # Termination of Equality Saturation
@@ -234,6 +235,8 @@ $M$ halts on an input $s$ if and only
 $\blacksquare$
 
 For a particular kind of rewrite systems, we show this regularity problem is R.E.-complete.
+We call a term rewriting system left-linear if variables in the left-hand side of each rewrite rule occur only once.
+For example, $R_1=\{f(x,y)\rightarrow g(x)\}$ is left-linear, while $R_2=\{f(x,x)\rightarrow g(x)\}$ is not left-linear.
 
 **Theorem 4.** The following problem is R.E.-complete.
 
@@ -242,18 +245,91 @@ For a particular kind of rewrite systems, we show this regularity problem is R.E
 
 **Proof.**
 
-$\leftarrow_R$, the inverse of $rightarrow_R$ defined in Theorem 1, is convergent.
-Moreover, every string rewriting system is a linear term rewriting system 
+As we show in Theorem 1, the regularity of $\leftarrow_R$ is undecidable.
+Note that $\leftarrow_R$, the inverse of $\rightarrow_R$ defined in Theorem 1, is convergent.
+Moreover, because every string rewriting system is a linear term rewriting system 
  and therefore a left-linear term rewriting system, 
- so the regularity of a left-linear, convergent term rewriting system is undecidable.
-Additionally, we show this problem is in R.E. by showing a semi-decision procedure for this problem.
+ $\leftarrow_R$ is left-linear.
+Therefore,
+ the regularity of left-linear, convergent term rewriting systems is undecidable.
+Additionally, we show the regularity problem is in R.E. by showing a semi-decision procedure for it.
 
-We enumerate E-graphs and for each  E-graph $G$, 
+Let $\mathcal{A}_\ast$ be a tree automaton that accepts any term. 
+More explicitly, $$\mathcal{A}_\ast=(q_\ast, \{f(q_\ast|_{i=1\ldots n})\rightarrow q_\ast\mid \text{for every }n\text{-ary symbol } f \})$$ for a fresh state $q_\ast$.
+
+
+> **Procedure** $\textit{termsMatchingPattern}(p)$
+> 
+> **Input:** A linear pattern $p$.
+>
+> **Output:** An FTA $\mathcal{A}$ satisfying $\mathcal{L(A)}$
+> contains all terms matching the given pattern.
+>
+> 1. **begin**
+> 
+> 2. $\quad$ $q_f\gets \textit{mkFreshState}()$;
+>
+> 3. $\quad$ **case** $p$ **of**
+> 
+> 4. $\quad$ $\quad$ $f(p_1,\ldots, p_k)\Rightarrow$
+> 
+> 5. $\quad$ $\quad$ $\quad$ $(q_i, \Delta_i) \gets \textit{termsMatchingPattern}(p_i)$ **for** $i=1,\ldots, k$;
+> 
+> 6. $\quad$ $\quad$ $\quad$ $q\gets \textit{mkFreshState}()$;
+>
+> 7. $\quad$ $\quad$ $\quad$ $\Delta \gets \{f(q_1,\ldots, q_k)\rightarrow q\}\cup \bigcup_{i=1,\ldots, k} \Delta_i$;
+>
+> 8. $\quad$ $\quad$ $\quad$ **return** $(q, \Delta)$;
+> 
+> 9. $\quad$ $\quad$ $x\Rightarrow$ **return** $A_\ast$;
+> 
+> 10. **end**
+
+> **Procedure** $\textit{termsContainingPattern}(p)$
+> 
+> **Input:** A linear pattern $p$.
+>
+> **Output:** An FTA $\mathcal{A}$ satisfying $\mathcal{L(A)}$
+> contains all terms containing the given pattern.
+>
+> **begin**
+>
+> 2. $\quad$ $q_f\gets \textit{mkFreshState}()$;
+> 
+> 3. $\quad$ $(q_p, \Delta)\gets \textit{termsMatchingPattern}(p)$;
+>
+> 4. $\quad$ $\Delta\gets \Delta\cup \{q_p\rightarrow q_f\}$;
+> 
+> 5. $\quad$ **for each** $n$-ary symbol $f$ **where** $n > 0$ **do**
+> 
+> 6. $\quad$ $\quad$ **for** $i = 1,\ldots,n$ **do**
+> 
+> 7. $\quad$ $\quad$ $\quad$ $\Delta \gets \Delta \cup \{ f(q_\ast|_{j=1,\ldots,i-1}, q_f, q_\ast|_{j=i+1,\ldots,n}) \rightarrow q_f \}$;
+>
+> 8. $\quad$ **return** $(q_f, \Delta)$;
+> 
+> **end**
+
+> **Procedure** $\textit{Reg}$($R$, $w$)
+>
+> **Input:** a left-linear, convergent term rewriting system $R$, a term $w$.
+>
+> **Output:** an E-graph that represents $[w]_R$ if exists.
+>
+> 1. **for each** E-graph $G$ such that $w\in L(G)$ **do**
+> 
+> 2. $\quad$ **if** $G\neq \textit{runEqSatOneIter}(G, R)$ **then continue**;
+>
+> 3. $\quad$ $\mathcal{A}\gets \bigcup_{\textit{lhs}\rightarrow \textit{rhs}\;\in\; R} \textit{termsContainingPattern}(\textit{lhs})$;
+>
+> 4. $\quad$ **if** $\mathcal{L}(G)\cap\overline{\mathcal{L(A)}}=\{w\}$ **then** **return** $G$;
+<!-- 
+We enumerate E-graphs and for each  E-graph $G$,
  we check the following three conditions:
 
 * $w\in L(G)$.
 * $[w]_R \subseteq [w]_G$: to check this, we can check if $[w]_G$ is saturated with respect to $\leftrightarrow_R$.
-* $[w]_G\subseteq [w]_R$: to check this, we can check if $[w]_G$ has only one normal form.
+* $[w]_G\subseteq [w]_R$: to check this, we can check if $[w]_G$ has only one normal form. -->
 
 
 
