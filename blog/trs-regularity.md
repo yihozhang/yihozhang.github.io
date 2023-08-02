@@ -4,11 +4,12 @@ csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
 geometry: margin=2cm
 title: The Termination Problem of Equality Saturation is Undecidable
 author: Yihong Zhang
+date: Aug 2, 2023
 ---
 
 In this note, we study the decidability of the termination of equality saturation and related problems.
 
-# Background
+## Background
 
 
 ## Term rewriting
@@ -140,7 +141,7 @@ Each configuration of $\mathcal{M}$ can be represented as $\rhd uq_i av \lhd$,
  $a$ is the symbol being scanned, and $v$ is the string to the right.
 We say $w_1\vdash_{\mathcal{M}} w_2$ if configuration $w_1$ can transit to configuration $w_2$ in a Turing machine $\mathcal{M}$, and we omit $\mathcal{M}$ when it's clear from the context.
 
-# Termination of Equality Saturation
+## Termination of Equality Saturation
 
 **Theorem 1.** The following problem is R.E.-complete:
 
@@ -374,7 +375,7 @@ Therefore,
  the regularity of left-linear, convergent term rewriting systems is undecidable.
 Additionally, we show the regularity problem is in R.E. by showing a semi-decision procedure for it.
 
-> **Procedure** $\textit{Reg}$($R$, $w$)
+> **Procedure** $\textit{equivClassOf}$($R$, $w$)
 >
 > **Input:** a left-linear, convergent term rewriting system $R$, a term $w$.
 >
@@ -389,4 +390,4 @@ Additionally, we show the regularity problem is in R.E. by showing a semi-decisi
 > 4. $\quad$ $\quad$ $\quad$ **return** $G$;
 
 
-# References
+## References
