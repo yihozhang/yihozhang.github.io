@@ -1,6 +1,6 @@
 ---
 bibliography: main.bib
-# csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
+csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
 geometry: margin=2cm
 title: The Termination Problem of Equality Saturation is Undecidable
 author: Yihong Zhang
@@ -61,21 +61,21 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 >
 > **begin**
 > 
-> 2. $\quad$ $q_f\gets \textit{mkFreshState}()$;
+> 1. $\quad$ $q_f\gets \textit{mkFreshState}()$;
 >
-> 3. $\quad$ **case** $p$ **of**
+> 2. $\quad$ **case** $p$ **of**
 > 
-> 4. $\quad$ $\quad$ $f(p_1,\ldots, p_k)\Rightarrow$
+> 3. $\quad$ $\quad$ $f(p_1,\ldots, p_k)\Rightarrow$
 > 
-> 5. $\quad$ $\quad$ $\quad$ $(q_i, \Delta_i) \gets \textit{termsMatchingPattern}(p_i)$ **for** $i=1,\ldots, k$;
+> 4. $\quad$ $\quad$ $\quad$ $(q_i, \Delta_i) \gets \textit{termsMatchingPattern}(p_i)$ **for** $i=1,\ldots, k$;
 > 
-> 6. $\quad$ $\quad$ $\quad$ $q\gets \textit{mkFreshState}()$;
+> 5. $\quad$ $\quad$ $\quad$ $q\gets \textit{mkFreshState}()$;
 >
-> 7. $\quad$ $\quad$ $\quad$ $\Delta \gets \{f(q_1,\ldots, q_k)\rightarrow q\}\cup \bigcup_{i=1,\ldots, k} \Delta_i$;
+> 6. $\quad$ $\quad$ $\quad$ $\Delta \gets \{f(q_1,\ldots, q_k)\rightarrow q\}\cup \bigcup_{i=1,\ldots, k} \Delta_i$;
 >
-> 8. $\quad$ $\quad$ $\quad$ **return** $(q, \Delta)$;
+> 7. $\quad$ $\quad$ $\quad$ **return** $(q, \Delta)$;
 > 
-> 9. $\quad$ $\quad$ $x\Rightarrow$ **return** $A_\ast$;
+> 8. $\quad$ $\quad$ $x\Rightarrow$ **return** $A_\ast$;
 > 
 > **end**
 >
@@ -88,19 +88,19 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 >
 > **begin**
 >
-> 2. $\quad$ $q_f\gets \textit{mkFreshState}()$;
+> 1. $\quad$ $q_f\gets \textit{mkFreshState}()$;
 > 
-> 3. $\quad$ $(q_p, \Delta)\gets \textit{termsMatchingPattern}(p)$;
+> 2. $\quad$ $(q_p, \Delta)\gets \textit{termsMatchingPattern}(p)$;
 >
-> 4. $\quad$ $\Delta\gets \Delta\cup \{q_p\rightarrow q_f\}$;
+> 3. $\quad$ $\Delta\gets \Delta\cup \{q_p\rightarrow q_f\}$;
 > 
-> 5. $\quad$ **for each** $n$-ary symbol $f$ **where** $n > 0$ **do**
+> 4. $\quad$ **for each** $n$-ary symbol $f$ **where** $n > 0$ **do**
 > 
-> 6. $\quad$ $\quad$ **for** $i = 1,\ldots,n$ **do**
+> 5. $\quad$ $\quad$ **for** $i = 1,\ldots,n$ **do**
 > 
-> 7. $\quad$ $\quad$ $\quad$ $\Delta \gets \Delta \cup \{ f(q_\ast|_{j=1,\ldots,i-1}, q_f, q_\ast|_{j=i+1,\ldots,n}) \rightarrow q_f \}$;
+> 6. $\quad$ $\quad$ $\quad$ $\Delta \gets \Delta \cup \{ f(q_\ast|_{j=1,\ldots,i-1}, q_f, q_\ast|_{j=i+1,\ldots,n}) \rightarrow q_f \}$;
 >
-> 8. $\quad$ **return** $(q_f, \Delta)$;
+> 7. $\quad$ **return** $(q_f, \Delta)$;
 > 
 > **end**
 >
