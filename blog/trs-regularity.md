@@ -1,6 +1,6 @@
 ---
 bibliography: main.bib
-csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
+# csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
 geometry: margin=2cm
 title: The Termination Problem of Equality Saturation is Undecidable
 author: Yihong Zhang
@@ -28,8 +28,9 @@ Every term in a terminating TRS has at least one normal form,
  every term in a confluent TRS has at most one normal form,
  and every term in a convergent TRS has exactly one normal form.
 
-We call a term rewriting system left-linear if variables in the left-hand side of each rewrite rule occur only once.
+We call a term rewriting system left-linear (resp. right-linear) if variables in the left-hand side (resp. right-hand side) of each rewrite rule occur only once.
 For example, $R_1=\{f(x,y)\rightarrow g(x)\}$ is left-linear, while $R_2=\{f(x,x)\rightarrow g(x)\}$ is not left-linear.
+A TRS is linear if it's left-linear and right linear.
 
 ## Finite tree automata
 
@@ -58,7 +59,7 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 > **Output:** An FTA $\mathcal{A}$ satisfying $\mathcal{L(A)}$
 > contains all terms matching the given pattern.
 >
-> 1. **begin**
+> **begin**
 > 
 > 2. $\quad$ $q_f\gets \textit{mkFreshState}()$;
 >
@@ -76,7 +77,7 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 > 
 > 9. $\quad$ $\quad$ $x\Rightarrow$ **return** $A_\ast$;
 > 
-> 10. **end**
+> **end**
 >
 > **Procedure** $\textit{subtermsMatchingPattern}(p)$
 > 
@@ -103,7 +104,7 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 > 
 > **end**
 >
-> **Procedure** $\textit{normalForm}(R)$
+> **Procedure** $\textit{normalForms}(R)$
 > 
 > **Input:** A left-linear TRS $R$.
 >
@@ -360,7 +361,7 @@ For a particular kind of rewrite systems, we show this regularity problem is R.E
 
 **Theorem 4.** The following problem is R.E.-complete.
 
-> Instance: a set of left-linear, convergent rewrite rules $R$, a term $w$.
+> Instance: a set of linear, convergent rewrite rules $R$, a term $w$.
 > 
 > Problem: Is $[w]_R$ regular?
 
@@ -381,13 +382,41 @@ Additionally, we show the regularity problem is in R.E. by showing a semi-decisi
 >
 > **Output:** an E-graph that represents $[w]_R$ if exists.
 >
-> 1. **for each** E-graph $G$ such that $w\in L(G)$ **do**
+> **begin**
 > 
-> 2. $\quad$ **if** $G= \textit{runEqSatOneIter}(G, R)$ **then**
+> 1. **for each** E-graph $G$ such that $w\in \mathcal{L}(G)$ **do**
+> 
+> 2. $\quad$ **if** $G= \textit{runEqSatOneIter}(G, \leftrightarrow_R)$ **then**
 >
-> 3. $\quad$ $\quad$ **if** $\mathcal{L}(G)\cap\textit{normalForm}(R)=\{w\}$ **then**
+> 3. $\quad$ $\quad$ **if** $\mathcal{L}(G)\cap\textit{normalForms}(R)=\{w\}$ **then**
 >
 > 4. $\quad$ $\quad$ $\quad$ **return** $G$;
+>
+> **end**
+
+
+We show the correctness of our algorithm in two steps.
+
+* We show that if an e-graph $G$ is returned, $\mathcal{L}(G)=[w]_R$:
+  First, if $G= \textit{runEqSatOneIter}(G, \leftrightarrow_R)$,
+  we have, for any term $t$, \begin{align*}
+  t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
+  \quad\quad\quad\quad\quad (1)
+  \end{align*}
+  Suppose this is not the case. There must exist term $u$, $v$ where $u\leftrightarrow_R v$, $u\in \mathcal{L}(G)$, and $v\in \mathcal{L}(G)$,
+  and running one iteration of equality saturation will further enlarge the e-graph, which is a contradiction.
+  Therefore, since $w\in \mathcal{L}(G)$, $[w]_R\subseteq \mathcal{L}(G)$.
+  
+  Second, we show $\mathcal{L}(G)\subseteq [w]_R$. Suppose this is not the case.
+  There exists a term $u\in \mathcal{L}(G)$ that is in a 
+  different equivalence class than $[w]_R$.
+  By (1), $[u]_R\subseteq \mathcal{L}(G)$.
+  Because $R$ is convergent, $[u]_R$ has a normal form $n_u$
+   that is contained in $\mathcal{L}(G)$,
+  but line 3 ensures that $\mathcal{L}(G)$ has one normal form which is $w$, a contradiction.
+* On the other hand, if there exists an e-graph $G$ such that $\mathcal{L}(G)=[w]_R$. This case is straightforward: if $\mathcal{L}(G)=[w]_R$, $G$ is "saturated" with regard to $\leftrightarrow_R$. 
+  Moreover, since $R$ is convergent, $[w]_R$ has only one normal form which is $w$.
+$\blacksquare$
 
 
 ## References
