@@ -414,8 +414,8 @@ We show the correctness of our algorithm in two steps.
   Because $R$ is convergent, $[u]_R$ has a normal form $n_u$
    that is contained in $\mathcal{L}(G)$,
   but line 3 ensures that $\mathcal{L}(G)$ has one normal form which is $w$, a contradiction.
-* On the other hand, if there exists an e-graph $G$ such that $\mathcal{L}(G)=[w]_R$. This case is straightforward: if $\mathcal{L}(G)=[w]_R$, $G$ is "saturated" with regard to $\leftrightarrow_R$. 
-  Moreover, since $R$ is convergent, $[w]_R$ has only one normal form which is $w$.
+* On the other hand, if there exists an e-graph $G$ such that $\mathcal{L}(G)=[w]_R$, it will be returned. This case is straightforward: if $\mathcal{L}(G)=[w]_R$, $G$ is "saturated" with regard to $\leftrightarrow_R$, so the check at line 3 passes.
+  Moreover, since $R$ is convergent, $[w]_R$ has only one normal form which is $w$, so the check at line 4 also passes. Therefore, $G$ will be returned.
 $\blacksquare$
 
 
