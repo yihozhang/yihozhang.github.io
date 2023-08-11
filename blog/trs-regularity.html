@@ -236,7 +236,11 @@ Let <span class="math inline">\(\mathcal{L(A)}\)</span> be the set of
 terms accepted by FTA <span class="math inline">\(\mathcal{A}\)</span>.
 A language <span class="math inline">\(L\)</span> is called regular if
 it is accepted by some FTA (<span class="math inline">\(\exists
-\mathcal{A}, L=\mathcal{L(A)}\)</span>).</p>
+\mathcal{A}, L=\mathcal{L(A)}\)</span>). When the set of transitions
+<span class="math inline">\(\Delta\)</span> is clear from the context,
+we use <span class="math inline">\(\mathcal{L}(c)\)</span> to denote the
+language of the tree automata <span
+class="math inline">\(\mathcal{L}=(c,\Delta)\)</span></p>
 <p>Regular languages and FTAs are closed under union, intersection, and
 complement. Moreover, it is possible to define a tree automaton that
 accepts any term: define <span
@@ -573,14 +577,15 @@ several properties:</p>
 <li>Reverse convergence: the critical pair lemma implies that if a
 rewriting system is terminating and all its critical pairs are
 convergent, it is convergent. Define <span
-class="math inline">\(\leftarrow_R=\left(\rightarrow_R\right)^{-1}\)</span>.
-<span class="math inline">\(\leftarrow_R\)</span> is terminating since
-rewrite rules in <span class="math inline">\(\leftarrow_R\)</span>
-decreases the sizes of terms (that is, rewrite rules in <span
-class="math inline">\(\rightarrow_R\)</span> increases the sizes of
-terms), and <span class="math inline">\(\leftarrow_R\)</span> has no
-critical pairs. Therefore, <span
-class="math inline">\(\leftarrow_R\)</span> is convergent.</li>
+class="math inline">\(R^{-1}\)</span> to be a TRS derived from <span
+class="math inline">\(R\)</span> by swapping left and right hand side.
+<span class="math inline">\(R^{-1}\)</span> is terminating since rewrite
+rules in <span class="math inline">\(R^{-1}\)</span> decreases the sizes
+of terms (that is, rewrite rules in <span
+class="math inline">\(R^{-1}\)</span> increases the sizes of terms), and
+<span class="math inline">\(R^{-1}\)</span> has no critical pairs.
+Therefore, <span class="math inline">\(R^{-1}\)</span> is
+convergent.</li>
 <li>For each type-A string <span class="math inline">\(w\)</span>, then
 either
 <ul>
@@ -857,22 +862,21 @@ problem is R.E.-complete.</p>
 <p><strong>Theorem 4.</strong> The following problem is
 R.E.-complete.</p>
 <blockquote>
-<p>Instance: a set of linear, convergent rewrite rules <span
+<p>Instance: a set of left-linear, convergent rewrite rules <span
 class="math inline">\(R\)</span>, a term <span
 class="math inline">\(w\)</span>.</p>
 <p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
 </blockquote>
 <p><strong>Proof.</strong></p>
 <p>As we show in Theorem 1, the regularity of <span
-class="math inline">\(\leftarrow_R\)</span> is undecidable. Note that
-<span class="math inline">\(\leftarrow_R\)</span>, the inverse of <span
-class="math inline">\(\rightarrow_R\)</span> defined in Theorem 1, is
-convergent. Moreover, because every string rewriting system is a linear
-term rewriting system and therefore a left-linear term rewriting system,
-<span class="math inline">\(\leftarrow_R\)</span> is left-linear.
-Therefore, the regularity of left-linear, convergent term rewriting
-systems is undecidable. Additionally, we show the regularity problem is
-in R.E. by showing a semi-decision procedure for it.</p>
+class="math inline">\(R\)</span> is undecidable. Note that <span
+class="math inline">\(\leftarrow_R\)</span> is convergent. Moreover,
+because every string rewriting system is a linear term rewriting system
+and therefore a left-linear term rewriting system, <span
+class="math inline">\(\leftarrow_R\)</span> is left-linear. Therefore,
+the regularity of left-linear, convergent term rewriting systems is
+undecidable. Additionally, we show the regularity problem is in R.E. by
+showing a semi-decision procedure for it.</p>
 <blockquote>
 <p><strong>Procedure</strong> <span
 class="math inline">\(\textit{equivClassOf}\)</span>(<span
@@ -890,8 +894,8 @@ class="math inline">\(G\)</span> such that <span
 class="math inline">\(w\in \mathcal{L}(G)\)</span>
 <strong>do</strong></p></li>
 <li><p><span class="math inline">\(\quad\)</span> <strong>if</strong>
-<span class="math inline">\(G= \textit{runEqSatOneIter}(G,
-\leftrightarrow_R)\)</span> <strong>then</strong></p></li>
+<span class="math inline">\(\textit{isFixPoint}(G, R\cup
+R^{-1})\)</span> <strong>then</strong></p></li>
 <li><p><span class="math inline">\(\quad\)</span> <span
 class="math inline">\(\quad\)</span> <strong>if</strong> <span
 class="math inline">\(\mathcal{L}(G)\cap\textit{normalForms}(R)=\{w\}\)</span>
@@ -903,12 +907,33 @@ class="math inline">\(G\)</span>;</p></li>
 </ol>
 <p><strong>end</strong></p>
 </blockquote>
+<p>In the above algorithm, <em>isFixPoint</em> checks if the E-graph
+<span class="math inline">\(G\)</span> is “saturated” with respect to
+<span class="math inline">\(R\)</span> and <span
+class="math inline">\(R^{-1}\)</span>. It does this by checking that,
+for each matched left-hand side <span
+class="math inline">\(l\sigma\)</span> of the pattern, the right-hand
+side <span class="math inline">\(r\sigma\)</span> exists in the E-graph
+and is equivalent to <span class="math inline">\(l\sigma\)</span>. Some
+care needs to be taken here: consider a rewrite rule <span
+class="math inline">\(f(x,y)\rightarrow g(x)\)</span>. The reverse form
+of this rule is <span class="math inline">\(g(x)\rightarrow
+f(x,y)\)</span>. The right-hand side pattern of this rewrite rule has a
+larger variable set than the left-hand side. To handle this rewrite
+rule, <em>isFixPoint</em> matches the left-hand side pattern <span
+class="math inline">\(g(x)\)</span>, and each match produces a
+substitution <span class="math inline">\(\{x\mapsto c_x\}\)</span> at
+root E-class <span class="math inline">\(c\)</span>. <em>isFixPoint</em>
+checks regular set containment <span class="math inline">\(\{f(t_x,
+t_y)\mid t_x\in \mathcal{L}(c_x), t_b\in \ast\}\subseteq
+\mathcal{L}(c)\)</span>, where <span class="math inline">\(\ast\)</span>
+is the universe of all terms.</p>
 <p>We show the correctness of our algorithm in two steps.</p>
 <ul>
 <li><p>We show that if an e-graph <span class="math inline">\(G\)</span>
 is returned, <span class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>:
-First, if <span class="math inline">\(G= \textit{runEqSatOneIter}(G,
-\leftrightarrow_R)\)</span>, we have, for any term <span
+First, if <span class="math inline">\(\textit{isFixPoint}(G, R\cup
+R^{-1})\)</span>, we have, for any term <span
 class="math inline">\(t\)</span>, <span
 class="math display">\[\begin{align*}
 t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
@@ -938,14 +963,16 @@ which is <span class="math inline">\(w\)</span>, a
 contradiction.</p></li>
 <li><p>On the other hand, if there exists an e-graph <span
 class="math inline">\(G\)</span> such that <span
-class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>. This case is
-straightforward: if <span
+class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>, it will be
+returned. This case is straightforward: if <span
 class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>, <span
 class="math inline">\(G\)</span> is “saturated” with regard to <span
-class="math inline">\(\leftrightarrow_R\)</span>. Moreover, since <span
-class="math inline">\(R\)</span> is convergent, <span
-class="math inline">\([w]_R\)</span> has only one normal form which is
-<span class="math inline">\(w\)</span>. <span
+class="math inline">\(\leftrightarrow_R\)</span>, so the check at line 3
+passes. Moreover, since <span class="math inline">\(R\)</span> is
+convergent, <span class="math inline">\([w]_R\)</span> has only one
+normal form which is <span class="math inline">\(w\)</span>, so the
+check at line 4 also passes. Therefore, <span
+class="math inline">\(G\)</span> will be returned. <span
 class="math inline">\(\blacksquare\)</span></p></li>
 </ul>
 <h2 id="references">References</h2>

@@ -30,7 +30,7 @@ Every term in a terminating TRS has at least one normal form,
 
 We call a term rewriting system left-linear (resp. right-linear) if variables in the left-hand side (resp. right-hand side) of each rewrite rule occur only once.
 For example, $R_1=\{f(x,y)\rightarrow g(x)\}$ is left-linear, while $R_2=\{f(x,x)\rightarrow g(x)\}$ is not left-linear.
-A TRS is linear if it's left-linear and right linear.
+A TRS is linear if it's left-linear and right-linear.
 
 ## Finite tree automata
 
@@ -40,6 +40,7 @@ A term $t$ is accepted by a state by $\mathcal{A}$ if it can be rewritten to a f
 Since $Q$ and $F$ can be determined by $\Delta$, we omit them and use $(Q_f,\Delta)$ to denote a FTA for brevity. 
 Let $\mathcal{L(A)}$ be the set of terms accepted by FTA $\mathcal{A}$.
 A language $L$ is called regular if it is accepted by some FTA ($\exists \mathcal{A}, L=\mathcal{L(A)}$).
+When the set of transitions $\Delta$ is clear from the context, we further omit it and use $\mathcal{L}(c)$ to denote the language accepted the tree automata $\mathcal{A}=(c,\Delta)$.
 
 Regular languages and FTAs are closed under union, intersection, and complement.
 Moreover, it is possible to define a tree automaton that accepts any term:
@@ -224,10 +225,10 @@ Now, we observe that $R$ has several properties:
 1. Reverse convergence: the critical pair lemma implies that
    if a rewriting system is terminating and all its critical pairs are convergent,
    it is convergent.
-   Define $\leftarrow_R=\left(\rightarrow_R\right)^{-1}$.
-   $\leftarrow_R$ is terminating since rewrite rules in $\leftarrow_R$
-   decreases the sizes of terms (that is, rewrite rules in $\rightarrow_R$ increases the sizes of terms), and $\leftarrow_R$ has no critical pairs.
-   Therefore, $\leftarrow_R$ is convergent.
+   Define $R^{-1}$ to be a TRS derived from $R$ by swapping left and right hand side.
+   $R^{-1}$ is terminating since rewrite rules in $R^{-1}$
+   decreases the sizes of terms (that is, rewrite rules in $R^{-1}$ increases the sizes of terms), and $R^{-1}$ has no critical pairs.
+   Therefore, $R^{-1}$ is convergent.
 2. For each type-A string $w$, then either
    * there exists no $w'$ with $w\rightarrow_R w'$ and $\pi(w)$ is a halting configuration;
    * there exists a unique $w'$ such that $w\rightarrow_R w'$ and $\pi(w)\vdash \pi(w')$.
@@ -361,14 +362,14 @@ For a particular kind of rewrite systems, we show this regularity problem is R.E
 
 **Theorem 4.** The following problem is R.E.-complete.
 
-> Instance: a set of linear, convergent rewrite rules $R$, a term $w$.
+> Instance: a set of left-linear, convergent rewrite rules $R$, a term $w$.
 > 
 > Problem: Is $[w]_R$ regular?
 
 **Proof.**
 
-As we show in Theorem 1, the regularity of $\leftarrow_R$ is undecidable.
-Note that $\leftarrow_R$, the inverse of $\rightarrow_R$ defined in Theorem 1, is convergent.
+As we show in Theorem 1, the regularity of $R$ is undecidable.
+Note that $\leftarrow_R$ is convergent.
 Moreover, because every string rewriting system is a linear term rewriting system 
  and therefore a left-linear term rewriting system, 
  $\leftarrow_R$ is left-linear.
@@ -386,7 +387,7 @@ Additionally, we show the regularity problem is in R.E. by showing a semi-decisi
 > 
 > 1. **for each** E-graph $G$ such that $w\in \mathcal{L}(G)$ **do**
 > 
-> 2. $\quad$ **if** $G= \textit{runEqSatOneIter}(G, \leftrightarrow_R)$ **then**
+> 2. $\quad$ **if** $\textit{isFixPoint}(G, R\cup R^{-1})$ **then**
 >
 > 3. $\quad$ $\quad$ **if** $\mathcal{L}(G)\cap\textit{normalForms}(R)=\{w\}$ **then**
 >
@@ -394,11 +395,23 @@ Additionally, we show the regularity problem is in R.E. by showing a semi-decisi
 >
 > **end**
 
+In the above algorithm, *isFixPoint* checks if the E-graph $G$
+ is "saturated" with respect to $R$ and $R^{-1}$. 
+It does this by checking that,
+ for each matched left-hand side $l\sigma$ of the pattern, 
+ the right-hand side $r\sigma$ exists in the E-graph and is equivalent to $l\sigma$.
+Some care needs to be taken here: consider a rewrite rule $f(x,y)\rightarrow g(x)$. The reverse form of this rule is $g(x)\rightarrow f(x,y)$.
+The right-hand side pattern of this rewrite rule has a larger variable set than the left-hand side.
+To handle this rewrite rule,
+ *isFixPoint* matches the left-hand side pattern $g(x)$,
+ and each match produces a substitution $\{x\mapsto c_x\}$ at root E-class $c$.
+ *isFixPoint* checks regular set containment $\{f(t_x, t_y)\mid t_x\in \mathcal{L}(c_x), t_b\in \ast\}\subseteq \mathcal{L}(c)$, where $\ast$ is the universe of all terms.
+
 
 We show the correctness of our algorithm in two steps.
 
 * We show that if an e-graph $G$ is returned, $\mathcal{L}(G)=[w]_R$:
-  First, if $G= \textit{runEqSatOneIter}(G, \leftrightarrow_R)$,
+  First, if $\textit{isFixPoint}(G, R\cup R^{-1})$,
   we have, for any term $t$, \begin{align*}
   t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
   \quad\quad\quad\quad\quad (1)
