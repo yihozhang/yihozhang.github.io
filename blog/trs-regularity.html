@@ -171,11 +171,11 @@
 <h1 class="title">The Termination Problem of Equality Saturation is
 Undecidable</h1>
 <p class="author">Yihong Zhang</p>
-<p class="date">Aug 2, 2023</p>
+<p class="date">Aug 11, 2023</p>
 </header>
 <p>In this note, we study the decidability of the termination of
 equality saturation and related problems.</p>
-<h2 id="background">Background</h2>
+<h1 id="background">Background</h1>
 <h2 id="term-rewriting">Term rewriting</h2>
 <p>A term rewriting system (TRS) <span class="math inline">\(R\)</span>
 consists of a set of rewrite rules. <span
@@ -186,20 +186,21 @@ the context. Let <span class="math inline">\(\rightarrow^*\)</span> be
 the transitive closure of binary relation <span
 class="math inline">\(\rightarrow\)</span>. We define <span
 class="math inline">\((\leftarrow_R)=(\rightarrow_R)^{-1}\)</span>,
-<span class="math inline">\((\leftrightarrow)=\rightarrow_R\cup
-\leftarrow_R\)</span>, and <span
-class="math inline">\((\approx)=\leftrightarrow_R^*\)</span>. <span
-class="math inline">\(\approx\)</span> is an equivalence relation.</p>
+<span class="math inline">\((\leftrightarrow_R)=(\rightarrow_R)\cup
+(\leftarrow_R)\)</span>, and <span
+class="math inline">\((\approx_R)=\leftrightarrow_R^*\)</span>. <span
+class="math inline">\(\approx_R\)</span> is an equivalence relation.</p>
 <p>A normal form is a term that cannot be rewritten any further. We say
 <span class="math inline">\(n\)</span> is a normal form of <span
 class="math inline">\(t\)</span> if <span
-class="math inline">\(t\)</span> can be reduced to <span
-class="math inline">\(n\)</span>. A TRS <span
+class="math inline">\(t\)</span> reduces to <span
+class="math inline">\(n\)</span> and <span
+class="math inline">\(n\)</span> is a normal form. A TRS <span
 class="math inline">\(R\)</span> is <em>terminating</em> if there is no
 infinite rewriting chain <span class="math inline">\(t_1\rightarrow_R
-t_2\ldots\)</span>. A TRS <span class="math inline">\(R\)</span> is
-<em>confluent</em> if for all <span class="math inline">\(t, t_1,
-t_2\)</span>, <span
+t_2\rightarrow \ldots\)</span>. A TRS <span
+class="math inline">\(R\)</span> is <em>confluent</em> if for all <span
+class="math inline">\(t, t_1, t_2\)</span>, <span
 class="math inline">\(t_1\leftarrow_R^*t\rightarrow_R^*t_2\)</span>
 implies there exists a <span class="math inline">\(t&#39;\)</span> such
 that <span class="math inline">\(t_1\rightarrow_R^* t&#39;\leftarrow_R^*
@@ -208,12 +209,12 @@ t_2\)</span>. We call a confluent and terminating TRS
 normal form, every term in a confluent TRS has at most one normal form,
 and every term in a convergent TRS has exactly one normal form.</p>
 <p>We call a term rewriting system left-linear (resp. right-linear) if
-variables in the left-hand side (resp. right-hand side) of each rewrite
-rule occur only once. For example, <span
+variables in the left-hand side (resp. right-hand side) pattern of each
+rewrite rule occur only once. For example, <span
 class="math inline">\(R_1=\{f(x,y)\rightarrow g(x)\}\)</span> is
 left-linear, while <span class="math inline">\(R_2=\{f(x,x)\rightarrow
 g(x)\}\)</span> is not left-linear. A TRS is linear if it’s left-linear
-and right linear.</p>
+and right-linear.</p>
 <h2 id="finite-tree-automata">Finite tree automata</h2>
 <p>A finite tree automaton (FTA) is a tuple <span
 class="math inline">\(\mathcal{A}=(Q, F, Q_f, \Delta)\)</span>, where
@@ -238,26 +239,30 @@ A language <span class="math inline">\(L\)</span> is called regular if
 it is accepted by some FTA (<span class="math inline">\(\exists
 \mathcal{A}, L=\mathcal{L(A)}\)</span>). When the set of transitions
 <span class="math inline">\(\Delta\)</span> is clear from the context,
-we use <span class="math inline">\(\mathcal{L}(c)\)</span> to denote the
-language of the tree automata <span
-class="math inline">\(\mathcal{L}=(c,\Delta)\)</span></p>
+we further omit it and use <span
+class="math inline">\(\mathcal{L}(c)\)</span> to denote the language
+accepted the tree automata <span
+class="math inline">\(\mathcal{A}=(c,\Delta)\)</span>.</p>
 <p>Regular languages and FTAs are closed under union, intersection, and
-complement. Moreover, it is possible to define a tree automaton that
-accepts any term: define <span
+complementation. Moreover, it is possible to define a tree automaton
+that accepts any term: define <span
 class="math display">\[\mathcal{A}_\ast=(\{q_\ast\},
 \{f(q_\ast|_{i=1\ldots n})\rightarrow q_\ast\mid n\text{-ary symbol }
 f\in F \})\]</span> for a fresh state <span
 class="math inline">\(q_\ast\)</span>.</p>
-<p>Given a <em>left-linear</em> term-rewriting system <span
-class="math inline">\(R\)</span>, the set of normal forms of <span
-class="math inline">\(R\)</span> is regular. The set of normal forms of
-<span class="math inline">\(R\)</span> is the complement of the set of
-rewritable terms, i.e., terms whose subterm match some left-hand side
-patterns of <span class="math inline">\(R\)</span>. We give such a
-construction below. The construction here requires left linearity to
-ensure that each “hole” in the left-hand side patterns can pick terms
-independently. For example, the set of rewritable terms of rule <span
-class="math inline">\(f(x, x)\rightarrow x\)</span> is not regular.</p>
+<p>Given a term-rewriting system <span class="math inline">\(R\)</span>,
+the set of normal forms of <span class="math inline">\(R\)</span> is the
+complement of the set of rewritable terms, i.e., terms whose subterm
+match some left-hand side patterns of <span
+class="math inline">\(R\)</span>. Suppose <span
+class="math inline">\(R\)</span> is left-linear. The set of rewritable
+terms is regular. Since regularity is preserved under complementation,
+the set of normal forms of <span class="math inline">\(R\)</span> is
+regular. We give such a construction below. The construction here
+requires left linearity to ensure that each “hole” in the left-hand side
+patterns can pick terms independently. For example, the set of
+rewritable terms of rule <span class="math inline">\(f(x, x)\rightarrow
+x\)</span> is not regular.</p>
 <blockquote>
 <p><strong>Procedure</strong> <span
 class="math inline">\(\textit{termsMatchingPattern}(p)\)</span></p>
@@ -373,14 +378,52 @@ class="math inline">\(t_2\)</span> there exists a state <span
 class="math inline">\(q\)</span> in <span
 class="math inline">\(G\)</span> such that <span
 class="math inline">\(t_1\rightarrow^* q\leftarrow^* t_2\)</span>, <span
-class="math inline">\(t_1\approx t_2\)</span>. <span
-class="math inline">\(\approx_G\)</span> is symmetric and reflexive.
-Moreover, if <span class="math inline">\(t_1\rightarrow^* q \leftarrow^*
-t_2\)</span> and <span class="math inline">\(t_2\rightarrow^*
-q&#39;\leftarrow^* t_3\)</span>, since an E-graph is deterministic,
-<span class="math inline">\(t_1\rightarrow^* q=q&#39;\leftarrow^*
+class="math inline">\(t_1\approx t_2\)</span><a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.
+<span class="math inline">\(\approx_G\)</span> is an equivalence
+relation: <span class="math inline">\(\approx_G\)</span> is symmetric
+and reflexive. Moreover, if <span class="math inline">\(t_1\rightarrow^*
+q \leftarrow^* t_2\)</span> and <span
+class="math inline">\(t_2\rightarrow^* q&#39;\leftarrow^* t_3\)</span>,
+since an E-graph is deterministic, <span
+class="math inline">\(t_1\rightarrow^* q=q&#39;\leftarrow^*
 t_3\)</span>, so <span class="math inline">\(\approx_G\)</span> is also
 transitive.</p>
+<p>Equality saturation is defined as inductive fixed point of rule
+applications and rebuilding: <span
+class="math display">\[\textit{EqSat}(R, w) = (\textit{CC}\circ
+T_p)^{\infty}(\textit{mkEGraph}(w)).\]</span></p>
+<p>We omit the definition of <em>CC</em> and <span
+class="math inline">\(T_p\)</span> here, which can be found in the egg
+and egglog paper. But we remind the readers several properties of
+equality saturation here: First, even if <span
+class="math inline">\(G\)</span> is an E-graph (i.e., deterministic and
+reachable tree automaton), <span class="math inline">\(T_p(G)\)</span>
+is not necessarily deterministic, and the congruence closure operator
+<em>CC</em> recovers the determinism. Second, <span
+class="math display">\[\mathcal{L}(G)\cup \{v \mid u\in \mathcal{L}(G),
+u\rightarrow_R v\}\subseteq \mathcal{L}(T_p(G))\subseteq
+\mathcal{L}((\textit{CC}\circ T_p)(G));\]</span> that is, the e-graph
+after rule application at least represents terms derived from the
+initial e-graph by rewriting zero or one time, and the congruence
+closure further grows the E-graph. Moreover, in many cases, the set
+containment is strict, see my earlier <a
+href="https://effect.systems/blog/ta-completion.html">blog post</a> on
+tree automata completion. As a corollary, <span
+class="math display">\[\{t\mid w\rightarrow_R^* t\}\subseteq
+\textit{EqSat}(w).\]</span> Finally, in terms of the equivalence
+relation derived from E-graphs, we have <span
+class="math display">\[\left(\approx_{G}\right)\subseteq
+\left(\approx_{T_p(G)}\right)\subseteq \left(\approx_{(\texttt{CC}\circ
+T_p)(G)}\right).\]</span></p>
+<p>Given a term rewriting system <span class="math inline">\(R\)</span>
+where every rule preserves the set of variables (i.e., <span
+class="math inline">\(\textit{vars}(\textit{lhs})=\textit{vars}(\textit{rhs})\)</span>),
+let <span class="math inline">\(R^{-1}\)</span> be the term rewriting
+system obtained by swapping left-hand sides and right-hand sides of
+patterns in <span class="math inline">\(R\)</span>. We have <span
+class="math inline">\([w]_R= \mathcal{L}(\textit{EqSat}(R\cup R^{-1},
+w))\)</span></p>
 <h2 id="turing-machines">Turing machines</h2>
 <p>A Turing machine <span class="math inline">\(\mathcal{M}=(Q,\Sigma,
 \Pi,\Delta,q_0,\beta)\)</span> consists of a set of states <span
@@ -416,8 +459,8 @@ can transit to configuration <span class="math inline">\(w_2\)</span> in
 a Turing machine <span class="math inline">\(\mathcal{M}\)</span>, and
 we omit <span class="math inline">\(\mathcal{M}\)</span> when it’s clear
 from the context.</p>
-<h2 id="termination-of-equality-saturation">Termination of Equality
-Saturation</h2>
+<h1 id="termination-of-equality-saturation">Termination of Equality
+Saturation</h1>
 <p><strong>Theorem 1.</strong> The following problem is
 R.E.-complete:</p>
 <blockquote>
@@ -841,9 +884,23 @@ finite number of iterations.</li>
 <p>Because the halting problem of a Turing machine is undecidable, the
 termination problem of EqSat is undecidable as well. <span
 class="math inline">\(\blacksquare\)</span></p>
+<h1 id="the-regularity-problem-of-term-rewriting-systems">The regularity
+problem of term rewriting systems</h1>
+<p>In the last section, we have shown that the termination of equality
+saturation is undecidable. Here, we consider a more general question:
+Given a term rewriting system and a term, is the equivalence class of
+the term defined by the term rewriting system regular? In general, for
+term rewriting systems consisting of variable-preserving rewrite rules,
+if equality saturation terminates on <span class="math inline">\(R\cup
+R^{-1}\)</span>, the equivalence class is regular. However, there are
+cases where the equivalence class of a term is regular, equality
+saturation does not terminate: an example is term rewriting system <span
+class="math inline">\(\{f(x)\rightarrow f(g(x))\}\)</span> and term
+<span class="math inline">\(f(a)\)</span>.</p>
+<p>This regularity problem is undecidable, as we show here.</p>
 <p><strong>Theorem 3.</strong> The following problem is undecidable.</p>
 <blockquote>
-<p>Instance: a set of rewrite rules <span
+<p>Instance: a term rewriting system <span
 class="math inline">\(R\)</span>, a term <span
 class="math inline">\(w\)</span>.</p>
 <p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
@@ -854,11 +911,13 @@ machines to this problem. As shown in Theorem 1, given a Turing machine
 <span class="math inline">\(\mathcal{M}\)</span>, <span
 class="math inline">\(\mathcal{M}\)</span> halts on an input <span
 class="math inline">\(s\)</span> if and only if <span
-class="math inline">\([w]_{R&#39;}\)</span> is regular for <span
-class="math inline">\(w=\rhd q_0(s, 2)\lhd\)</span>. <span
-class="math inline">\(\blacksquare\)</span></p>
-<p>For a particular kind of rewrite systems, we show this regularity
-problem is R.E.-complete.</p>
+class="math inline">\([w]_{R&#39;}\)</span> (as constructed in Theorem
+1) is regular for <span class="math inline">\(w=\rhd q_0(s,
+2)\lhd\)</span>. <span class="math inline">\(\blacksquare\)</span></p>
+<p>Different from the termination of equality saturation, it is open
+whether this problem is recursive enumerable. However, for a particular
+kind of rewrite systems, we show this regularity problem is
+R.E.-complete.</p>
 <p><strong>Theorem 4.</strong> The following problem is
 R.E.-complete.</p>
 <blockquote>
@@ -869,12 +928,12 @@ class="math inline">\(w\)</span>.</p>
 </blockquote>
 <p><strong>Proof.</strong></p>
 <p>As we show in Theorem 1, the regularity of <span
-class="math inline">\(R\)</span> is undecidable. Note that <span
-class="math inline">\(\leftarrow_R\)</span> is convergent. Moreover,
-because every string rewriting system is a linear term rewriting system
-and therefore a left-linear term rewriting system, <span
-class="math inline">\(\leftarrow_R\)</span> is left-linear. Therefore,
-the regularity of left-linear, convergent term rewriting systems is
+class="math inline">\(R\)</span> (and therefore <span
+class="math inline">\(R^{-1}\)</span>) is undecidable. Because every
+string rewriting system is a linear term rewriting system <span
+class="math inline">\(R^{-1}\)</span> is left-linear. Moreover, <span
+class="math inline">\(R^{-1}\)</span> is convergent. Therefore, the
+regularity of left-linear, convergent term rewriting systems is
 undecidable. Additionally, we show the regularity problem is in R.E. by
 showing a semi-decision procedure for it.</p>
 <blockquote>
@@ -930,26 +989,33 @@ t_y)\mid t_x\in \mathcal{L}(c_x), t_b\in \ast\}\subseteq
 is the universe of all terms.</p>
 <p>We show the correctness of our algorithm in two steps.</p>
 <ul>
-<li><p>We show that if an e-graph <span class="math inline">\(G\)</span>
-is returned, <span class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>:
-First, if <span class="math inline">\(\textit{isFixPoint}(G, R\cup
-R^{-1})\)</span>, we have, for any term <span
-class="math inline">\(t\)</span>, <span
+<li>We show that if an e-graph <span class="math inline">\(G\)</span> is
+returned, <span class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>:
+<ul>
+<li><p>First, we show <span class="math inline">\([w]_R\subseteq
+\mathcal{L}(G)\)</span>: if <span
+class="math inline">\(\textit{isFixPoint}(G, R\cup R^{-1})\)</span>
+holds, we have, for any term <span class="math inline">\(t\)</span>, if
+<span class="math inline">\(t\)</span> is accepted by <span
+class="math inline">\(G\)</span>, the entire equivalence class of <span
+class="math inline">\(t\)</span> is also accepted by <span
+class="math inline">\(G\)</span>; that is <span
 class="math display">\[\begin{align*}
 t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
 \quad\quad\quad\quad\quad (1)
-\end{align*}\]</span> Suppose this is not the case. There must exist
-term <span class="math inline">\(u\)</span>, <span
+\end{align*}\]</span> Since <span class="math inline">\(w\in
+\mathcal{L}(G)\)</span>, <span class="math inline">\([w]_R\subseteq
+\mathcal{L}(G)\)</span>. To prove (1), suppose this is not the case.
+There must exist term <span class="math inline">\(u\)</span>, <span
 class="math inline">\(v\)</span> where <span
 class="math inline">\(u\leftrightarrow_R v\)</span>, <span
 class="math inline">\(u\in \mathcal{L}(G)\)</span>, and <span
-class="math inline">\(v\in \mathcal{L}(G)\)</span>, and running one
-iteration of equality saturation will further enlarge the e-graph, which
-is a contradiction. Therefore, since <span class="math inline">\(w\in
-\mathcal{L}(G)\)</span>, <span class="math inline">\([w]_R\subseteq
-\mathcal{L}(G)\)</span>.</p>
-<p>Second, we show <span class="math inline">\(\mathcal{L}(G)\subseteq
-[w]_R\)</span>. Suppose this is not the case. There exists a term <span
+class="math inline">\(v\not\in \mathcal{L}(G)\)</span>, which
+contradicts <span class="math inline">\(\textit{isFixPoint}(G, R\cup
+R^{-1})\)</span>.</p></li>
+<li><p>Second, we show <span
+class="math inline">\(\mathcal{L}(G)\subseteq [w]_R\)</span>. Suppose
+this is not the case. There exists a term <span
 class="math inline">\(u\in \mathcal{L}(G)\)</span> that is in a
 different equivalence class than <span
 class="math inline">\([w]_R\)</span>. By (1), <span
@@ -961,7 +1027,8 @@ class="math inline">\(\mathcal{L}(G)\)</span>, but line 3 ensures that
 <span class="math inline">\(\mathcal{L}(G)\)</span> has one normal form
 which is <span class="math inline">\(w\)</span>, a
 contradiction.</p></li>
-<li><p>On the other hand, if there exists an e-graph <span
+</ul></li>
+<li>On the other hand, if there exists an e-graph <span
 class="math inline">\(G\)</span> such that <span
 class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>, it will be
 returned. This case is straightforward: if <span
@@ -973,8 +1040,25 @@ convergent, <span class="math inline">\([w]_R\)</span> has only one
 normal form which is <span class="math inline">\(w\)</span>, so the
 check at line 4 also passes. Therefore, <span
 class="math inline">\(G\)</span> will be returned. <span
-class="math inline">\(\blacksquare\)</span></p></li>
+class="math inline">\(\blacksquare\)</span></li>
 </ul>
-<h2 id="references">References</h2>
+<h1 id="references">References</h1>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p> Note that this definition of <span
+class="math inline">\(\approx_G\)</span> is different from the
+congruence relation defined in the Myhill-Nerode theorem for trees <span
+class="citation" data-cites="kozen1992myhill">[@kozen1992myhill]</span>.
+For example, consider an E-graph with transitions <span
+class="math inline">\(\{a()\rightarrow c_1, b()\rightarrow c_2,
+f(c_1)\rightarrow c_f, f(c_2)\rightarrow c_f\}\)</span>. In the
+Myhill-Nerode theorem, <span class="math inline">\(fa\)</span> and <span
+class="math inline">\(fb\)</span> would be equivalent while in our
+definition they are not because they are accepted by different states.<a
+href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
 </body>
 </html>
