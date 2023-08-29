@@ -51,3 +51,5 @@ To cover all $c_{j}$'s with the smallest cost means picking
 As a side note, the construction here uses function symbols with non-constant arities (i.e., the root E-node).
 This can be fixed by replacing the root E-node with $O(n)$ many E-nodes with binary function symbols forming a depth $O(\log n)$ binary tree,
  so our reduction only requires unary and binary function symbols.
+
+**Update (Aug 29, 2023):** Michael Stepp showed the NP-completeness of this problem via a similar reduction to Min-SAT in [his thesis](https://rosstate.org/publications/eqsat/MikeThesis.pdf).

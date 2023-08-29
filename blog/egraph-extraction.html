@@ -187,7 +187,7 @@ to integer linear programming (ILP). Moreover, we show the extraction
 problem is NP-hard by reducing <a
 href="https://en.wikipedia.org/wiki/Set_cover_problem">the minimum set
 cover problem</a> to it.</p>
-<p>The minimum set cover problem is defined as follows (adapted from the
+<p>The minimum set cover problem is defined as follows (adapted from
 Wikipedia):</p>
 <pre><code> Input: A set of elements {1, 2, ..., n} (called the universe)
         and a collection S of m sets whose union equals the 
@@ -229,16 +229,20 @@ optimal extraction</figcaption>
 <p>The intuition behind this construction is that, to extract the root
 E-class, we have to cover all the elements in the universe, so we need
 to pick an E-node from each <span class="math inline">\(c_{j}\)</span>.
-To cover all <span class="math inline">\(c_{j}\)</span>s with the
+To cover all <span class="math inline">\(c_{j}\)</span>’s with the
 smallest cost means picking as fewer <span
 class="math inline">\(S_i\)</span> E-nodes as possible, which
 corresponds to a minimum set cover.</p>
 <p>As a side note, the construction here uses function symbols with
 non-constant arities (i.e., the root E-node). This can be fixed by
 replacing the root E-node with <span class="math inline">\(O(n)\)</span>
-many E-nodes with binary function symbols forming a depth-<span
+many E-nodes with binary function symbols forming a depth <span
 class="math inline">\(O(\log n)\)</span> binary tree, so our reduction
 only requires unary and binary function symbols.</p>
+<p><strong>Update (Aug 29, 2023):</strong> Michael Stepp showed the
+NP-completeness of this problem via a similar reduction to Min-SAT in <a
+href="https://rosstate.org/publications/eqsat/MikeThesis.pdf">his
+thesis</a>.</p>
 <section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
