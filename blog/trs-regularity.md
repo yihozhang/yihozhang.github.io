@@ -4,52 +4,54 @@ csl: https://www.zotero.org/styles/acm-sig-proceedings-long-author-list
 geometry: margin=2cm
 title: The Termination Problem of Equality Saturation is Undecidable
 author: Yihong Zhang
-date: Aug 2, 2023
+date: Aug 11, 2023
 ---
 
 In this note, we study the decidability of the termination of equality saturation and related problems.
 
-## Background
-
+# Background
 
 ## Term rewriting
 
 A term rewriting system (TRS) $R$ consists of a set of rewrite rules.
-$R$ defines a *rewrite relation* $\rightarrow_R$.
+$R$ defines a *rewrite relation* $\rightarrow_R$ as follows: $u\rightarrow_R v$ if and only if there exists a rule $(l\rightarrow r)\in R$ and a substitution $\sigma$ such that a subterm of $u$ at path $p$ is $l\sigma$, and $v$ is $u$ whose subterm at path $p$ is substituted with $r\sigma$.
 We omit the subscript $R$ when it's clear from the context.
 Let $\rightarrow^*$ be the transitive closure of binary relation $\rightarrow$.
-We define $(\leftarrow_R)=(\rightarrow_R)^{-1}$, $(\leftrightarrow)=\rightarrow_R\cup \leftarrow_R$, and $(\approx)=\leftrightarrow_R^*$. $\approx$ is an equivalence relation.
+We define $(\leftarrow_R)=(\rightarrow_R)^{-1}$, $(\leftrightarrow_R)=(\rightarrow_R)\cup (\leftarrow_R)$, and $(\approx_R)=\leftrightarrow_R^*$. $\approx_R$ is an equivalence relation.
 
 A normal form is a term that cannot be rewritten any further.
-We say $n$ is a normal form of $t$ if $t$ can be reduced to $n$.
-A TRS $R$ is *terminating* if there is no infinite rewriting chain $t_1\rightarrow_R t_2\ldots$. A TRS $R$ is *confluent* if for all $t, t_1, t_2$, 
+We say $n$ is a normal form of $t$ if $t$ reduces to $n$ and $n$ is a normal form.
+A TRS $R$ is *terminating* if there is no infinite rewriting chain $t_1\rightarrow_R t_2\rightarrow \ldots$. A TRS $R$ is *confluent* if for all $t, t_1, t_2$, 
 $t_1\leftarrow_R^*t\rightarrow_R^*t_2$ implies there exists a $t'$ such that $t_1\rightarrow_R^* t'\leftarrow_R^* t_2$. We call a confluent and terminating TRS *convergent*.
-Every term in a terminating TRS has at least one normal form,
- every term in a confluent TRS has at most one normal form,
- and every term in a convergent TRS has exactly one normal form.
+Terms in a terminating TRS have at least one normal form,
+ terms in a confluent TRS have at most one normal form,
+ and terms in a convergent TRS have exactly one normal form.
 
-We call a term rewriting system left-linear (resp. right-linear) if variables in the left-hand side (resp. right-hand side) of each rewrite rule occur only once.
+We call a term rewriting system left-linear (resp. right-linear) if variables in the left-hand side (resp. right-hand side) pattern of each rewrite rule occur only once.
 For example, $R_1=\{f(x,y)\rightarrow g(x)\}$ is left-linear, while $R_2=\{f(x,x)\rightarrow g(x)\}$ is not left-linear.
 A TRS is linear if it's left-linear and right-linear.
 
 ## Finite tree automata
 
-A finite tree automaton (FTA) is a tuple $\mathcal{A}=(Q, F, Q_f, \Delta)$, where $Q$ is a set of states, $F$ is a set of function symbols, $Q_f\subseteq Q$ is a set of final states, and $\Delta$ is a set of transitions of the form 
+A finite tree automaton (FTA) is a tuple $\mathcal{A}=(Q, F, Q_{\textit{final}}, \Delta)$, where $Q$ is a set of states, $F$ is a set of function symbols, $Q_{\textit{final}}\subseteq Q$ is a set of final states, and $\Delta$ is a set of transitions of the form 
 $f(q_1,\ldots, q_n)\rightarrow q$ where $q,q_1,\ldots, q_n\in Q$.
-A term $t$ is accepted by a state by $\mathcal{A}$ if it can be rewritten to a final state $q_f\in Q_f$ of $\mathcal{A}$, i.e., $t\rightarrow^* q_f\in Q_f$.
-Since $Q$ and $F$ can be determined by $\Delta$, we omit them and use $(Q_f,\Delta)$ to denote a FTA for brevity. 
+A term $t$ is accepted by $\mathcal{A}$ if it can be rewritten to a final state $q_{\textit{final}}\in Q_{\textit{final}}$ of $\mathcal{A}$, i.e., $t\rightarrow^* q_{\textit{final}}\in Q_{\textit{final}}$.
+Since $Q$ and $F$ can be determined by $\Delta$, we omit them and use $(Q_{\textit{final}},\Delta)$ to denote a FTA for brevity. 
 Let $\mathcal{L(A)}$ be the set of terms accepted by FTA $\mathcal{A}$.
 A language $L$ is called regular if it is accepted by some FTA ($\exists \mathcal{A}, L=\mathcal{L(A)}$).
 When the set of transitions $\Delta$ is clear from the context, we further omit it and use $\mathcal{L}(c)$ to denote the language accepted the tree automata $\mathcal{A}=(c,\Delta)$.
 
-Regular languages and FTAs are closed under union, intersection, and complement.
-Moreover, it is possible to define a tree automaton that accepts any term:
-define $$\mathcal{A}_\ast=(\{q_\ast\}, \{f(q_\ast|_{i=1\ldots n})\rightarrow q_\ast\mid n\text{-ary symbol } f\in F \})$$ for a fresh state $q_\ast$.
+Regular languages and FTAs are closed under union, intersection, and complementation.
+Moreover, it is possible to define a tree automaton that accepts any term: it is the complement of an empty FTA.
+To give an explicit construction, define $$\mathcal{A}_\ast=(\{q_\ast\}, \{f(\underbrace{q_\ast,\ldots,q_\ast}_{n} )\rightarrow q_\ast\mid n\text{-ary symbol } f\in F \})$$ for a fresh state $q_\ast$.
 
-Given a *left-linear* term-rewriting system $R$, the set of normal forms of $R$ is regular.
-The set of normal forms of $R$ is the complement of the set of rewritable terms, i.e.,
+Left-regularity of a term rewriting system implies the regularity of its normal forms:
+Given a term-rewriting system $R$, the set of normal forms of $R$ is the complement of the set of rewritable terms, i.e.,
  terms whose subterm match some left-hand side patterns of $R$.
-We give such a construction below. 
+Suppose $R$ is left-linear. The set of rewritable terms is regular.
+Since regularity is preserved under complementation, 
+ the set of normal forms of $R$ is regular.
+Below is an algorithm that computes a tree automata whose language is the set of normal forms.
 The construction here requires left linearity to ensure that each "hole" in the left-hand side patterns can pick terms independently.
 For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not regular.
 
@@ -61,22 +63,20 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 > contains all terms matching the given pattern.
 >
 > **begin**
-> 
-> 1. $\quad$ $q_f\gets \textit{mkFreshState}()$;
 >
-> 2. $\quad$ **case** $p$ **of**
+> 1. $\quad$ **case** $p$ **of**
 > 
-> 3. $\quad$ $\quad$ $f(p_1,\ldots, p_k)\Rightarrow$
+> 2. $\quad$ $\quad$ $f(p_1,\ldots, p_k)\Rightarrow$
 > 
-> 4. $\quad$ $\quad$ $\quad$ $(q_i, \Delta_i) \gets \textit{termsMatchingPattern}(p_i)$ **for** $i=1,\ldots, k$;
+> 3. $\quad$ $\quad$ $\quad$ $(q_i, \Delta_i) \gets \textit{termsMatchingPattern}(p_i)$ **for** $i=1,\ldots, k$;
 > 
-> 5. $\quad$ $\quad$ $\quad$ $q\gets \textit{mkFreshState}()$;
+> 4. $\quad$ $\quad$ $\quad$ $q\gets \textit{mkFreshState}()$;
 >
-> 6. $\quad$ $\quad$ $\quad$ $\Delta \gets \{f(q_1,\ldots, q_k)\rightarrow q\}\cup \bigcup_{i=1,\ldots, k} \Delta_i$;
+> 5. $\quad$ $\quad$ $\quad$ $\Delta \gets \{f(q_1,\ldots, q_k)\rightarrow q\}\cup \bigcup_{i=1,\ldots, k} \Delta_i$;
 >
-> 7. $\quad$ $\quad$ $\quad$ **return** $(q, \Delta)$;
+> 6. $\quad$ $\quad$ $\quad$ **return** $(q, \Delta)$;
 > 
-> 8. $\quad$ $\quad$ $x\Rightarrow$ **return** $A_\ast$;
+> 7. $\quad$ $\quad$ $x\Rightarrow$ **return** $A_\ast$;
 > 
 > **end**
 >
@@ -89,19 +89,19 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 >
 > **begin**
 >
-> 1. $\quad$ $q_f\gets \textit{mkFreshState}()$;
+> 1. $\quad$ $q_{\textit{final}}\gets \textit{mkFreshState}()$;
 > 
 > 2. $\quad$ $(q_p, \Delta)\gets \textit{termsMatchingPattern}(p)$;
 >
-> 3. $\quad$ $\Delta\gets \Delta\cup \{q_p\rightarrow q_f\}$;
+> 3. $\quad$ $\Delta\gets \Delta\cup \{q_p\rightarrow q_{\textit{final}}\}$;
 > 
 > 4. $\quad$ **for each** $n$-ary symbol $f$ **where** $n > 0$ **do**
 > 
 > 5. $\quad$ $\quad$ **for** $i = 1,\ldots,n$ **do**
 > 
-> 6. $\quad$ $\quad$ $\quad$ $\Delta \gets \Delta \cup \{ f(q_\ast|_{j=1,\ldots,i-1}, q_f, q_\ast|_{j=i+1,\ldots,n}) \rightarrow q_f \}$;
+> 6. $\quad$ $\quad$ $\quad$ $\Delta \gets \Delta \cup \{ f(\underbrace{q_\ast, \ldots, q_\ast}_{i-1}, q_{\textit{final}}, \underbrace{q_\ast, \ldots, q_\ast}_{n-i}) \rightarrow q_{\textit{final}} \}$;
 >
-> 7. $\quad$ **return** $(q_f, \Delta)$;
+> 7. $\quad$ **return** $(q_{\textit{final}}, \Delta)$;
 > 
 > **end**
 >
@@ -117,15 +117,38 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 > 
 > **end**
 
-
-
 ## E-graphs and equality saturation
 
-We call an FTA deterministic if for every term $t$, $$t\rightarrow^*q_1\land t\rightarrow^*q_2\rightarrow q_1=q_2.$$ We call an FTA reachable its every state accepts some term. An e-graph $G$ is a deterministic and reachable FTA $(Q_f, \Delta)$ with $|Q_f|=1$.
+We call an FTA deterministic if for every term $t$, $$t\rightarrow^*q_1\land t\rightarrow^*q_2\rightarrow q_1=q_2.$$ We call an FTA reachable for every state $q$ there exists a ground term $t$ such that $t\rightarrow^* q$. An e-graph $G$ is a deterministic and reachable FTA $(\{q_\textit{final}\}, \Delta)$ with a single final state.
 Moreover, $G$ induces a relation $\approx_G$ defined as follows:
 if for two terms $t_1$ and $t_2$ there exists a state $q$ in $G$ such that
-$t_1\rightarrow^* q\leftarrow^* t_2$, $t_1\approx t_2$. $\approx_G$ is symmetric and reflexive. Moreover, if $t_1\rightarrow^* q \leftarrow^* t_2$ and $t_2\rightarrow^* q'\leftarrow^* t_3$, since an E-graph is deterministic, 
+$t_1\rightarrow^* q\leftarrow^* t_2$, $t_1\approx t_2$^[
+  Note that this definition of $\approx_G$ is different from the congruence relation defined in the Myhill-Nerode theorem for trees [@kozen1992myhill].
+  For example, consider an E-graph with transitions $\{a()\rightarrow c_1, b()\rightarrow c_2, f(c_1)\rightarrow c_f, f(c_2)\rightarrow c_f\}$.
+  In the Myhill-Nerode theorem, $fa$ and $fb$ would be equivalent while in our definition they are not because they are accepted by different states.
+]. 
+$\approx_G$ is an equivalence relation: $\approx_G$ is symmetric and reflexive by definition. Moreover, if $t_1\rightarrow^* q \leftarrow^* t_2$ and $t_2\rightarrow^* q'\leftarrow^* t_3$, since an E-graph is deterministic, 
 $t_1\rightarrow^* q=q'\leftarrow^* t_3$, so $\approx_G$ is also transitive.
+
+Equality saturation is defined as the inductive fixed point of rule applications and rebuilding:
+$$\textit{EqSat}(R, w) = (\textit{CC}\circ T_p)^{\infty}(\textit{mkEGraph}(w)).$$
+
+We omit the definition of *CC* and $T_p$ here, which can be found in the egg and egglog paper.
+But we remind the readers several properties of equality saturation here:
+First, $T_p(G)$ is not necessarily deterministic, even when $G$ is an E-graph (i.e., deterministic and reachable tree automaton).
+The congruence closure operator *CC* recovers the determinicity.
+Second, $$\{v \mid u\in \mathcal{L}(G), u=v\lor u\rightarrow_R v\}\subseteq \mathcal{L}(T_p(G))\subseteq \mathcal{L}((\textit{CC}\circ T_p)(G));$$
+that is, the e-graph after rule application at least represents terms derived from the initial e-graph
+ by rewriting zero or one time,
+ and the congruence closure further grows the E-graph.
+In many cases, the set containment is strict, see my earlier [blog post](https://effect.systems/blog/ta-completion.html) on tree automata completion.
+As a corollary, $$\{t\mid w\rightarrow_R^* t\}\subseteq \textit{EqSat}(w).$$
+Finally, in terms of the equivalence relation derived from E-graphs, 
+ we have $$\left(\approx_{G}\right)\subseteq \left(\approx_{T_p(G)}\right)\subseteq \left(\approx_{(\texttt{CC}\circ T_p)(G)}\right).$$
+
+Given a term rewriting system $R$ where every rule preserves the set of variables (i.e., $\textit{vars}(\textit{lhs})=\textit{vars}(\textit{rhs})$),
+ let $R^{-1}$ be the term rewriting system obtained by swapping left-hand sides and right-hand sides of patterns in $R$.
+We have $[w]_R= \mathcal{L}(\textit{EqSat}(R\cup R^{-1}, w))$
 
 ## Turing machines
 
@@ -143,7 +166,7 @@ Each configuration of $\mathcal{M}$ can be represented as $\rhd uq_i av \lhd$,
  $a$ is the symbol being scanned, and $v$ is the string to the right.
 We say $w_1\vdash_{\mathcal{M}} w_2$ if configuration $w_1$ can transit to configuration $w_2$ in a Turing machine $\mathcal{M}$, and we omit $\mathcal{M}$ when it's clear from the context.
 
-## Termination of Equality Saturation
+# Termination of Equality Saturation
 
 **Theorem 1.** The following problem is R.E.-complete:
 
@@ -343,9 +366,25 @@ EqSat terminates if and only if $\mathcal{M}$ halts on $s$:
 
 Because the halting problem of a Turing machine is undecidable, the termination problem of EqSat is undecidable as well. $\blacksquare$
 
+# The regularity problem of term rewriting systems
+
+In the last section, we have shown that the termination of equality saturation is undecidable.
+Here, we consider a more general question:
+Given a term rewriting system and a term,
+ is the equivalence class of the term defined
+ by the term rewriting system regular?
+In general, for term rewriting systems consisting of variable-preserving rewrite rules,
+ if equality saturation terminates on $R\cup R^{-1}$,
+ the equivalence class is regular.
+However, there are cases where the equivalence class of a term is regular,
+ equality saturation does not terminate: an example is term rewriting system $\{f(x)\rightarrow f(g(x))\}$
+ and term $f(a)$.
+
+This regularity problem is undecidable, as we show here.
+
 **Theorem 3.** The following problem is undecidable.
 
-> Instance: a set of rewrite rules $R$, a term $w$.
+> Instance: a term rewriting system $R$, a term $w$.
 > 
 > Problem: Is $[w]_R$ regular?
 
@@ -355,10 +394,13 @@ To show the undecidability,
  we reduce the halting problem of Turing machines to this problem.
 As shown in Theorem 1, given a Turing machine $\mathcal{M}$,
 $\mathcal{M}$ halts on an input $s$ if and only
- if $[w]_{R'}$ is regular for $w=\rhd q_0(s, 2)\lhd$.
+ if $[w]_{R'}$ (as constructed in Theorem 1) is regular for $w=\rhd q_0(s, 2)\lhd$.
 $\blacksquare$
 
-For a particular kind of rewrite systems, we show this regularity problem is R.E.-complete.
+Different from the termination of equality saturation,
+it is open whether this problem is recursive enumerable.
+However,
+ for a particular kind of rewrite systems, we show this regularity problem is R.E.-complete.
 
 **Theorem 4.** The following problem is R.E.-complete.
 
@@ -368,11 +410,10 @@ For a particular kind of rewrite systems, we show this regularity problem is R.E
 
 **Proof.**
 
-As we show in Theorem 1, the regularity of $R$ is undecidable.
-Note that $\leftarrow_R$ is convergent.
-Moreover, because every string rewriting system is a linear term rewriting system 
- and therefore a left-linear term rewriting system, 
- $\leftarrow_R$ is left-linear.
+As we show in Theorem 1, the regularity of $R$ (and therefore $R^{-1}$) is undecidable.
+Because every string rewriting system is a linear term rewriting system
+ $R^{-1}$ is left-linear.
+Moreover, $R^{-1}$ is convergent.
 Therefore,
  the regularity of left-linear, convergent term rewriting systems is undecidable.
 Additionally, we show the regularity problem is in R.E. by showing a semi-decision procedure for it.
@@ -411,25 +452,29 @@ To handle this rewrite rule,
 We show the correctness of our algorithm in two steps.
 
 * We show that if an e-graph $G$ is returned, $\mathcal{L}(G)=[w]_R$:
-  First, if $\textit{isFixPoint}(G, R\cup R^{-1})$,
-  we have, for any term $t$, \begin{align*}
-  t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
-  \quad\quad\quad\quad\quad (1)
-  \end{align*}
-  Suppose this is not the case. There must exist term $u$, $v$ where $u\leftrightarrow_R v$, $u\in \mathcal{L}(G)$, and $v\in \mathcal{L}(G)$,
-  and running one iteration of equality saturation will further enlarge the e-graph, which is a contradiction.
-  Therefore, since $w\in \mathcal{L}(G)$, $[w]_R\subseteq \mathcal{L}(G)$.
+  * First, we show $[w]_R\subseteq \mathcal{L}(G)$:
+    if $\textit{isFixPoint}(G, R\cup R^{-1})$ holds,
+    we have, for any term $t$, if $t$ is accepted by $G$, 
+    the entire equivalence class of $t$ is also accepted by $G$; that is \begin{align*}
+    t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
+    \quad\quad\quad\quad\quad (1)
+    \end{align*}
+    Since $w\in \mathcal{L}(G)$, $[w]_R\subseteq \mathcal{L}(G)$.
+    To prove (1), suppose this is not the case. There must exist term $u$, $v$ where $u\leftrightarrow_R v$, $u\in \mathcal{L}(G)$, and $v\not\in \mathcal{L}(G)$, which contradicts $\textit{isFixPoint}(G, R\cup R^{-1})$.
   
-  Second, we show $\mathcal{L}(G)\subseteq [w]_R$. Suppose this is not the case.
-  There exists a term $u\in \mathcal{L}(G)$ that is in a 
-  different equivalence class than $[w]_R$.
-  By (1), $[u]_R\subseteq \mathcal{L}(G)$.
-  Because $R$ is convergent, $[u]_R$ has a normal form $n_u$
-   that is contained in $\mathcal{L}(G)$,
-  but line 3 ensures that $\mathcal{L}(G)$ has one normal form which is $w$, a contradiction.
+  * Second, we show $\mathcal{L}(G)\subseteq [w]_R$. Suppose this is not the case.
+    There exists a term $u\in \mathcal{L}(G)$ that is in a 
+    different equivalence class than $[w]_R$.
+    By (1), $[u]_R\subseteq \mathcal{L}(G)$.
+    Because $R$ is convergent, $[u]_R$ has a normal form $n_u$
+     that is contained in $\mathcal{L}(G)$,
+    but line 3 ensures that $\mathcal{L}(G)$ has one normal form which is $w$, a contradiction.
 * On the other hand, if there exists an e-graph $G$ such that $\mathcal{L}(G)=[w]_R$, it will be returned. This case is straightforward: if $\mathcal{L}(G)=[w]_R$, $G$ is "saturated" with regard to $\leftrightarrow_R$, so the check at line 3 passes.
   Moreover, since $R$ is convergent, $[w]_R$ has only one normal form which is $w$, so the check at line 4 also passes. Therefore, $G$ will be returned.
 $\blacksquare$
 
+## Relaxing left-linearity
 
-## References
+In the last theorem, we require the term rewriting system to be left-linear. However, this needs not to be the case. TODO
+
+# References
