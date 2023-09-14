@@ -121,8 +121,8 @@ For example, the set of rewritable terms of rule $f(x, x)\rightarrow x$ is not r
 
 We call an FTA deterministic if for every term $t$, $$t\rightarrow^*q_1\land t\rightarrow^*q_2\rightarrow q_1=q_2.$$ We call an FTA reachable for every state $q$ there exists a ground term $t$ such that $t\rightarrow^* q$. An e-graph $G$ is a deterministic and reachable FTA $(\{q_\textit{final}\}, \Delta)$ with a single final state.
 Moreover, $G$ induces a relation $\approx_G$ defined as follows:
-if for two terms $t_1$ and $t_2$ there exists a state $q$ in $G$ such that
-$t_1\rightarrow^* q\leftarrow^* t_2$, $t_1\approx t_2$^[
+for any terms $t_1$ and $t_2$, if there exists a state $q$ in $G$ such that
+$t_1\rightarrow^* q\leftarrow^* t_2$, then $t_1\approx t_2$^[
   Note that this definition of $\approx_G$ is different from the congruence relation defined in the Myhill-Nerode theorem for trees [@kozen1992myhill].
   For example, consider an E-graph with transitions $\{a()\rightarrow c_1, b()\rightarrow c_2, f(c_1)\rightarrow c_f, f(c_2)\rightarrow c_f\}$.
   In the Myhill-Nerode theorem, $fa$ and $fb$ would be equivalent while in our definition they are not because they are accepted by different states.
@@ -170,7 +170,7 @@ We say $w_1\vdash_{\mathcal{M}} w_2$ if configuration $w_1$ can transit to confi
 
 **Theorem 1.** The following problem is R.E.-complete:
 
-> Instance: a set of rewrite rules $R$, a term $t$.
+> Instance: a term rewriting system $R$, a term $t$.
 > 
 > Question: does EqSat terminate with $R$ and $t$?
 
@@ -182,17 +182,19 @@ We use the technique by [@NARENDRAN1985343].
 In particular, for each Turing machine $\mathcal{M}$, 
  we produce a string rewriting system $R$ such that the equivalence closure of $R$, $(\approx_R)=\left(R\cup R^{-1}\right)^*$, satisfies that each equivalence class of $\approx_R$ 
  corresponds to a trace of the Turing machine.
-As a result, the Turing machine halts
- iff its trace is finite
- iff the corresponding equivalence class in $R$ is finite
- iff EqSat terminates.
+As a result, the following statements are equivalent:
+
+* the Turing machine halts;
+* the trace of the Turing machine is finite;
+* the equivalence class of the initial configuration in $R$ is finite;
+* EqSat terminates.
 
 In this proof, we consider a degenerate form of EqSat that works with *string* rewriting systems
  instead of term rewriting systems.
 Every string corresponds to a term, and every string rewrite rule corresponds to a rewrite rule.
 For example, the string $uvw$ corresponds to a term $u(v(w(\epsilon)))$, where $u(\cdot), v(\cdot), w(\cdot)$
- are unary functions and $\epsilon$ is a constant,
- and a string rewrite rule $uvw\rightarrow vuw$ corresponds to a (linear) term rewriting rule $u(v(w(x)))\rightarrow v(u(w(x)))$
+ are unary functions and $\epsilon$ is a special constant.
+A string rewrite rule $uvw\rightarrow vuw$ corresponds to a (linear) term rewriting rule $u(v(w(x)))\rightarrow v(u(w(x)))$
  where $x$ is a variable.
 
 It is useful to define several sets of symbols for our construction.
@@ -210,11 +212,12 @@ We use these dummy symbols to make the string rewriting system that we will late
 
 The rewriting system we are going to define works over the set of strings 
  $\textit{CONFIG}=\rhd (\overline\Pi\cup D_L)^*(Q\cup \overline Q)(\Pi\cup D_R)^*\lhd$.
- Strings in *CONFIG* is in a many-to-one mapping, denoted as $\pi$, to configurations of a Turing machine.
+ Strings in *CONFIG* is in a many-to-one mapping to configurations of a Turing machine.
+We denote this mapping as $\pi$:
 $\pi(w)$ converts each $\overline a\overline q_i$ to $q_ia$, removes dummy symbols $L_z$ and $R_z$, and replace $\overline a$ with $a$.
 For example $\pi(\rhd L_{q_0,a}\overline{b} L_{q_1,b} \overline{cq_3}dR_{q_i,\lhd}\lhd)=\rhd bq_3cd\lhd$
 
-Now, the  transitions in $\mathcal{M}$, we define our string rewriting system $R$ as follows.
+Now, for each transitions in $\mathcal{M}$, we define our string rewriting system $R$ as follows.
 
 | transitions in $\mathcal{M}$ | rewrites in $R$ |
 |--------------------|----------------|
@@ -234,7 +237,7 @@ L_z\overline q_i&\rightarrow_R \overline q_iR_zR_z
 \end{align*}
 for any $z$.
 
-To explain what these two rules do, let us define two types of strings. Type-A strings are strings where the symbol being scanned
+To explain what the two rules do, let us define two types of strings. Type-A strings are strings where the symbol being scanned
  is to the immediate right of $q_i$ or to the immediate left of $\overline {q_i}$. 
 In other words, 
  we call a string $s$ a type-A string if $s$ contains $q_ia$ or $\overline{aq_i}$.
@@ -339,7 +342,7 @@ Let $R'$ be the string rewriting system derived from $\mathcal{M}'$ using the en
 
 Given a string $s$,
  let $w$ be the initial configuration $\rhd q_0(s, 2)\lhd$.
-The following conditions are equivalent to each other:
+The following conditions are equivalent:
 
 1. $\mathcal{M}$ halts on input $s$.
 2. $\mathcal{M}'$ halts on input $(s, 2)$.
@@ -404,7 +407,7 @@ However,
 
 **Theorem 4.** The following problem is R.E.-complete.
 
-> Instance: a set of left-linear, convergent rewrite rules $R$, a term $w$.
+> Instance: a left-linear and convergent term rewriting system $R$, a term $w$.
 > 
 > Problem: Is $[w]_R$ regular?
 
@@ -475,6 +478,33 @@ $\blacksquare$
 
 ## Relaxing left-linearity
 
-In the last theorem, we require the term rewriting system to be left-linear. However, this needs not to be the case. TODO
+In the last theorem, the set of normal forms is intersected with the language represented by the e-graph,
+ and checked for equivalence with the singleton set $\{w\}$.
+This is why we require the term rewriting system to be left-linear:
+ the set of normal forms of a left-linear term rewriting system is regular, and regular languages
+ are closed under intersection and has decidable equivalence checking.
+Therefore, if there is a representation of normal forms for general term rewriting systems that
+ is closed under intersection and has decidable equivalence checking,
+ then we can lift the left linearity condition in the last theorem.
+
+Indeed, such a representation exists. It is called *tree automata with global constraints* (TAGCs) [@TAGC].
+Essentially, TAGCs extend tree automata with *global* equality and inequality constraints.
+TAGCs are closed under union and intersection, but not under complementation. 
+Moreover, the emptiness and membership problem of TAGC is decidable.
+Therefore,
+ if we can represent the set of normal forms of a term rewriting system as a TAGC, 
+ then line 3 of the algorithm used in the last theorem can be checked decidably for a general term rewriting system
+ by considering its equivalent form: 
+ $$w\in L\land L\cap \overline{\{w\}}=\emptyset$$
+where $L=\mathcal{L}(G)\cap\textit{normalForms}(R)$.
+I claim $\textit{normalForms}(R)$ can be represented as an TAGC for an arbitrary term rewriting system, although I will omit the details of the construction here since it is a bit technical^[In particular, we cannot use our strategy for left-linear term rewriting systems by first representing the set of rewritable terms and taking its complement, since TAGC is not closed under complementation. Luckily, for each rewrite rule, we can explicitly represent terms that does not match the left-hand side with inequality constraints, and then take the intersection of them.].
+Putting everything together, we have the following generalization of Theorem 4:
+
+**Theorem 5.** The following problem is R.E.-complete.
+
+> Instance: a convergent term rewriting system $R$, a term $w$.
+> 
+> Problem: Is $[w]_R$ regular?
+
 
 # References

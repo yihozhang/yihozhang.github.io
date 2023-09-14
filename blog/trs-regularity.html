@@ -149,15 +149,10 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
   </style>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
@@ -180,10 +175,20 @@ equality saturation and related problems.</p>
 <p>A term rewriting system (TRS) <span class="math inline">\(R\)</span>
 consists of a set of rewrite rules. <span
 class="math inline">\(R\)</span> defines a <em>rewrite relation</em>
-<span class="math inline">\(\rightarrow_R\)</span>. We omit the
-subscript <span class="math inline">\(R\)</span> when it’s clear from
-the context. Let <span class="math inline">\(\rightarrow^*\)</span> be
-the transitive closure of binary relation <span
+<span class="math inline">\(\rightarrow_R\)</span> as follows: <span
+class="math inline">\(u\rightarrow_R v\)</span> if and only if there
+exists a rule <span class="math inline">\((l\rightarrow r)\in R\)</span>
+and a substitution <span class="math inline">\(\sigma\)</span> such that
+a subterm of <span class="math inline">\(u\)</span> at path <span
+class="math inline">\(p\)</span> is <span
+class="math inline">\(l\sigma\)</span>, and <span
+class="math inline">\(v\)</span> is <span
+class="math inline">\(u\)</span> whose subterm at path <span
+class="math inline">\(p\)</span> is substituted with <span
+class="math inline">\(r\sigma\)</span>. We omit the subscript <span
+class="math inline">\(R\)</span> when it’s clear from the context. Let
+<span class="math inline">\(\rightarrow^*\)</span> be the transitive
+closure of binary relation <span
 class="math inline">\(\rightarrow\)</span>. We define <span
 class="math inline">\((\leftarrow_R)=(\rightarrow_R)^{-1}\)</span>,
 <span class="math inline">\((\leftrightarrow_R)=(\rightarrow_R)\cup
@@ -205,9 +210,9 @@ class="math inline">\(t_1\leftarrow_R^*t\rightarrow_R^*t_2\)</span>
 implies there exists a <span class="math inline">\(t&#39;\)</span> such
 that <span class="math inline">\(t_1\rightarrow_R^* t&#39;\leftarrow_R^*
 t_2\)</span>. We call a confluent and terminating TRS
-<em>convergent</em>. Every term in a terminating TRS has at least one
-normal form, every term in a confluent TRS has at most one normal form,
-and every term in a convergent TRS has exactly one normal form.</p>
+<em>convergent</em>. Terms in a terminating TRS have at least one normal
+form, terms in a confluent TRS have at most one normal form, and terms
+in a convergent TRS have exactly one normal form.</p>
 <p>We call a term rewriting system left-linear (resp. right-linear) if
 variables in the left-hand side (resp. right-hand side) pattern of each
 rewrite rule occur only once. For example, <span
@@ -217,52 +222,59 @@ g(x)\}\)</span> is not left-linear. A TRS is linear if it’s left-linear
 and right-linear.</p>
 <h2 id="finite-tree-automata">Finite tree automata</h2>
 <p>A finite tree automaton (FTA) is a tuple <span
-class="math inline">\(\mathcal{A}=(Q, F, Q_f, \Delta)\)</span>, where
-<span class="math inline">\(Q\)</span> is a set of states, <span
-class="math inline">\(F\)</span> is a set of function symbols, <span
-class="math inline">\(Q_f\subseteq Q\)</span> is a set of final states,
-and <span class="math inline">\(\Delta\)</span> is a set of transitions
-of the form <span class="math inline">\(f(q_1,\ldots, q_n)\rightarrow
+class="math inline">\(\mathcal{A}=(Q, F, Q_{\textit{final}},
+\Delta)\)</span>, where <span class="math inline">\(Q\)</span> is a set
+of states, <span class="math inline">\(F\)</span> is a set of function
+symbols, <span class="math inline">\(Q_{\textit{final}}\subseteq
+Q\)</span> is a set of final states, and <span
+class="math inline">\(\Delta\)</span> is a set of transitions of the
+form <span class="math inline">\(f(q_1,\ldots, q_n)\rightarrow
 q\)</span> where <span class="math inline">\(q,q_1,\ldots, q_n\in
 Q\)</span>. A term <span class="math inline">\(t\)</span> is accepted by
-a state by <span class="math inline">\(\mathcal{A}\)</span> if it can be
-rewritten to a final state <span class="math inline">\(q_f\in
-Q_f\)</span> of <span class="math inline">\(\mathcal{A}\)</span>, i.e.,
-<span class="math inline">\(t\rightarrow^* q_f\in Q_f\)</span>. Since
-<span class="math inline">\(Q\)</span> and <span
+<span class="math inline">\(\mathcal{A}\)</span> if it can be rewritten
+to a final state <span class="math inline">\(q_{\textit{final}}\in
+Q_{\textit{final}}\)</span> of <span
+class="math inline">\(\mathcal{A}\)</span>, i.e., <span
+class="math inline">\(t\rightarrow^* q_{\textit{final}}\in
+Q_{\textit{final}}\)</span>. Since <span
+class="math inline">\(Q\)</span> and <span
 class="math inline">\(F\)</span> can be determined by <span
 class="math inline">\(\Delta\)</span>, we omit them and use <span
-class="math inline">\((Q_f,\Delta)\)</span> to denote a FTA for brevity.
-Let <span class="math inline">\(\mathcal{L(A)}\)</span> be the set of
-terms accepted by FTA <span class="math inline">\(\mathcal{A}\)</span>.
-A language <span class="math inline">\(L\)</span> is called regular if
-it is accepted by some FTA (<span class="math inline">\(\exists
-\mathcal{A}, L=\mathcal{L(A)}\)</span>). When the set of transitions
-<span class="math inline">\(\Delta\)</span> is clear from the context,
-we further omit it and use <span
+class="math inline">\((Q_{\textit{final}},\Delta)\)</span> to denote a
+FTA for brevity. Let <span class="math inline">\(\mathcal{L(A)}\)</span>
+be the set of terms accepted by FTA <span
+class="math inline">\(\mathcal{A}\)</span>. A language <span
+class="math inline">\(L\)</span> is called regular if it is accepted by
+some FTA (<span class="math inline">\(\exists \mathcal{A},
+L=\mathcal{L(A)}\)</span>). When the set of transitions <span
+class="math inline">\(\Delta\)</span> is clear from the context, we
+further omit it and use <span
 class="math inline">\(\mathcal{L}(c)\)</span> to denote the language
 accepted the tree automata <span
 class="math inline">\(\mathcal{A}=(c,\Delta)\)</span>.</p>
 <p>Regular languages and FTAs are closed under union, intersection, and
 complementation. Moreover, it is possible to define a tree automaton
-that accepts any term: define <span
+that accepts any term: it is the complement of an empty FTA. To give an
+explicit construction, define <span
 class="math display">\[\mathcal{A}_\ast=(\{q_\ast\},
-\{f(q_\ast|_{i=1\ldots n})\rightarrow q_\ast\mid n\text{-ary symbol }
-f\in F \})\]</span> for a fresh state <span
+\{f(\underbrace{q_\ast,\ldots,q_\ast}_{n} )\rightarrow q_\ast\mid
+n\text{-ary symbol } f\in F \})\]</span> for a fresh state <span
 class="math inline">\(q_\ast\)</span>.</p>
-<p>Given a term-rewriting system <span class="math inline">\(R\)</span>,
-the set of normal forms of <span class="math inline">\(R\)</span> is the
-complement of the set of rewritable terms, i.e., terms whose subterm
-match some left-hand side patterns of <span
-class="math inline">\(R\)</span>. Suppose <span
+<p>Left-regularity of a term rewriting system implies the regularity of
+its normal forms: Given a term-rewriting system <span
+class="math inline">\(R\)</span>, the set of normal forms of <span
+class="math inline">\(R\)</span> is the complement of the set of
+rewritable terms, i.e., terms whose subterm match some left-hand side
+patterns of <span class="math inline">\(R\)</span>. Suppose <span
 class="math inline">\(R\)</span> is left-linear. The set of rewritable
 terms is regular. Since regularity is preserved under complementation,
 the set of normal forms of <span class="math inline">\(R\)</span> is
-regular. We give such a construction below. The construction here
-requires left linearity to ensure that each “hole” in the left-hand side
-patterns can pick terms independently. For example, the set of
-rewritable terms of rule <span class="math inline">\(f(x, x)\rightarrow
-x\)</span> is not regular.</p>
+regular. Below is an algorithm that computes a tree automata whose
+language is the set of normal forms. The construction here requires left
+linearity to ensure that each “hole” in the left-hand side patterns can
+pick terms independently. For example, the set of rewritable terms of
+rule <span class="math inline">\(f(x, x)\rightarrow x\)</span> is not
+regular.</p>
 <blockquote>
 <p><strong>Procedure</strong> <span
 class="math inline">\(\textit{termsMatchingPattern}(p)\)</span></p>
@@ -274,9 +286,6 @@ class="math inline">\(\mathcal{L(A)}\)</span> contains all terms
 matching the given pattern.</p>
 <p><strong>begin</strong></p>
 <ol type="1">
-<li><p><span class="math inline">\(\quad\)</span> <span
-class="math inline">\(q_f\gets
-\textit{mkFreshState}()\)</span>;</p></li>
 <li><p><span class="math inline">\(\quad\)</span> <strong>case</strong>
 <span class="math inline">\(p\)</span> <strong>of</strong></p></li>
 <li><p><span class="math inline">\(\quad\)</span> <span
@@ -318,14 +327,14 @@ containing the given pattern.</p>
 <p><strong>begin</strong></p>
 <ol type="1">
 <li><p><span class="math inline">\(\quad\)</span> <span
-class="math inline">\(q_f\gets
+class="math inline">\(q_{\textit{final}}\gets
 \textit{mkFreshState}()\)</span>;</p></li>
 <li><p><span class="math inline">\(\quad\)</span> <span
 class="math inline">\((q_p, \Delta)\gets
 \textit{termsMatchingPattern}(p)\)</span>;</p></li>
 <li><p><span class="math inline">\(\quad\)</span> <span
 class="math inline">\(\Delta\gets \Delta\cup \{q_p\rightarrow
-q_f\}\)</span>;</p></li>
+q_{\textit{final}}\}\)</span>;</p></li>
 <li><p><span class="math inline">\(\quad\)</span> <strong>for
 each</strong> <span class="math inline">\(n\)</span>-ary symbol <span
 class="math inline">\(f\)</span> <strong>where</strong> <span
@@ -337,10 +346,11 @@ class="math inline">\(i = 1,\ldots,n\)</span>
 <li><p><span class="math inline">\(\quad\)</span> <span
 class="math inline">\(\quad\)</span> <span
 class="math inline">\(\quad\)</span> <span class="math inline">\(\Delta
-\gets \Delta \cup \{ f(q_\ast|_{j=1,\ldots,i-1}, q_f,
-q_\ast|_{j=i+1,\ldots,n}) \rightarrow q_f \}\)</span>;</p></li>
+\gets \Delta \cup \{ f(\underbrace{q_\ast, \ldots, q_\ast}_{i-1},
+q_{\textit{final}}, \underbrace{q_\ast, \ldots, q_\ast}_{n-i})
+\rightarrow q_{\textit{final}} \}\)</span>;</p></li>
 <li><p><span class="math inline">\(\quad\)</span>
-<strong>return</strong> <span class="math inline">\((q_f,
+<strong>return</strong> <span class="math inline">\((q_{\textit{final}},
 \Delta)\)</span>;</p></li>
 </ol>
 <p><strong>end</strong></p>
@@ -367,47 +377,49 @@ saturation</h2>
 class="math inline">\(t\)</span>, <span
 class="math display">\[t\rightarrow^*q_1\land
 t\rightarrow^*q_2\rightarrow q_1=q_2.\]</span> We call an FTA reachable
-its every state accepts some term. An e-graph <span
+for every state <span class="math inline">\(q\)</span> there exists a
+ground term <span class="math inline">\(t\)</span> such that <span
+class="math inline">\(t\rightarrow^* q\)</span>. An e-graph <span
 class="math inline">\(G\)</span> is a deterministic and reachable FTA
-<span class="math inline">\((Q_f, \Delta)\)</span> with <span
-class="math inline">\(|Q_f|=1\)</span>. Moreover, <span
-class="math inline">\(G\)</span> induces a relation <span
-class="math inline">\(\approx_G\)</span> defined as follows: if for two
-terms <span class="math inline">\(t_1\)</span> and <span
-class="math inline">\(t_2\)</span> there exists a state <span
+<span class="math inline">\((\{q_\textit{final}\}, \Delta)\)</span> with
+a single final state. Moreover, <span class="math inline">\(G\)</span>
+induces a relation <span class="math inline">\(\approx_G\)</span>
+defined as follows: for any terms <span
+class="math inline">\(t_1\)</span> and <span
+class="math inline">\(t_2\)</span>, if there exists a state <span
 class="math inline">\(q\)</span> in <span
 class="math inline">\(G\)</span> such that <span
-class="math inline">\(t_1\rightarrow^* q\leftarrow^* t_2\)</span>, <span
-class="math inline">\(t_1\approx t_2\)</span><a href="#fn1"
+class="math inline">\(t_1\rightarrow^* q\leftarrow^* t_2\)</span>, then
+<span class="math inline">\(t_1\approx t_2\)</span><a href="#fn1"
 class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.
 <span class="math inline">\(\approx_G\)</span> is an equivalence
 relation: <span class="math inline">\(\approx_G\)</span> is symmetric
-and reflexive. Moreover, if <span class="math inline">\(t_1\rightarrow^*
-q \leftarrow^* t_2\)</span> and <span
-class="math inline">\(t_2\rightarrow^* q&#39;\leftarrow^* t_3\)</span>,
-since an E-graph is deterministic, <span
+and reflexive by definition. Moreover, if <span
+class="math inline">\(t_1\rightarrow^* q \leftarrow^* t_2\)</span> and
+<span class="math inline">\(t_2\rightarrow^* q&#39;\leftarrow^*
+t_3\)</span>, since an E-graph is deterministic, <span
 class="math inline">\(t_1\rightarrow^* q=q&#39;\leftarrow^*
 t_3\)</span>, so <span class="math inline">\(\approx_G\)</span> is also
 transitive.</p>
-<p>Equality saturation is defined as inductive fixed point of rule
+<p>Equality saturation is defined as the inductive fixed point of rule
 applications and rebuilding: <span
 class="math display">\[\textit{EqSat}(R, w) = (\textit{CC}\circ
 T_p)^{\infty}(\textit{mkEGraph}(w)).\]</span></p>
 <p>We omit the definition of <em>CC</em> and <span
 class="math inline">\(T_p\)</span> here, which can be found in the egg
 and egglog paper. But we remind the readers several properties of
-equality saturation here: First, even if <span
-class="math inline">\(G\)</span> is an E-graph (i.e., deterministic and
-reachable tree automaton), <span class="math inline">\(T_p(G)\)</span>
-is not necessarily deterministic, and the congruence closure operator
-<em>CC</em> recovers the determinism. Second, <span
-class="math display">\[\mathcal{L}(G)\cup \{v \mid u\in \mathcal{L}(G),
+equality saturation here: First, <span
+class="math inline">\(T_p(G)\)</span> is not necessarily deterministic,
+even when <span class="math inline">\(G\)</span> is an E-graph (i.e.,
+deterministic and reachable tree automaton). The congruence closure
+operator <em>CC</em> recovers the determinicity. Second, <span
+class="math display">\[\{v \mid u\in \mathcal{L}(G), u=v\lor
 u\rightarrow_R v\}\subseteq \mathcal{L}(T_p(G))\subseteq
 \mathcal{L}((\textit{CC}\circ T_p)(G));\]</span> that is, the e-graph
 after rule application at least represents terms derived from the
 initial e-graph by rewriting zero or one time, and the congruence
-closure further grows the E-graph. Moreover, in many cases, the set
-containment is strict, see my earlier <a
+closure further grows the E-graph. In many cases, the set containment is
+strict, see my earlier <a
 href="https://effect.systems/blog/ta-completion.html">blog post</a> on
 tree automata completion. As a corollary, <span
 class="math display">\[\{t\mid w\rightarrow_R^* t\}\subseteq
@@ -464,7 +476,7 @@ Saturation</h1>
 <p><strong>Theorem 1.</strong> The following problem is
 R.E.-complete:</p>
 <blockquote>
-<p>Instance: a set of rewrite rules <span
+<p>Instance: a term rewriting system <span
 class="math inline">\(R\)</span>, a term <span
 class="math inline">\(t\)</span>.</p>
 <p>Question: does EqSat terminate with <span
@@ -485,9 +497,15 @@ equivalence closure of <span class="math inline">\(R\)</span>, <span
 class="math inline">\((\approx_R)=\left(R\cup R^{-1}\right)^*\)</span>,
 satisfies that each equivalence class of <span
 class="math inline">\(\approx_R\)</span> corresponds to a trace of the
-Turing machine. As a result, the Turing machine halts iff its trace is
-finite iff the corresponding equivalence class in <span
-class="math inline">\(R\)</span> is finite iff EqSat terminates.</p>
+Turing machine. As a result, the following statements are
+equivalent:</p>
+<ul>
+<li>the Turing machine halts;</li>
+<li>the trace of the Turing machine is finite;</li>
+<li>the equivalence class of the initial configuration in <span
+class="math inline">\(R\)</span> is finite;</li>
+<li>EqSat terminates.</li>
+</ul>
 <p>In this proof, we consider a degenerate form of EqSat that works with
 <em>string</em> rewriting systems instead of term rewriting systems.
 Every string corresponds to a term, and every string rewrite rule
@@ -495,8 +513,8 @@ corresponds to a rewrite rule. For example, the string <span
 class="math inline">\(uvw\)</span> corresponds to a term <span
 class="math inline">\(u(v(w(\epsilon)))\)</span>, where <span
 class="math inline">\(u(\cdot), v(\cdot), w(\cdot)\)</span> are unary
-functions and <span class="math inline">\(\epsilon\)</span> is a
-constant, and a string rewrite rule <span
+functions and <span class="math inline">\(\epsilon\)</span> is a special
+constant. A string rewrite rule <span
 class="math inline">\(uvw\rightarrow vuw\)</span> corresponds to a
 (linear) term rewriting rule <span
 class="math inline">\(u(v(w(x)))\rightarrow v(u(w(x)))\)</span> where
@@ -526,9 +544,10 @@ Church-Rosser.</p>
 <p>The rewriting system we are going to define works over the set of
 strings <span class="math inline">\(\textit{CONFIG}=\rhd
 (\overline\Pi\cup D_L)^*(Q\cup \overline Q)(\Pi\cup D_R)^*\lhd\)</span>.
-Strings in <em>CONFIG</em> is in a many-to-one mapping, denoted as <span
-class="math inline">\(\pi\)</span>, to configurations of a Turing
-machine. <span class="math inline">\(\pi(w)\)</span> converts each <span
+Strings in <em>CONFIG</em> is in a many-to-one mapping to configurations
+of a Turing machine. We denote this mapping as <span
+class="math inline">\(\pi\)</span>: <span
+class="math inline">\(\pi(w)\)</span> converts each <span
 class="math inline">\(\overline a\overline q_i\)</span> to <span
 class="math inline">\(q_ia\)</span>, removes dummy symbols <span
 class="math inline">\(L_z\)</span> and <span
@@ -537,7 +556,7 @@ class="math inline">\(\overline a\)</span> with <span
 class="math inline">\(a\)</span>. For example <span
 class="math inline">\(\pi(\rhd L_{q_0,a}\overline{b} L_{q_1,b}
 \overline{cq_3}dR_{q_i,\lhd}\lhd)=\rhd bq_3cd\lhd\)</span></p>
-<p>Now, the transitions in <span
+<p>Now, for each transitions in <span
 class="math inline">\(\mathcal{M}\)</span>, we define our string
 rewriting system <span class="math inline">\(R\)</span> as follows.</p>
 <table>
@@ -601,13 +620,12 @@ q_iR_z&amp;\rightarrow_R L_zL_zq_i\\
 L_z\overline q_i&amp;\rightarrow_R \overline q_iR_zR_z
 \end{align*}\]</span> for any <span
 class="math inline">\(z\)</span>.</p>
-<p>To explain what these two rules do, let us define two types of
-strings. Type-A strings are strings where the symbol being scanned is to
-the immediate right of <span class="math inline">\(q_i\)</span> or to
-the immediate left of <span class="math inline">\(\overline
-{q_i}\)</span>. In other words, we call a string <span
-class="math inline">\(s\)</span> a type-A string if <span
-class="math inline">\(s\)</span> contains <span
+<p>To explain what the two rules do, let us define two types of strings.
+Type-A strings are strings where the symbol being scanned is to the
+immediate right of <span class="math inline">\(q_i\)</span> or to the
+immediate left of <span class="math inline">\(\overline {q_i}\)</span>.
+In other words, we call a string <span class="math inline">\(s\)</span>
+a type-A string if <span class="math inline">\(s\)</span> contains <span
 class="math inline">\(q_ia\)</span> or <span
 class="math inline">\(\overline{aq_i}\)</span>. Type-B strings are
 strings that are not type-A: they are strings where there are dummy
@@ -844,7 +862,7 @@ introduced in the lemma.</p>
 <p>Given a string <span class="math inline">\(s\)</span>, let <span
 class="math inline">\(w\)</span> be the initial configuration <span
 class="math inline">\(\rhd q_0(s, 2)\lhd\)</span>. The following
-conditions are equivalent to each other:</p>
+conditions are equivalent:</p>
 <ol type="1">
 <li><span class="math inline">\(\mathcal{M}\)</span> halts on input
 <span class="math inline">\(s\)</span>.</li>
@@ -921,7 +939,7 @@ R.E.-complete.</p>
 <p><strong>Theorem 4.</strong> The following problem is
 R.E.-complete.</p>
 <blockquote>
-<p>Instance: a set of left-linear, convergent rewrite rules <span
+<p>Instance: a left-linear and convergent term rewriting system <span
 class="math inline">\(R\)</span>, a term <span
 class="math inline">\(w\)</span>.</p>
 <p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
@@ -1042,12 +1060,50 @@ check at line 4 also passes. Therefore, <span
 class="math inline">\(G\)</span> will be returned. <span
 class="math inline">\(\blacksquare\)</span></li>
 </ul>
+<h2 id="relaxing-left-linearity">Relaxing left-linearity</h2>
+<p>In the last theorem, the set of normal forms is intersected with the
+language represented by the e-graph, and checked for equivalence with
+the singleton set <span class="math inline">\(\{w\}\)</span>. This is
+why we require the term rewriting system to be left-linear: the set of
+normal forms of a left-linear term rewriting system is regular, and
+regular languages are closed under intersection and has decidable
+equivalence checking. Therefore, if there is a representation of normal
+forms for general term rewriting systems that is closed under
+intersection and has decidable equivalence checking, then we can lift
+the left linearity condition in the last theorem.</p>
+<p>Indeed, such a representation exists. It is called <em>tree automata
+with global constraints</em> (TAGCs) <span class="citation"
+data-cites="TAGC">[@TAGC]</span>. Essentially, TAGCs extend tree
+automata with <em>global</em> equality and inequality constraints. TAGCs
+are closed under union and intersection, but not under complementation.
+Moreover, the emptiness and membership problem of TAGC is decidable.
+Therefore, if we can represent the set of normal forms of a term
+rewriting system as a TAGC, then line 3 of the algorithm used in the
+last theorem can be checked decidably for a general term rewriting
+system by considering its equivalent form: <span
+class="math display">\[w\in L\land L\cap
+\overline{\{w\}}=\emptyset\]</span> where <span
+class="math inline">\(L=\mathcal{L}(G)\cap\textit{normalForms}(R)\)</span>.
+I claim <span class="math inline">\(\textit{normalForms}(R)\)</span> can
+be represented as an TAGC for an arbitrary term rewriting system,
+although I will omit the details of the construction here since it is a
+bit technical<a href="#fn2" class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a>. Putting everything together, we
+have the following generalization of Theorem 4:</p>
+<p><strong>Theorem 5.</strong> The following problem is
+R.E.-complete.</p>
+<blockquote>
+<p>Instance: a convergent term rewriting system <span
+class="math inline">\(R\)</span>, a term <span
+class="math inline">\(w\)</span>.</p>
+<p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
+</blockquote>
 <h1 id="references">References</h1>
-<section id="footnotes" class="footnotes footnotes-end-of-document"
+<section class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1"><p> Note that this definition of <span
+<li id="fn1" role="doc-endnote"><p> Note that this definition of <span
 class="math inline">\(\approx_G\)</span> is different from the
 congruence relation defined in the Myhill-Nerode theorem for trees <span
 class="citation" data-cites="kozen1992myhill">[@kozen1992myhill]</span>.
@@ -1058,6 +1114,13 @@ Myhill-Nerode theorem, <span class="math inline">\(fa\)</span> and <span
 class="math inline">\(fb\)</span> would be equivalent while in our
 definition they are not because they are accepted by different states.<a
 href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>In particular, we cannot use our
+strategy for left-linear term rewriting systems by first representing
+the set of rewritable terms and taking its complement, since TAGC is not
+closed under complementation. Luckily, for each rewrite rule, we can
+explicitly represent terms that does not match the left-hand side with
+inequality constraints, and then take the intersection of them.<a
+href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </body>
