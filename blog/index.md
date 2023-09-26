@@ -4,7 +4,7 @@ author: Yihong Zhang
 ---
 Aug 11, 2023
 
-* [The Termination Problem of Equality Saturation is Undecidable](trs-regularity.html) [\[PDF version\]](trs-regularity.pdf)
+* [The Termination Problem of EqSat is Undecidable](trs-regularity.html) [\[PDF version\]](trs-regularity.pdf)
 
 Jun 22, 2023
 
