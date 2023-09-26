@@ -2,6 +2,10 @@
 title: Blog
 author: Yihong Zhang
 ---
+Aug 11, 2023
+
+* [The Termination Problem of Equality Saturation is Undecidable](trs-regularity.html) [\[PDF version\]](trs-regularity.pdf)
+
 Jun 22, 2023
 
 * [The E-graph extraction problem is NP-complete](egraph-extraction.html) [\[PDF version\]](egraph-extraction.pdf)
