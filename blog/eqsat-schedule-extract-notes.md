@@ -1,5 +1,5 @@
 ---
-title: Notes on the scheduling and extraction problem of EqSat
+title: Notes on the scheduling and extraction problems of EqSat
 author: Yihong Zhang
 ---
 

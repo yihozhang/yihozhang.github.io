@@ -2,6 +2,10 @@
 title: Blog
 author: Yihong Zhang
 ---
+Feb 4, 2024
+
+* [Notes on the scheduling and extraction problems of EqSat](eqsat-schedule-extract-notes.html) [\[PDF version\]](eqsat-schedule-extract-notes.pdf)
+
 Aug 11, 2023
 
 * [The Termination Problem of EqSat is Undecidable](trs-regularity.html) [\[PDF version\]](trs-regularity.pdf)
