@@ -149,10 +149,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
@@ -163,9 +168,30 @@
 <h1 class="title">Blog</h1>
 <p class="author">Yihong Zhang</p>
 </header>
+<p>Aug 11, 2023</p>
+<ul>
+<li><a href="trs-regularity.html">The Termination Problem of EqSat is
+Undecidable</a> <a href="trs-regularity.pdf">[PDF version]</a></li>
+</ul>
+<p>Jun 22, 2023</p>
+<ul>
+<li><a href="egraph-extraction.html">The E-graph extraction problem is
+NP-complete</a> <a href="egraph-extraction.pdf">[PDF version]</a></li>
+</ul>
+<p>Mar 17, 2023</p>
+<ul>
+<li><a href="ta-completion.html">Ensuring the Termination of EqSat over
+Terminating TRS</a> <a href="ta-completion.pdf">[PDF version]</a></li>
+</ul>
+<p>Jul 19, 2022</p>
+<ul>
+<li><a href="egg-sharp-tutorial.html">A Tutorial on the Imaginary Gogi
+Language</a> <a href="egg-sharp-tutorial.pdf">[PDF version]</a></li>
+</ul>
+<p>Mar 9, 2022</p>
 <ul>
 <li><a href="ematch-trick.html">A Trick that Makes Classical E-Matching
-Faster</a> <a href="ematch-trick.pdf">[PDF version]</a></li>
+Faster</a> <a href="ematch-trick.pdf">[PDF version]</a>.</li>
 </ul>
 </body>
 </html>

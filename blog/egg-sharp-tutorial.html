@@ -227,6 +227,7 @@
 <header id="title-block-header">
 <h1 class="title">A tutorial on the imaginary Gogi language</h1>
 <p class="author">Yihong Zhang</p>
+<p class="date">Jul 19, 2022</p>
 </header>
 <nav id="TOC" role="doc-toc">
 
@@ -265,8 +266,8 @@ generalizes egg I will also try to develop the operational and model
 semantics of Gogi.
 <!-- Finally, I'll discuss some thoughts on Gogi. --></p>
 <h1 id="introduction-to-gogi">Introduction to Gogi</h1>
-<h2 id="ext-1-user-defined-sorts-and-lattices">Ext 1: User-defined sorts
-and lattices</h2>
+<h2 id="extension-1-user-defined-sorts-and-lattices">Extension 1:
+User-defined sorts and lattices</h2>
 <p>In Gogi, every value is either a (semi)lattice value or a sort value.
 Lattices in Gogi are algebraic structures with a binary join operator
 (<span class="math inline">\(\lor\)</span>) that is associative,
@@ -283,8 +284,8 @@ for lattice join.</p>
 <p>Similarly, users can define sorts. Unlike lattices, sorts are
 uninterpreted. As a result, sort values can only be created implicitly
 via functional dependency. We will go back to this point later.</p>
-<h2 id="ext-2-relations-and-functional-dependencies">Ext 2: Relations
-and Functional Dependencies</h2>
+<h2 id="extension-2-relations-with-functional-dependencies">Extension 2:
+Relations with Functional Dependencies</h2>
 <h3 id="declaring-a-relation-with-functional-dependency">Declaring a
 relation with functional dependency</h3>
 <p>Relations can be declared using the <code>rel</code> keyword.
@@ -396,7 +397,7 @@ with lattices:</p>
 <div class="sourceCode" id="cb11"><pre
 class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>rel hi(expr) <span class="kw">-&gt;</span> lmax(<span class="fu">-</span><span class="dv">2147483648</span>)<span class="kw">.</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>rel lo(expr) <span class="kw">-&gt;</span> lmin(<span class="dv">2147482647</span>)<span class="kw">.</span></span></code></pre></div>
-<p>To define a lattice column, a default value need to be provided in
+<p>To define a lattice column, a default value needs to be provided in
 the relation definition. The default value is not a lattice bottom: the
 bottom means do not exist. Meanwhile, the lattice top means there are
 conflicts. It is also possible for default value to refer to the
@@ -479,12 +480,12 @@ class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb15-1"><a h
 <span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="co">% if x&gt;0 is equivalent to true,</span></span>
 <span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="co">% every abs[x] in the database should be equivalent to x </span></span>
 <span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>x := abs[x] if geq(x<span class="kw">,</span> <span class="dv">0</span><span class="kw">,</span> <span class="kw">true</span>[])</span></code></pre></div>
-<p>The above program can be seen as implementing a small theorem prover
-in Gogi. Whenever it sees abs[x], a query about <code>x &gt;= 0</code>
-will be issued to the database. If later <code>x &gt;= 0</code> is
-proven to be equivalent to true, a distinguished sort value,
-<code>abs[x]</code> will be put in the same e-class as
-<code>x</code>.</p>
+<p>This can be seen as implementing a small theorem prover in Gogi.
+Whenever it sees <code>abs[x]</code>, a query about
+<code>x &gt;= 0</code> will be issued to the database. If later
+<code>x &gt;= 0</code> is proven to be equivalent to true, a
+distinguished sort value, <code>abs[x]</code> will be put in the same
+e-class as <code>x</code>.</p>
 <p>All these rewrite will be very hard to express in egg.</p>
 <h2 id="ext-3-functional-dependency-repair">Ext 3: Functional Dependency
 Repair</h2>
@@ -493,9 +494,9 @@ same set of determinant columns? In this case, we need to repair the
 FDs. We have seen such examples many times in previous sections. For
 example, rules like <code>R[x1, ..., xk] := ...</code> will add new
 values to <code>R</code> indexed by <code>x1, ..., xk</code>, and it is
-likely that there are already other tuples with the same prefix
-<code>x1, ..., xk</code>. These rules may potentially cause violation of
-functional dependencies. In general, there are two kinds of
+likely that there are already other tuples with the form
+<code>R(x1, ..., xk, _)</code>. These rules may potentially cause
+violation of functional dependencies. In general, there are two kinds of
 violations:</p>
 <p><strong>Case 1.</strong> If the dependent column is a sort value,
 Gogi will unify the two sort values later in the iteration. We can think
@@ -565,143 +566,51 @@ class="sourceCode rust"><code class="sourceCode rust"><span id="cb18-1"><a href=
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> av <span class="kw">in</span> store[a]<span class="op">.</span>iter()<span class="op">,</span> <span class="cf">if</span> <span class="kw">let</span> Kont(k) <span class="op">=</span> av<span class="op">;</span></span></code></pre></div>
 <p>This makes Ascent have a more macro-y vibe, which makes sense since
 the whole Ascent frontend is based on Rust’s procedural macros. However,
-I think the similar can be easily achieved inside the relational land,
-so in a full-fledged relational language like Gogi, the <code>for</code>
-syntax may not be necessary.</p>
+I think <code>for</code> can be easily achieved inside the pure
+relational land, so in Gogi, this may not be necessary.</p>
 <p>Seamless interop with Rust is in general very powerful. In fact, we
 have already used this feature a lot. For example, lattices in Gogi are
 structs defined in Rust that implements certain traits. So rules like
 <code>hi(x, n.into()) :- num(n, x).</code>, will call methods in the
 corresponding struct (e.g., <code>n.into()</code>).</p>
-<p>In general, these user-defined functions introduced functional
-dependencies from domains of functions to their range. For example, rule
+<p>User-defined functions introduce functional dependencies from
+functions’ domains to their ranges. For example, rule
 <code>hi(x, n.into()) :- num(n, x).</code> can be viewed as
 <code>hi(x, n_into) :- num(n, x), into_rel(n, n_into)</code> with
 functional dependency from <code>n</code> to <code>n_into</code>.
 Advanced join algorithms like worst-case optimal joins can leverage
 these functional dependencies to optimize the query.</p>
-<h1 id="the-model-semantics-of-gogi-and-its-evaluation">The Model
-Semantics of Gogi and its Evaluation</h1>
-<p>In this section, we will focus on the problem of how to formalize
-Gogi and how to evaluate Gogi programs. This section will first give the
-model semantics of Gogi. Then, It will describe rebuilding, an essential
-procedure for evaluating and maintaining e-graphs, namely rebuilding, in
-the Gogi setting. Finally, we will discuss how Gogi’s matching procedure
-can benefit from semi-naive evaluation, a classic evaluation algorithm
-in Datalog ## The Model Semantics</p>
-<p>For simplicity, we assume that in our core language there will only
-be one (interpreted) lattice <span class="math inline">\(L\)</span> and
-one (uninterpreted) sort <span class="math inline">\(S\)</span>.</p>
-<p>A relation declaration in core Gogi has the following shape:</p>
-<p><span class="math display">\[\text{rel }R(c_1,\dots,c_p)\rightarrow
-(s_1,\ldots, s_m, l_1,\ldots, l_n)\]</span> where <span
-class="math inline">\(s_j\)</span> is a sort value column, <span
-class="math inline">\(l_k\)</span> is a lattice value column, and <span
-class="math inline">\(c_i\)</span> can be either a lattice or sort value
-column. Such declaration specifies a relation with schema<br />
-<span class="math inline">\((c_1, \ldots c_p, s_1, \ldots, s_m, l_1,
-\ldots, l_n)\)</span> and implies the following logical constraint:</p>
-<p><span class="math display">\[
-  \forall
-  \vec c,\vec s,\vec l,
-  \vec{s&#39;},\vec{l&#39;}.
-  R(\vec c, \vec s, \vec l)\land
-  R(\vec{c&#39;}, \vec{s&#39;}, \vec{l&#39;})\rightarrow
-  \vec s=\vec{s&#39;}\land \vec l = \vec{l&#39;}\]</span> where <span
-class="math inline">\(\vec x\)</span> denotes a vector of variables
-<span class="math inline">\(x_1,\ldots,x_k\)</span>.</p>
-<p>Note in the core formalization, we don’t assign default values to
-lattices and we assume the bottom is the default value, and each default
-value is specified as a rewrite rule.</p>
-<p>A rewrite rule in the core looks like follows: <span
-class="math display">\[
-  \exists \vec{z}.R_1(\vec{x_1}), \ldots, R_n(\vec {x_n})
-  \gets
-  S_1(\vec{y_1}), \ldots, S_m(\vec{y_m}).
-\]</span> All variables <span class="math inline">\(x_{ij}\)</span> in
-the head are either bound in the body or existentially quantified.
-Importantly, existentially quantified variables in the core quantifies
-over sort values and must be “inferrable” from the functional
-dependency, meaning that they must be a dependent variable within some
-relation atoms. For example, the following Gogi program is not valid,
-because rule <code>R(1, c)</code> can be triggered arbitrarily many
-times, each with different <code>c</code>:</p>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>sort <span class="dt">S</span><span class="kw">.</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>rel <span class="dt">R</span>(i64<span class="kw">,</span> <span class="dt">S</span>)<span class="kw">.</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="dt">R</span>(<span class="dv">1</span><span class="kw">,</span> c)<span class="kw">.</span> <span class="co">% translated from R[1].</span></span></code></pre></div>
-<p>This “inferrable” constraints can be formalized as <span
-class="math display">\[\forall i.\exists j. z_i\in
-\text{dep}(R_j(\vec{x_j})),\]</span> where <span
-class="math inline">\(\text{dep}\left(R_j\left(\vec{x_j}\right)\right)\)</span>
-is the set of dependent variables in atom <span
-class="math inline">\(R_j(\vec{x_j})\)</span>.</p>
-<p>The rewrite rule in the core is further translated to the following
-logical constraint:</p>
-<p><span class="math display">\[
-  \forall \vec{y}.
-  \left(\bigwedge_i \vec{y_i}\sqsubseteq_L S_i \rightarrow
-  \exists \vec{z}\in S^k. \bigwedge_i \vec{x_i}\sqsubseteq_L
-R_i\right),\]</span> <!-- ```prolog
-forall y11, ..., yn’mn’:
-  (/\i Si(yi1, ..., yim'i)) ->
-  exists z1 in L, ..., zk in L,
-    /\i (xi1, ... ximi) subset_L Ri
-``` --> where <span class="math inline">\(\vec{y}\)</span> is the set of
-variables occurring in <span class="math inline">\(\vec{y_1},\ldots,
-\vec{y_m}\)</span> and <span class="math display">\[
-(\vec{c},\vec{s},\vec{l})
-\sqsubseteq_L R\iff
-\exists \vec{l&#39;}.
-R(\vec{c},\vec{s},\vec{l&#39;}) \land\left(\bigwedge_i\;l_i\leq_L
-l&#39;_i\right)
-\]</span> <!-- ```
-(s1, ..., sm, l1, ..., ln) subset_L R
-    iff
-exists l'1, ..., l'n: 
-  R(s1, ..., sm, l'1, ..., l'n) /\
-  /\j (lj <= l'j)
-``` --></p>
-<p>In English, whenever a valuation of variables satisfied right-hand
-side, there exists some <span class="math inline">\(\vec{z}\)</span>
-such that the left-hand side also “holds”, in the sense that some tuples
-in the relation subsumes the substituted left-hand side.</p>
-<p>The result of evaluating a (core) Gogi program is the minimal model
-<span class="math inline">\((S_{\min}, D_{\min})\)</span> that satisfies
-the logical constraints derived from the program, where <span
-class="math inline">\(S_{\min}\)</span> is the minimal <span
-class="math inline">\(S\)</span> of sort values (up to isomorphism) and
-<span class="math inline">\(D_{\min}\)</span> is the minimal database
-instance (i.e., interpretation of relations) with domain <span
-class="math inline">\(L\)</span> and <span
-class="math inline">\(S_{\min}\)</span>.</p>
-<p>This core formalization should look familiar to people who know the
-<a href="https://dl.acm.org/doi/10.1145/3034786.3034796">chase</a>:
-Functional dependencies are equality-generating dependencies (EGD), and
-rewrite rules are tuple-generating dependencies (TGD). However, there
-are several critical distinctions between Gogi and the chase. First, the
-chase has both labelled nulls and constants, and unifying two constants
-will cause a conflict. Sort values in Gogi can be thought as labelled
-nulls, and there is no matching concept for constants in Gogi. Moreover,
-Gogi supports lattice values. This feature has its root in both egg’s
-e-class analyses and relational languages like Flix, and is necessary
-for different kinds of analysis tasks that Gogi strives to support.
-Finally, and perhaps most importantly, Gogi has this “inferrable”
-constraint for existential variables. This constraint leads Gogi to have
-a single very efficient application algorithm of executing both EGDs
-(from functional dependencies) and TGDs (from rewrite rules). In
-contrast, EGDs and TGDs in the chase are executed independently. Without
-the lattice values and lifting the inferrable constraint, Gogi programs
-can be expressed in the chase.</p>
+<!-- # The Model Semantics of Gogi and its Evaluation
+
+In this section, we will focus on the problem of how to formalize Gogi 
+ and how to evaluate Gogi programs. 
+This section will first give a model semantics of Gogi 
+ motivated by monotonicity.
+
+// However, it turns out this model semantics is just an old wine in new bottles.
+// In fact, the semantics of data dependency and the chase, 
+//  which has been long studied in the database land,
+//  exactly captures this.
+// It is also fascinating that the output of equality saturation is in fact the core.
+
+After the model semantics, tis section will describe
+ rebuilding, an essential procedure for 
+ evaluating and maintaining e-graphs,
+ namely rebuilding, in the Gogi setting.
+Finally,
+ we will discuss how Gogi's matching procedure
+ can benefit from semi-naive evaluation,
+ a classic evaluation algorithm in Datalog
+
+## The Model Semantics -->
 <h2 id="the-evaluation-algorithm">The Evaluation Algorithm</h2>
 <p>The evaluation algorithm of Gogi programs consists of two parts. The
 core of the evaluation is the invariant-maintaining rebuilding
 algorithm, which is inspired both by the rebuilding algorithm of egg and
-by the evaluation algorithm of the chase. The second part involves
-matching and applying Gogi rules. Applying Gogi rules is efficient. In
-the chase’s terminology, thanks to the above mentioned inferrable
-constraint, rule application in Gogi is able to utilize functional
-dependencies to avoid to generate unnecessary nulls. Moreover, because
+by the evaluation algorithm of <a
+href="https://en.wikipedia.org/wiki/Chase_(algorithm)">the chase</a>.
+The second part involves matching and applying Gogi rules. Applying Gogi
+rules is efficient compared to the standard chase. Moreover, because
 Gogi programs are monotonic computations over the relational database in
 nature, they can benefit from the semi-naive evaluation algorithm of
 Datalog. We call this semi-naive matching, which can be seen as a
@@ -710,112 +619,112 @@ href="https://dl.acm.org/doi/10.1145/3498696">relational
 e-matching</a>.</p>
 <h3 id="rebuilding">Rebuilding</h3>
 <p>The rebuilding algorithm:</p>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>todo <span class="op">=</span> mk_union_find()</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>domain <span class="op">=</span> mk_set()</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> union_sort(s1, s2):</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  todo.union(s1, s2)</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  domain.add_all([s1, s2])</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> refresh_todo():</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  todo <span class="op">=</span> mk_union_find()</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  domain <span class="op">=</span> mk_set()</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> on_insert(R, tup):</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># find the tuple by its determinant columns</span></span>
-<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  orig_tup <span class="op">=</span> R.find_by_determinant(tup.det)</span>
-<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> orig_tup <span class="kw">is</span> <span class="va">None</span>:</span>
-<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    R.insert(tup)</span>
-<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
-<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># enumerate each dependent column</span></span>
-<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c1 <span class="kw">in</span> tup.dep:</span>
-<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      col <span class="op">=</span> c1.col</span>
-<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>      c2 <span class="op">=</span> orig_tup[col]</span>
-<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> col.is_sort():</span>
-<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>        s1 <span class="op">=</span> todo.get_or_create(c1)</span>
-<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        s2 <span class="op">=</span> todo.get_or_create(c2)</span>
-<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>        union_sort(s1, s2)</span>
-<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span>:</span>
-<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>        orig_tup.set_col(col, c1.lat_max(c2))</span>
-<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> normalize(<span class="bu">tuple</span>, union_find):</span>
-<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">tuple</span>.<span class="bu">map</span>(<span class="kw">lambda</span> val: </span>
-<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    union_find.get_or_default(val, default <span class="op">=</span> val))</span>
-<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rebuild(DB):</span>
-<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="kw">not</span> todo.is_empty():</span>
-<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># take todo into the local scope</span></span>
-<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    union_find <span class="op">=</span> todo</span>
-<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    refresh_todo()</span>
-<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    to_remove <span class="op">=</span> mk_set()</span>
-<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>    to_insert <span class="op">=</span> mk_set()</span>
-<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> val <span class="kw">in</span> domain:</span>
-<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> R <span class="kw">in</span> DB:</span>
-<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> col <span class="kw">in</span> R.cols:</span>
-<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> tup <span class="kw">in</span> R.index_by(col <span class="op">=</span> col, val <span class="op">=</span> val):</span>
-<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>            new_tup <span class="op">=</span> normalize(tup, union_find)</span>
-<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> new_tup <span class="op">!=</span> tup:</span>
-<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>              to_remove.add((R, tup))</span>
-<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>              to_insert.add((R, new_tup))</span>
-<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    DB.remove_all(to_remove)</span>
-<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>    <span class="co"># may trigger on_insert</span></span>
-<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    DB.insert_all(to_insert)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>todo <span class="op">=</span> mk_union_find()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>domain <span class="op">=</span> mk_set()</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> union_sort(s1, s2):</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  todo.union(s1, s2)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  domain.add_all([s1, s2])</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> refresh_todo():</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  todo <span class="op">=</span> mk_union_find()</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  domain <span class="op">=</span> mk_set()</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> on_insert(R, tup):</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># find the tuple by its determinant columns</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  orig_tup <span class="op">=</span> R.find_by_determinant(tup.det)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> orig_tup <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    R.insert(tup)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># enumerate each dependent column</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> c1 <span class="kw">in</span> tup.dep:</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>      col <span class="op">=</span> c1.col</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>      c2 <span class="op">=</span> orig_tup[col]</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> col.is_sort():</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        s1 <span class="op">=</span> todo.get_or_create(c1)</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>        s2 <span class="op">=</span> todo.get_or_create(c2)</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>        union_sort(s1, s2)</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span>:</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>        orig_tup.set_col(col, c1.lat_max(c2))</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> normalize(<span class="bu">tuple</span>, union_find):</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="bu">tuple</span>.<span class="bu">map</span>(<span class="kw">lambda</span> val: </span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    union_find.get_or_default(val, default <span class="op">=</span> val))</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rebuild(DB):</span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="kw">not</span> todo.is_empty():</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># take todo into the local scope</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>    union_find <span class="op">=</span> todo</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>    refresh_todo()</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>    to_remove <span class="op">=</span> mk_set()</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>    to_insert <span class="op">=</span> mk_set()</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> val <span class="kw">in</span> domain:</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> R <span class="kw">in</span> DB:</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> col <span class="kw">in</span> R.cols:</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>          <span class="cf">for</span> tup <span class="kw">in</span> R.index_by(col <span class="op">=</span> col, val <span class="op">=</span> val):</span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>            new_tup <span class="op">=</span> normalize(tup, union_find)</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> new_tup <span class="op">!=</span> tup:</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>              to_remove.add((R, tup))</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>              to_insert.add((R, new_tup))</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>    DB.remove_all(to_remove)</span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>    <span class="co"># may trigger on_insert</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>    DB.insert_all(to_insert)</span></code></pre></div>
 <h3 id="applying-rewrite-rules">Applying rewrite rules</h3>
-<div class="sourceCode" id="cb21"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> batch_rewrite(pats, DB):</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  to_insert <span class="op">=</span> mk_set()</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (lhs, rhs) <span class="kw">in</span> pats:</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> subst <span class="kw">in</span> match(DB, lhs):</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>      subst <span class="op">=</span> chase(DB, subst, lhs, rhs)</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (R, atom) <span class="kw">in</span> rhs:</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        to_insert.add((R, atom.<span class="bu">apply</span>(subst)))</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  DB.insert_all(to_insert)</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> to_insert.is_empty()</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> chase(DB, subst, lhs, rhs):</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  shouldContinue <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> shouldContinue:</span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    shouldContinue <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> atom <span class="kw">in</span> rhs:</span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>      det_vars <span class="op">=</span> atom.get_det_vars()</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> det_vars.is_subset_of(subst.get_domain()):</span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        shouldContinue <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>        R <span class="op">=</span> DB.get_rel(atom.rel)</span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>        det <span class="op">=</span> det_vars.<span class="bu">apply</span>(subst)</span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        tup <span class="op">=</span> R.find_by_determinant(det)</span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> var <span class="kw">in</span> atom.get_dep_vars():</span>
-<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>          col <span class="op">=</span> var.col</span>
-<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> var.is_sort():</span>
-<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> tup <span class="kw">is</span> <span class="va">None</span>: <span class="cf">continue</span></span>
-<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>              value <span class="op">=</span> tup.get_by_col(col)</span>
-<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>              sort_update(subst, var, value)</span>
-<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>          <span class="cf">else</span>:</span>
-<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>            value <span class="op">=</span> tup <span class="kw">is</span> <span class="va">None</span> ? col.lat_init(det)</span>
-<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>                                : tup.get_by_col(col)</span>
-<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>            lat_update(subst, var, value)</span>
-<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> var <span class="kw">in</span> rhs.get_all_vars():</span>
-<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>subst.contains(var):</span>
-<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>      <span class="cf">assert</span> var.is_sort():</span>
-<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>      subst[var] <span class="op">=</span> new_sort_value(var.sort)</span>
-<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lat_update(subst, var, value):</span>
-<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> subst.contains(var):</span>
-<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>    subst[var] <span class="op">=</span> subst[var].lat_max(value)</span>
-<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
-<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>    subst[var] <span class="op">=</span> value</span>
-<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sort_update(subst, var, value):</span>
-<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> subst.contains(var):</span>
-<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>    union_sort(subst[var], value)</span>
-<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
-<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>    subst[var] <span class="op">=</span> value</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> batch_rewrite(pats, DB):</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  to_insert <span class="op">=</span> mk_set()</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (lhs, rhs) <span class="kw">in</span> pats:</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> subst <span class="kw">in</span> match(DB, lhs):</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>      subst <span class="op">=</span> chase(DB, subst, lhs, rhs)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (R, atom) <span class="kw">in</span> rhs:</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>        to_insert.add((R, atom.<span class="bu">apply</span>(subst)))</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  DB.insert_all(to_insert)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> to_insert.is_empty()</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> chase(DB, subst, lhs, rhs):</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  shouldContinue <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> shouldContinue:</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    shouldContinue <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> atom <span class="kw">in</span> rhs:</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>      det_vars <span class="op">=</span> atom.get_det_vars()</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> det_vars.is_subset_of(subst.get_domain()):</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        shouldContinue <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>        R <span class="op">=</span> DB.get_rel(atom.rel)</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>        det <span class="op">=</span> det_vars.<span class="bu">apply</span>(subst)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>        tup <span class="op">=</span> R.find_by_determinant(det)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> var <span class="kw">in</span> atom.get_dep_vars():</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>          col <span class="op">=</span> var.col</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>          <span class="cf">if</span> var.is_sort():</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>              <span class="cf">if</span> tup <span class="kw">is</span> <span class="va">None</span>: <span class="cf">continue</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>              value <span class="op">=</span> tup.get_by_col(col)</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>              sort_update(subst, var, value)</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>          <span class="cf">else</span>:</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>            value <span class="op">=</span> tup <span class="kw">is</span> <span class="va">None</span> ? col.lat_init(det)</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>                                : tup.get_by_col(col)</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>            lat_update(subst, var, value)</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> var <span class="kw">in</span> rhs.get_all_vars():</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>subst.contains(var):</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>      <span class="cf">assert</span> var.is_sort():</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>      subst[var] <span class="op">=</span> new_sort_value(var.sort)</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lat_update(subst, var, value):</span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> subst.contains(var):</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    subst[var] <span class="op">=</span> subst[var].lat_max(value)</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    subst[var] <span class="op">=</span> value</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sort_update(subst, var, value):</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> subst.contains(var):</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    union_sort(subst[var], value)</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span>:</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>    subst[var] <span class="op">=</span> value</span></code></pre></div>
 <!-- 
 Note to myself: 
 This part differs slightly from egglite.
@@ -845,12 +754,12 @@ and wait the rebuilding to resolve the violation, Gogi will
 ??? TODO), 
 -->
 <h3 id="the-main-algorithm">The main algorithm</h3>
-<div class="sourceCode" id="cb22"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(pats, DB, max_iter):</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="bu">iter</span> <span class="kw">in</span> <span class="bu">range</span>(max_iter):</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>batch_rewrite(pats, DB):</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    rebuild(DB)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(pats, DB, max_iter):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> <span class="bu">iter</span> <span class="kw">in</span> <span class="bu">range</span>(max_iter):</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">!</span>batch_rewrite(pats, DB):</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    rebuild(DB)</span></code></pre></div>
 <h3 id="semi-naive-matching">Semi-Naive Matching</h3>
 <p>One of the bottleneck in evaluating Gogi programs is matching the
 left-hand side. Since we are matching over a relational representation
@@ -864,133 +773,212 @@ Datalog. We call this similar optimization in Gogi semi-naive matching.
 This optimization will be tricky to do over e-graph’s DAG
 representation, yet is fairly obvious in Gogi’s full-fledged relational
 representation.</p>
-<h1 id="gogi-by-example">Gogi by Example</h1>
-<h2 id="lambda-calculus">Lambda Calculus</h2>
-<div class="sourceCode" id="cb23"><pre
-class="sourceCode prolog"><code class="sourceCode prolog"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>sort term<span class="kw">.</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>rel <span class="kw">false</span>() <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>rel <span class="kw">true</span>() <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>rel num(i32) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>rel <span class="dt">var</span>(string) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>rel add(term<span class="kw">,</span> term) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>rel eq(term<span class="kw">,</span> term) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>rel lam(string<span class="kw">,</span> term) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>rel let(string<span class="kw">,</span> term<span class="kw">,</span> term) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>rel fix(term<span class="kw">,</span> term) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>rel cond(term<span class="kw">,</span> term<span class="kw">,</span> term) <span class="kw">-&gt;</span> term<span class="kw">.</span></span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>rel free(term<span class="kw">,</span> string)<span class="kw">.</span></span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>rel const_num(term<span class="kw">,</span> i32)<span class="kw">.</span></span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>rel const_bool(term<span class="kw">,</span> bool)<span class="kw">.</span></span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>rel is_const(term)<span class="kw">.</span></span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="co">% constant folding</span></span>
-<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>const_num(c<span class="kw">,</span> i) <span class="kw">:-</span> num(i<span class="kw">,</span> c)<span class="kw">.</span></span>
-<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>const_num[c] := const_num[a] <span class="fu">+</span> const_num[b] </span>
-<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>             if c <span class="kw">=</span> add[a, b]<span class="kw">.</span></span>
-<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>const_bool[<span class="kw">true</span>[], <span class="kw">true</span>]<span class="kw">.</span></span>
-<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>const_bool[<span class="kw">false</span>[], <span class="kw">false</span>]<span class="kw">.</span></span>
-<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>const_bool[c] := <span class="kw">true</span>[]</span>
-<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>              if c <span class="kw">=</span> eq[a, a]<span class="kw">.</span></span>
-<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>const_bool[c] := <span class="kw">false</span>[]</span>
-<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>              if c <span class="kw">=</span> eq[a, b]<span class="kw">,</span></span>
-<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>                 const_num[a] <span class="kw">!=</span> const_num[b]<span class="kw">.</span></span>
-<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>is_const(c) <span class="kw">:-</span> const_num[c]<span class="kw">.</span></span>
-<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>is_const(c) <span class="kw">:-</span> const_bool[c]<span class="kw">.</span></span>
-<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a><span class="co">% free variable analysis</span></span>
-<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>free(c<span class="kw">,</span> v)<span class="kw">:-</span> <span class="dt">var</span>(v<span class="kw">,</span> c)<span class="kw">.</span></span>
-<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>free[c] := free[a] if c <span class="kw">=</span> add[a, b]<span class="kw">.</span></span>
-<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a><span class="co">% unfolds to free(c, v) :- free(a, v), if c = add[a, b].</span></span>
-<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>free[c] := free[b] if c <span class="kw">=</span> add[a, b]<span class="kw">.</span></span>
-<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>free[c] := free[a] if c <span class="kw">=</span> eq[a, b]<span class="kw">.</span></span>
-<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>free[c] := free[b] if c <span class="kw">=</span> eq[a, b]<span class="kw">.</span></span>
-<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>free(c<span class="kw">,</span> v) <span class="kw">:-</span> free(body<span class="kw">,</span> v) </span>
-<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>           if c <span class="kw">=</span> lam[x, body]<span class="kw">,</span></span>
-<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a>              v <span class="kw">!=</span> x<span class="kw">.</span></span>
-<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a><span class="co">% fv(let(x, a, b)) = free(a) + (free(b) \ x)</span></span>
-<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a>free(c<span class="kw">,</span> v) := free(b<span class="kw">,</span> v) </span>
-<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>           if c <span class="kw">=</span> let[x, a, b]<span class="kw">,</span></span>
-<span id="cb23-45"><a href="#cb23-45" aria-hidden="true" tabindex="-1"></a>              v <span class="kw">!=</span> x<span class="kw">.</span></span>
-<span id="cb23-46"><a href="#cb23-46" aria-hidden="true" tabindex="-1"></a>free[c] := free[a]</span>
-<span id="cb23-47"><a href="#cb23-47" aria-hidden="true" tabindex="-1"></a>           if c <span class="kw">=</span> let[x, a, b]<span class="kw">.</span></span>
-<span id="cb23-48"><a href="#cb23-48" aria-hidden="true" tabindex="-1"></a>free(c<span class="kw">,</span> v) <span class="kw">:-</span> free(body<span class="kw">,</span> v) </span>
-<span id="cb23-49"><a href="#cb23-49" aria-hidden="true" tabindex="-1"></a>           if c <span class="kw">=</span> fix[x, body]<span class="kw">,</span></span>
-<span id="cb23-50"><a href="#cb23-50" aria-hidden="true" tabindex="-1"></a>              v <span class="kw">!=</span> x<span class="kw">.</span></span>
-<span id="cb23-51"><a href="#cb23-51" aria-hidden="true" tabindex="-1"></a>free[c] := free[pred] if c <span class="kw">=</span> cond[pred, a, b]</span>
-<span id="cb23-52"><a href="#cb23-52" aria-hidden="true" tabindex="-1"></a>free[c] := free[a] if c <span class="kw">=</span> cond[pred, a, b]</span>
-<span id="cb23-53"><a href="#cb23-53" aria-hidden="true" tabindex="-1"></a>free[c] := free[b] if c <span class="kw">=</span> cond[pred, a, b]</span>
-<span id="cb23-54"><a href="#cb23-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-55"><a href="#cb23-55" aria-hidden="true" tabindex="-1"></a><span class="co">% if-true</span></span>
-<span id="cb23-56"><a href="#cb23-56" aria-hidden="true" tabindex="-1"></a>then := cond[<span class="kw">true</span>[], then, else]<span class="kw">.</span></span>
-<span id="cb23-57"><a href="#cb23-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-58"><a href="#cb23-58" aria-hidden="true" tabindex="-1"></a><span class="co">% if-false</span></span>
-<span id="cb23-59"><a href="#cb23-59" aria-hidden="true" tabindex="-1"></a>else := cond[<span class="kw">false</span>[], then, else]<span class="kw">.</span></span>
-<span id="cb23-60"><a href="#cb23-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-61"><a href="#cb23-61" aria-hidden="true" tabindex="-1"></a><span class="co">% if-elim</span></span>
-<span id="cb23-62"><a href="#cb23-62" aria-hidden="true" tabindex="-1"></a>else := cond[eq[<span class="dt">var</span>[x], e], then, else]</span>
-<span id="cb23-63"><a href="#cb23-63" aria-hidden="true" tabindex="-1"></a>     if let[x, e, then] <span class="kw">=</span> let[x, e, else]</span>
-<span id="cb23-64"><a href="#cb23-64" aria-hidden="true" tabindex="-1"></a>let[x, e, then] <span class="kw">:-</span> cond[eq[<span class="dt">var</span>[x], e], then, else]</span>
-<span id="cb23-65"><a href="#cb23-65" aria-hidden="true" tabindex="-1"></a>let[x, e, else] <span class="kw">:-</span> cond[eq[<span class="dt">var</span>[x], e], then, else]</span>
-<span id="cb23-66"><a href="#cb23-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-67"><a href="#cb23-67" aria-hidden="true" tabindex="-1"></a><span class="co">% add-comm</span></span>
-<span id="cb23-68"><a href="#cb23-68" aria-hidden="true" tabindex="-1"></a>add[b, a] := add[a, b]</span>
-<span id="cb23-69"><a href="#cb23-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-70"><a href="#cb23-70" aria-hidden="true" tabindex="-1"></a><span class="co">% add-assoc</span></span>
-<span id="cb23-71"><a href="#cb23-71" aria-hidden="true" tabindex="-1"></a>add[a, add[b, c]] := add[add[a, b], c]</span>
-<span id="cb23-72"><a href="#cb23-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-73"><a href="#cb23-73" aria-hidden="true" tabindex="-1"></a><span class="co">% eq-comm</span></span>
-<span id="cb23-74"><a href="#cb23-74" aria-hidden="true" tabindex="-1"></a>eq[b, a] := eq[a, b]</span>
-<span id="cb23-75"><a href="#cb23-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-76"><a href="#cb23-76" aria-hidden="true" tabindex="-1"></a><span class="co">% fix</span></span>
-<span id="cb23-77"><a href="#cb23-77" aria-hidden="true" tabindex="-1"></a>let[v, fix[v, e], e] := fix[v, e]</span>
-<span id="cb23-78"><a href="#cb23-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-79"><a href="#cb23-79" aria-hidden="true" tabindex="-1"></a><span class="co">% beta</span></span>
-<span id="cb23-80"><a href="#cb23-80" aria-hidden="true" tabindex="-1"></a>let[v, e, body] := app[lam[v, body], e]</span>
-<span id="cb23-81"><a href="#cb23-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-82"><a href="#cb23-82" aria-hidden="true" tabindex="-1"></a><span class="co">% let-app</span></span>
-<span id="cb23-83"><a href="#cb23-83" aria-hidden="true" tabindex="-1"></a>app[let[v, e, a], let[v, e, b]] := let[v, e, app[a, b]]</span>
-<span id="cb23-84"><a href="#cb23-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-85"><a href="#cb23-85" aria-hidden="true" tabindex="-1"></a><span class="co">% let-add</span></span>
-<span id="cb23-86"><a href="#cb23-86" aria-hidden="true" tabindex="-1"></a>add[let[v, e, a], let[v, e, b]] := let[v, e, add[a, b]]</span>
-<span id="cb23-87"><a href="#cb23-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-88"><a href="#cb23-88" aria-hidden="true" tabindex="-1"></a><span class="co">% let-eq</span></span>
-<span id="cb23-89"><a href="#cb23-89" aria-hidden="true" tabindex="-1"></a>eq[let[v, e, a], let[v, e, b]] := let[v, e, eq[a, b]]</span>
-<span id="cb23-90"><a href="#cb23-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-91"><a href="#cb23-91" aria-hidden="true" tabindex="-1"></a><span class="co">% let-const</span></span>
-<span id="cb23-92"><a href="#cb23-92" aria-hidden="true" tabindex="-1"></a>c:= let[v, e, c] if is_const(c)</span>
-<span id="cb23-93"><a href="#cb23-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-94"><a href="#cb23-94" aria-hidden="true" tabindex="-1"></a><span class="co">% let-if</span></span>
-<span id="cb23-95"><a href="#cb23-95" aria-hidden="true" tabindex="-1"></a>cond[let[v, e, pred], let[v, e, then], let[v, e, else]] </span>
-<span id="cb23-96"><a href="#cb23-96" aria-hidden="true" tabindex="-1"></a>    := let[v, e, cond[pred, then, else]]</span>
-<span id="cb23-97"><a href="#cb23-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-98"><a href="#cb23-98" aria-hidden="true" tabindex="-1"></a><span class="co">% let-var-same</span></span>
-<span id="cb23-99"><a href="#cb23-99" aria-hidden="true" tabindex="-1"></a>e := let[v1, e, <span class="dt">var</span>[v1]]</span>
-<span id="cb23-100"><a href="#cb23-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-101"><a href="#cb23-101" aria-hidden="true" tabindex="-1"></a><span class="co">% let-var-diff</span></span>
-<span id="cb23-102"><a href="#cb23-102" aria-hidden="true" tabindex="-1"></a><span class="dt">var</span>[v2] := let[v1, e, <span class="dt">var</span>[v2]] if v1 <span class="kw">!=</span> v2</span>
-<span id="cb23-103"><a href="#cb23-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-104"><a href="#cb23-104" aria-hidden="true" tabindex="-1"></a><span class="co">% let-lam-same</span></span>
-<span id="cb23-105"><a href="#cb23-105" aria-hidden="true" tabindex="-1"></a>lam[v1, body] := let[v1, e, lam[v1, body]]</span>
-<span id="cb23-106"><a href="#cb23-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-107"><a href="#cb23-107" aria-hidden="true" tabindex="-1"></a><span class="co">% let-lam-diff</span></span>
-<span id="cb23-108"><a href="#cb23-108" aria-hidden="true" tabindex="-1"></a>lam[v2, let[v1, e, body]] := let[v1, e, lam[v2, body]] </span>
-<span id="cb23-109"><a href="#cb23-109" aria-hidden="true" tabindex="-1"></a>                          if v1 <span class="kw">!=</span> v2<span class="kw">,</span> free(e<span class="kw">,</span> v2)</span>
-<span id="cb23-110"><a href="#cb23-110" aria-hidden="true" tabindex="-1"></a><span class="co">% capture-avoiding subst</span></span>
-<span id="cb23-111"><a href="#cb23-111" aria-hidden="true" tabindex="-1"></a>lam[fresh, </span>
-<span id="cb23-112"><a href="#cb23-112" aria-hidden="true" tabindex="-1"></a>  let[v1, e, </span>
-<span id="cb23-113"><a href="#cb23-113" aria-hidden="true" tabindex="-1"></a>    let[v2, <span class="dt">var</span>[fresh], </span>
-<span id="cb23-114"><a href="#cb23-114" aria-hidden="true" tabindex="-1"></a>        body]]] </span>
-<span id="cb23-115"><a href="#cb23-115" aria-hidden="true" tabindex="-1"></a>  := </span>
-<span id="cb23-116"><a href="#cb23-116" aria-hidden="true" tabindex="-1"></a>let[v1, e, lam[v2, body]] </span>
-<span id="cb23-117"><a href="#cb23-117" aria-hidden="true" tabindex="-1"></a>  if v1 <span class="kw">!=</span> v2<span class="kw">,</span> <span class="kw">!</span>free(e<span class="kw">,</span> v2)<span class="kw">,</span> fresh <span class="kw">=</span> gensym()<span class="kw">.</span></span></code></pre></div>
-<h2 id="type-inference-for-hm-type-system">Type Inference for HM Type
-System</h2>
-<h1 id="comparison-to-other-languages">Comparison to other
-languages</h1>
-<h2 id="comparison-to-rel">Comparison to Rel</h2>
-<h2 id="comparison-to-souffle">Comparison to Souffle</h2>
-<h2 id="comparison-to-flix">Comparison to Flix</h2>
+<!-- # Gogi by Example
+
+## Lambda Calculus
+
+```prolog
+sort term.
+rel false() -> term.
+rel true() -> term.
+rel num(i32) -> term.
+rel var(string) -> term.
+rel add(term, term) -> term.
+rel eq(term, term) -> term.
+rel lam(string, term) -> term.
+rel let(string, term, term) -> term.
+rel fix(term, term) -> term.
+rel cond(term, term, term) -> term.
+
+rel free(term, string).
+rel const_num(term, i32).
+rel const_bool(term, bool).
+rel is_const(term).
+
+% constant folding
+const_num(c, i) :- num(i, c).
+const_num[c] := const_num[a] + const_num[b] 
+             if c = add[a, b].
+const_bool[true[], true].
+const_bool[false[], false].
+const_bool[c] := true[]
+              if c = eq[a, a].
+const_bool[c] := false[]
+              if c = eq[a, b],
+                 const_num[a] != const_num[b].
+is_const(c) :- const_num[c].
+is_const(c) :- const_bool[c].
+
+% free variable analysis
+free(c, v):- var(v, c).
+free[c] := free[a] if c = add[a, b].
+% unfolds to free(c, v) :- free(a, v), if c = add[a, b].
+free[c] := free[b] if c = add[a, b].
+free[c] := free[a] if c = eq[a, b].
+free[c] := free[b] if c = eq[a, b].
+free(c, v) :- free(body, v) 
+           if c = lam[x, body],
+              v != x.
+% fv(let(x, a, b)) = free(a) + (free(b) \ x)
+free(c, v) := free(b, v) 
+           if c = let[x, a, b],
+              v != x.
+free[c] := free[a]
+           if c = let[x, a, b].
+free(c, v) :- free(body, v) 
+           if c = fix[x, body],
+              v != x.
+free[c] := free[pred] if c = cond[pred, a, b]
+free[c] := free[a] if c = cond[pred, a, b]
+free[c] := free[b] if c = cond[pred, a, b]
+
+% if-true
+then := cond[true[], then, else].
+% if-false
+else := cond[false[], then, else].
+% if-elim
+else := cond[eq[var[x], e], then, else]
+     if let[x, e, then] = let[x, e, else]
+let[x, e, then] :- cond[eq[var[x], e], then, else]
+let[x, e, else] :- cond[eq[var[x], e], then, else]
+% add-comm
+add[b, a] := add[a, b]
+% add-assoc
+add[a, add[b, c]] := add[add[a, b], c]
+% eq-comm
+eq[b, a] := eq[a, b]
+% fix
+let[v, fix[v, e], e] := fix[v, e]
+% beta
+let[v, e, body] := app[lam[v, body], e]
+% let-app
+app[let[v, e, a], let[v, e, b]] := let[v, e, app[a, b]]
+% let-add
+add[let[v, e, a], let[v, e, b]] := let[v, e, add[a, b]]
+% let-eq
+eq[let[v, e, a], let[v, e, b]] := let[v, e, eq[a, b]]
+% let-const
+c:= let[v, e, c] if is_const(c)
+% let-if
+cond[let[v, e, pred], let[v, e, then], let[v, e, else]] 
+    := let[v, e, cond[pred, then, else]]
+% let-var-same
+e := let[v1, e, var[v1]]
+% let-var-diff
+var[v2] := let[v1, e, var[v2]] if v1 != v2
+% let-lam-same
+lam[v1, body] := let[v1, e, lam[v1, body]]
+% let-lam-diff
+lam[v2, let[v1, e, body]] := let[v1, e, lam[v2, body]] 
+                          if v1 != v2, free(e, v2)
+% capture-avoiding subst
+lam[fresh, 
+  let[v1, e, 
+    let[v2, var[fresh], 
+        body]]] 
+  := 
+let[v1, e, lam[v2, body]] 
+  if v1 != v2, !free(e, v2), fresh = gensym().
+```
+
+## Type Inference for HM Type System
+
+```prolog
+sort expr.
+(decl-ctor lam (string expr) expr)
+(decl-ctor var (string) expr)
+(decl-ctor app (expr expr) expr)
+(decl-ctor let (string expr) expr)
+(decl-ctor unit () expr)
+
+(decl-sort type)
+(decl-ctor tvar (string) type)
+(decl-ctor tunit () type)
+(decl-ctor tarr (type type) type)
+; we don't need to introduce additional
+; rules for case like ((tvar s), tunit),
+; where we will normally subst one to the other,
+; because here once union! is performed,
+; the object language can't distinguish
+; (tvar s) from tunit
+(rule (
+    (eq (tarr fr1 to1) (tarr fr2 to2)
+)(
+    (union! fr1 fr2)
+    (union! to1 to2)
+))
+
+
+; a ctx is a list of var -> scheme
+(decl-sort ctx)
+(decl-ctor nil () ctx)
+(decl-ctor cons (string scheme) ctx)
+
+; a scheme is a type with some type variables qualified
+(decl-sort scheme)
+(decl-ctor forall (string-list, type) scheme)
+
+
+; \Sigma |- e : t
+(decl-fun type-of 
+    (: (ctx expr) type)
+    (default \bot) ; in default case the type is None
+                   ; each bottom value should be unique
+                   ; so they don't accidentally merge
+    (merge union!)) ; when merge, unify the type
+
+(decl-fun generalize (: (type) scheme) TODO)
+(decl-fun instantiate (: (scheme) type) TODO)
+
+; \Sigma |- () : Unit
+(merge (type-of ctx unit) tunit)
+
+; \Sigma; x: t1 |- e : t2
+; -------------------------------
+; \Sigma |- lam x. e : t1 -> t2
+(rule (
+    (eq a (type-of ctx (lam x e)))
+    (eq s (fresh-str))
+)(
+    (merge a (tarr (tvar s) 
+                   (type-of (cons x (forall [] (tvar s)))
+                               e)))
+))
+
+; \Sigma |- e1 :- t1 -> t2
+; \Sigma |- e2 : t1
+---------------------------------
+; \Sigma |- e1 e2 : t2
+(rule (
+    (eq a (type-of ctx (app e1 e2)))
+    (eq s (fresh-str))
+)(
+    (union! (type-of ctx e1) 
+            (tarr (type-of ctx e2)
+                  (tvar s)))
+    (union! a (tvar s))
+))
+
+
+(rule (
+    (eq a (type-of ctx (let x e1 e2)))
+)(
+    (union! a
+            (type-of (cons x (generalize (type-of ctx e1)) 
+                           ctx) 
+                        e2))
+))
+```
+
+# Comparison to other languages
+
+## Comparison to Rel
+
+## Comparison to Souffle
+
+## Comparison to Flix
+
+## Comparison to the Chase -->
 <section class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />

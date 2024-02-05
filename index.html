@@ -15,6 +15,17 @@
 </head>
 
 <body>
+    <style>
+        .highlighted-tag {
+            padding: 3px 7px;
+            background-color: #62c370;
+            color: black;
+            border-radius: 5px;
+            font-size: smaller;
+            border: 1px solid #256d44;
+            margin-right: 5px;
+        }
+    </style>
     <script>
         if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) {
             document.body.classList.add('mobile');
@@ -23,115 +34,196 @@
 
     <div id="main">
         <div>
-                <h3>Yihong Zhang (张轶泓)</h3>
-                <b>BS/MS student at
-                    <a href="https://cs.washington.edu">Paul G. Allen School of Computer Science & Engineering</a>
-                </b><br>
-                <tt style="font-size: 18px">yz489 at cs.washington.edu</tt>
+            <h3>Yihong Zhang (张轶泓)</h3>
+            <b>PhD student at
+                <a href="https://cs.washington.edu">Paul G. Allen School of Computer Science & Engineering</a>
+            </b><br>
+            <tt style="font-size: 18px">yz489 at cs.washington.edu</tt>
 
-                <hr>
-                <h3>About me</h3>
-                <p>
-                    I am a BS/MS studying Computer Science at UW Seattle. I am broadly interested in the theories and applications of programming languages and database systems.
-                </p>
-                <a href="blog/index.html">Blog</a>
-                &ensp;|&ensp;
-                <a href="doc/Yihong_Zhang_Resume.pdf">Curriculum Vitae</a>
-                &ensp;|&ensp;
-                <a href="course_list.html">Coursework</a>
-                &ensp;|&ensp;
-                <a href="https://github.com/yihozhang">GitHub</a>
+            <hr>
+            <h3>About me</h3>
+            <p>
+                I am a second-year PhD student studying Computer Science at UW Seattle, co-advised by <a
+                    href="https://ztatlock.net">Zachary Tatlock</a>
+                and <a href="https://homes.cs.washington.edu/~suciu">Dan Suciu</a>.
+                I am broadly interested in the theories and applications of programming languages and data management.
+            </p>
+            <p>
+                Currently, I am working on a program optimization technique called Equality Saturation (EqSat):
+            <ul>
+                <li><b>Theory</b>: I try to answer questions like <a href="doc/egraphs-2023-theory/paper.pdf">"when does
+                        EqSat
+                        terminate?"</a>.</li>
+                <li><b>System</b>: I am working on a new system called <a
+                        href="https://github.com/egraphs-good/egglog">egglog</a> that unifies Datalog and EqSat.</li>
+                <li><b>Technique</b>: I am interested in techniques that make EqSat better. In our <a
+                        href="doc/popl-2022-gj/paper.pdf">POPL 2022 paper</a> we made pattern matching in EqSat
+                    asymptotically
+                    faster.</li>
+                <li><b>Application</b>: I am always looking to apply EqSat to emerging domains, such as <a
+                        href="https://github.com/yihozhang/szalinski/tree/cse556">computational fabrication</a>. I am
+                    maintaining <a
+                        href="https://necessary-taker-84c.notion.site/Projects-that-use-equality-saturation-9b298720aa724f8b8a72001398e88d9f">a
+                        list of projects that use equality saturation</a>.</li>
+            </ul>
+            </p>
+            <a href="blog/index.html">Blog</a>
+            &ensp;|&ensp;
+            <a href="doc/Yihong_Zhang_Resume.pdf">Curriculum Vitae</a>
+            &ensp;|&ensp;
+            <a href="course_list.html">Coursework</a>
+            &ensp;|&ensp;
+            <a href="https://github.com/yihozhang">GitHub</a>
 
-                <h3>Papers and Talks</h3>
-                <ul>
-                    <li>
-                        <b>Chasing an Egg (Contributed Talk)</b><br>
-                        <span class="me">Yihong Zhang</span><br>
-                        EGRAPHS @ PLDI 2022<br>
-                        <a href="doc/pldi-2022-egraphs/abstract.pdf">[abstract]</a>
-                    </li>
-                    <li>
-                        <b>Relational E-Matching</b><br>
-                        <span class="me">Yihong Zhang</span>,
-                        <a href="https://remy.wang">Yisu Remy Wang</a>,
-                        <a href="https://mwillsey.com">Max Willsey</a>,
-                        <a href="https://ztatlock.net">Zachary Tatlock</a><br>
-                        POPL 2022<br>
-                        <a href="doc/popl-2022-gj/paper.pdf">[paper]</a>
-                    </li>
-                    <li>
-                        <b>Faster and Worst-Case Optimal E-Matching via Reduction to Conjunctive Queries</b><br>
-                        <span class="me">Yihong Zhang</span><br>
-                        PLDI 2021 Student Research Competition (Undergraduate division)<br>
-                        Won 1st place at PLDI SRC and 2nd place in the SRC Grand Finals<br>
-                        <a href="doc/pldi-2021-src/abstract.pdf">[abstract]</a> 
-                        <a href="doc/pldi-2021-src/poster.pdf">[poster]</a> 
-                        <a href="doc/pldi-2021-src/slides.pdf">[slides]</a>
-                        <a href="doc/pldi-2021-src/grandfinals.pdf">[grand-finals]</a>
-                    </li>
-                    <li>
-                        <b>GeCo: Quality Counterfactual Explanations in Real Time</b> <br>
-                        <a href="https://mjschleich.github.io/">Maximilian Schleich</a>, 
-                        <a href="https://www.linkedin.com/in/zixuan-gibbs-geng-4969181a2">Zixuan Geng</a>, 
-                        <span class="me">Yihong Zhang</span>,
-                        <a href="https://homes.cs.washington.edu/~suciu/">Dan Suciu</a><br>
-                        VLDB 2021<br>
-                        <a href="doc/vldb-2021-geco/paper.pdf">[paper]</a>
-                        <a href="https://github.com/mjschleich/GeCo.jl">[src]</a>
-                    </li>
-                </ul>
+            <h3>Papers and Talks</h3>
+            <ul class="cv">
+                <li>
+                    <b>Efficient Bottom-Up Synthesis for Programs with Local Variables</b> <span class="highlighted-tag">
+                        Conference </span> <br>
+                    <a href="https://github.com/AlienKevin">Xiang Li<sup>*</sup></a>,
+                    <a href="https://kevinxiangyuzhou.github.io/">Xiangyu Zhou<sup>*</sup></a>,
+                    <a href="https://ruidong.pl/">Rui Dong</a>,
+                    <span class="me">Yihong Zhang</span>,
+                    <a href="https://web.eecs.umich.edu/~xwangsd/">Xinyu Wang</a>
+                    <br>
+                    POPL 2024<br>
+                    <a href="https://arxiv.org/abs/2311.03705">[arXiv]</a>
+                </li>
+                <li>
+                    <b>Ensuring the Termination of EqSat for Terminating Term Rewriting Systems (Contributed
+                        Talk)</b><br>
+                    <span class="me">Yihong Zhang</span>,
+                    <a href="https://oflatt.com">Oliver Flatt</a><br>
+                    EGRAPHS@PLDI 2023<br>
+                    <a href="doc/egraphs-2023-theory/paper.pdf">[paper]</a>
+                    <a href="doc/egraphs-2023-theory/slides.pdf">[slides]</a>
+                </li>
+                <li>
+                    <b>egglog In Practice: Automatically Improving Floating-point Error (Contributed Talk)</b><br>
+                    <a href="https://oflatt.com">Oliver Flatt</a>,
+                    <span class="me">Yihong Zhang</span><br>
+                    EGRAPHS@PLDI 2023<br>
+                    <a href="doc/egraphs-2023-egglog/paper.pdf">[paper]</a>
+                    <a href="https://www.youtube.com/watch?v=N2RDQGRBrSY">[talk]</a>
+                </li>
+                <li>
+                    <b>Better Together: Unifying Datalog and Equality Saturation</b> <span class="highlighted-tag">
+                        Conference </span> <br>
+                    <span class="me">Yihong Zhang</span>,
+                    <a href="https://remy.wang">Yisu Remy Wang</a>,
+                    <a href="https://oflatt.com">Oliver Flatt</a>,
+                    <a href="https://cao.sh">David Cao</a>,
+                    <a href="https://www.philipzucker.com/">Philip Zucker</a>,
+                    <a href="https://www.linkedin.com/in/eli-rosenthal-79230264/">Eli Rosenthal</a>,
+                    <a href="https://ztatlock.net">Zachary Tatlock</a>,
+                    <a href="https://mwillsey.com">Max Willsey</a><br>
+                    PLDI 2023<br>
+                    <a href="doc/pldi-2023-egglog/paper.pdf">[paper]</a>
+                    <a href="doc/pldi-2023-egglog/slides.pdf">[slides]</a>
+                </li>
+                <li>
+                    <b>Chasing an Egg (Contributed Talk)</b><br>
+                    <span class="me">Yihong Zhang</span><br>
+                    EGRAPHS@PLDI 2022<br>
+                    <a href="doc/pldi-2022-egraphs/abstract.pdf">[abstract]</a>
+                    <a href="doc/pldi-2022-egraphs/slides.pdf">[slides]</a>
+                </li>
+                <li>
+                    <b>Relational E-Matching</b> <span class="highlighted-tag">Conference</span> <br>
+                    <span class="me">Yihong Zhang</span>,
+                    <a href="https://remy.wang">Yisu Remy Wang</a>,
+                    <a href="https://mwillsey.com">Max Willsey</a>,
+                    <a href="https://ztatlock.net">Zachary Tatlock</a><br>
+                    POPL 2022<br>
+                    <a href="doc/popl-2022-gj/paper.pdf">[paper]</a>
+                    <a href="https://www.youtube.com/watch?v=88Mq1Zba_1I">[talk]</a>
+                </li>
+                <li>
+                    <b>Faster and Worst-Case Optimal E-Matching via Reduction to Conjunctive Queries</b><br>
+                    <span class="me">Yihong Zhang</span><br>
+                    PLDI 2021 Student Research Competition (Undergraduate division)<br>
+                    Won 1st place at PLDI SRC and 2nd place in the SRC Grand Finals<br>
+                    <a href="doc/pldi-2021-src/abstract.pdf">[abstract]</a>
+                    <a href="doc/pldi-2021-src/poster.pdf">[poster]</a>
+                    <a href="doc/pldi-2021-src/slides.pdf">[slides]</a>
+                    <a href="doc/pldi-2021-src/grandfinals.pdf">[grand-finals]</a>
+                </li>
+                <li>
+                    <b>GeCo: Quality Counterfactual Explanations in Real Time</b> <span
+                        class="highlighted-tag">Conference</span> <br>
+                    <a href="https://mjschleich.github.io/">Maximilian Schleich</a>,
+                    <a href="https://www.linkedin.com/in/zixuan-gibbs-geng-4969181a2">Zixuan Geng</a>,
+                    <span class="me">Yihong Zhang</span>,
+                    <a href="https://homes.cs.washington.edu/~suciu/">Dan Suciu</a><br>
+                    VLDB 2021<br>
+                    <a href="doc/vldb-2021-geco/paper.pdf">[paper]</a>
+                    <a href="https://github.com/mjschleich/GeCo.jl">[src]</a>
+                    <a href="https://www.youtube.com/watch?v=19BMj3cjBgU">[talk]</a>
+                </li>
+            </ul>
 
-                <h3>Theses</h3>
-                <ul>
-                    <li>
-                        <b>Faster and Worst-Case Optimal E-Matching</b><br>
-                        Undergraduate Honor Thesis<br>
-                        <span class="me">Yihong Zhang</span><br>
-                        <a href="doc/ug-thesis/thesis.pdf">[thesis]</a>
-                        <a href="doc/ug-thesis/talk.pdf">[slides]</a>
-                    </li>
-                </ul>
+            <h3>Other projects</h3>
+            <ul class="cv">
+                <li><b>A Staged Datalog Compiler using Lightweight Modular Staging</b><br>
+                    Course project of "CSE 544 Principles of DBMS"<br>
+                    <!--                     In this project, I build a staged Datalog compiler using Lightweight Modular Staging (LMS). Experiments show that it achieves up to 10x speedup compared to Souffle Datalog tool. <br> -->
+                    <a href="doc/course-projects/sdl.pdf">[report]</a> <a
+                        href="https://github.com/zyh3838438zyh/sdl">[src]</a>
+                </li>
 
-                <h3>Graduate course projects</h3>
-                <ul>
-                    <li><b>A Staged Datalog Compiler using Lightweight Modular Staging</b><br>
-                    CSE 544 Principles of DBMS <br>
-<!--                     In this project, I build a staged Datalog compiler using Lightweight Modular Staging (LMS). Experiments show that it achieves up to 10x speedup compared to Souffle Datalog tool. <br> -->
-                    <a href="doc/course-projects/sdl.pdf">[report]</a> <a href="https://github.com/zyh3838438zyh/sdl">[src]</a></li>
+                <li><b>Combining Statistical Top-down Deductions and Bottom-up Enumerations for Programming by
+                        Example</b><br>
+                    Course project of "CSE 573 Artificial Intelligence" <br>
+                    <!--                     In this project, I add support for enumerative search to MaxFlash for PBE solving. The enumerated programs are used to directly solve the synthesis problem and guide the witness functions during probabilistic deductions. This is an attempt to unify enumerative search, deductive search, and stochastic search into a framework for program synthesis. Experiments on the SyGuS benchmarks shows mixed (aka negative) results. <br> -->
+                    <a href="doc/course-projects/maxduet.pdf">[report]</a> <a
+                        href="https://github.com/yihozhang/maxduet">[src]</a>
+                </li>
 
-                    <li><b>Combining Statistical Top-down Deductions and Bottom-up Enumerations for Programming by Example</b><br>
-                    CSE 573 Artificial Intelligence <br>
-<!--                     In this project, I add support for enumerative search to MaxFlash for PBE solving. The enumerated programs are used to directly solve the synthesis problem and guide the witness functions during probabilistic deductions. This is an attempt to unify enumerative search, deductive search, and stochastic search into a framework for program synthesis. Experiments on the SyGuS benchmarks shows mixed (aka negative) results. <br> -->
-                    <a href="doc/course-projects/maxduet.pdf">[report]</a> <a href="https://github.com/yihozhang/maxduet">[src]</a></li>
-                        
-                    <li><b>Cornelius: Killing Equivalent and Redundant Mutants with E-graphs</b><br>
-                    CSE 503: Software Engineering,
-                    with <a href="https://bkushigian.github.io/">Ben Kushigian</a>, <a href="https://scholar.google.com/citations?user=CdUDJxoAAAAJ&hl=en">Ishan Chatterjee</a>, and Gabrielle Strandquist.  <br>
-<!--                         We propose to utilize E-graph to eliminate equivalent and redundant mutants for mutation testing. This addresses the phase-ordering problem faced by Trivial Compiler Equivalence (TCE), a known technique for eliminating equivalent mutants. Experiments on a pure Java subset show that it discovers much more equivalent and redundant mutants than TCE in less time. <br> -->
-                    <a href="doc/course-projects/cornelius.pdf">[report]</a> <a href="https://github.com/bkushigian/cornelius">[src]</a></li>
+                <li><b>Cornelius: Killing Equivalent and Redundant Mutants with E-graphs</b><br>
+                    Course project of "CSE 503: Software Engineering"<br>
+                    With <a href="https://bkushigian.github.io/">Ben Kushigian</a>, <a
+                        href="https://scholar.google.com/citations?user=CdUDJxoAAAAJ&hl=en">Ishan Chatterjee</a>, and
+                    Gabrielle Strandquist. <br>
+                    <!--                         We propose to utilize E-graph to eliminate equivalent and redundant mutants for mutation testing. This addresses the phase-ordering problem faced by Trivial Compiler Equivalence (TCE), a known technique for eliminating equivalent mutants. Experiments on a pure Java subset show that it discovers much more equivalent and redundant mutants than TCE in less time. <br> -->
+                    <a href="doc/course-projects/cornelius.pdf">[report]</a> <a
+                        href="https://github.com/bkushigian/cornelius">[src]</a>
+                </li>
 
-                    <li><b>Sager: A Demonic Graph Synthesizer for Worst-Case Performance</b><br>
-                    CSE 507 Computer-Aided Reasoning for Software, 
-                    with <a href="https://ad1024.space/about">Mike He</a>.  <br>
-<!--                         We propose to use symbolic evaluations to synthesize input instances that determine the worst-case complexity of a given algorithm. We build a prototype implementation with Rosette and show that it makes Shortest-Path Faster Algorithm (SPFA) and its several variants asymptotically worse. <br> -->
-                    <a href="https://github.com/AD1024/Sager">[src]</a></li>
-                    
-                </ul>
+                <li><b>Sager: A Demonic Graph Synthesizer for Worst-Case Performance</b><br>
+                    Course project of "CSE 507 Computer-Aided Reasoning for Software"<br>
+                    With <a href="https://ad1024.space/about">Mike He</a>. <br>
+                    <!--                         We propose to use symbolic evaluations to synthesize input instances that determine the worst-case complexity of a given algorithm. We build a prototype implementation with Rosette and show that it makes Shortest-Path Faster Algorithm (SPFA) and its several variants asymptotically worse. <br> -->
+                    <a href="https://github.com/AD1024/Sager">[src]</a>
+                </li>
 
-                <h3>Programming for fun</h3>
-                <ul>
-                    <li><b><a href="https://github.com/zyh3838438zyh/Hatafun">Hatafun</a>:</b> Embedding the type system of Datafun (ICFP 2016) in Haskell.</li>
-<!--                     <li><b><a href="https://github.com/zyh3838438zyh/2TBF">2TBF</a>:</b> A proof-of-concept compiler from (our favorite) Pascal to an extension of brainfuck lang with two tapes.</li> -->
-                </ul>
+                <li><b>Hatafun: Embedding Datafun (ICFP 2016) in Haskell</b><br>
+                    <a href="https://github.com/yihozhang/Hatafun">[src]</a>
+                </li>
 
-                <h3>Teaching</h3>
+                <li><b>egraph-sqlite: Equality Saturation on top of SQLite</b><br>
+                    <a href="https://github.com/yihozhang/egraphs-sqlite">[src]</a>
+                </li>
+            </ul>
 
-                <p>During my undergrad, I TAed 3 classes: CSE 341, an introductory PL class for in-major undergrads; CSE 374, an intermediate programming class for non-major undergrads; and CSE 505, a PL class for Professional Masters and PhDs. TAship is fun.</p>
-                <br>
-                <br>
-                <br>
-                <br>
-    </div>
+            <h3>Theses</h3>
+            <ul class="cv">
+                <li>
+                    <b>Towards a Relational E-graph</b><br>
+                    Master's Thesis<br>
+                    <span class="me">Yihong Zhang</span><br>
+                    <a href="doc/ms-thesis/ms-thesis.pdf">[thesis]</a>
+                </li>
+            </ul>
+            <ul class="cv">
+                <li>
+                    <b>Faster and Worst-Case Optimal E-Matching</b><br>
+                    Undergraduate Honor Thesis<br>
+                    <span class="me">Yihong Zhang</span><br>
+                    <a href="doc/ug-thesis/ug-thesis.pdf">[thesis]</a>
+                    <a href="doc/ug-thesis/talk.pdf">[slides]</a>
+                </li>
+            </ul>
+        </div>
 </body>
 
 </html>

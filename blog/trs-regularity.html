@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Yihong Zhang" />
+  <title>The Termination Problem of Equality Saturation is Undecidable</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+  </style>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">The Termination Problem of Equality Saturation is
+Undecidable</h1>
+<p class="author">Yihong Zhang</p>
+<p class="date">Aug 11, 2023</p>
+</header>
+<p>In this note, we study the decidability of the termination of
+equality saturation and related problems.</p>
+<h1 id="background">Background</h1>
+<h2 id="term-rewriting">Term rewriting</h2>
+<p>A term rewriting system (TRS) <span class="math inline">\(R\)</span>
+consists of a set of rewrite rules. <span
+class="math inline">\(R\)</span> defines a <em>rewrite relation</em>
+<span class="math inline">\(\rightarrow_R\)</span> as follows: <span
+class="math inline">\(u\rightarrow_R v\)</span> if and only if there
+exists a rule <span class="math inline">\((l\rightarrow r)\in R\)</span>
+and a substitution <span class="math inline">\(\sigma\)</span> such that
+a subterm of <span class="math inline">\(u\)</span> at path <span
+class="math inline">\(p\)</span> is <span
+class="math inline">\(l\sigma\)</span>, and <span
+class="math inline">\(v\)</span> is <span
+class="math inline">\(u\)</span> whose subterm at path <span
+class="math inline">\(p\)</span> is substituted with <span
+class="math inline">\(r\sigma\)</span>. We omit the subscript <span
+class="math inline">\(R\)</span> when it’s clear from the context. Let
+<span class="math inline">\(\rightarrow^*\)</span> be the transitive
+closure of binary relation <span
+class="math inline">\(\rightarrow\)</span>. We define <span
+class="math inline">\((\leftarrow_R)=(\rightarrow_R)^{-1}\)</span>,
+<span class="math inline">\((\leftrightarrow_R)=(\rightarrow_R)\cup
+(\leftarrow_R)\)</span>, and <span
+class="math inline">\((\approx_R)=\leftrightarrow_R^*\)</span>. <span
+class="math inline">\(\approx_R\)</span> is an equivalence relation.</p>
+<p>A normal form is a term that cannot be rewritten any further. We say
+<span class="math inline">\(n\)</span> is a normal form of <span
+class="math inline">\(t\)</span> if <span
+class="math inline">\(t\)</span> reduces to <span
+class="math inline">\(n\)</span> and <span
+class="math inline">\(n\)</span> is a normal form. A TRS <span
+class="math inline">\(R\)</span> is <em>terminating</em> if there is no
+infinite rewriting chain <span class="math inline">\(t_1\rightarrow_R
+t_2\rightarrow \ldots\)</span>. A TRS <span
+class="math inline">\(R\)</span> is <em>confluent</em> if for all <span
+class="math inline">\(t, t_1, t_2\)</span>, <span
+class="math inline">\(t_1\leftarrow_R^*t\rightarrow_R^*t_2\)</span>
+implies there exists a <span class="math inline">\(t&#39;\)</span> such
+that <span class="math inline">\(t_1\rightarrow_R^* t&#39;\leftarrow_R^*
+t_2\)</span>. We call a confluent and terminating TRS
+<em>convergent</em>. Terms in a terminating TRS have at least one normal
+form, terms in a confluent TRS have at most one normal form, and terms
+in a convergent TRS have exactly one normal form.</p>
+<p>We call a term rewriting system left-linear (resp. right-linear) if
+variables in the left-hand side (resp. right-hand side) pattern of each
+rewrite rule occur only once. For example, <span
+class="math inline">\(R_1=\{f(x,y)\rightarrow g(x)\}\)</span> is
+left-linear, while <span class="math inline">\(R_2=\{f(x,x)\rightarrow
+g(x)\}\)</span> is not left-linear. A TRS is linear if it’s left-linear
+and right-linear.</p>
+<h2 id="finite-tree-automata">Finite tree automata</h2>
+<p>A finite tree automaton (FTA) is a tuple <span
+class="math inline">\(\mathcal{A}=(Q, F, Q_{\textit{final}},
+\Delta)\)</span>, where <span class="math inline">\(Q\)</span> is a set
+of states, <span class="math inline">\(F\)</span> is a set of function
+symbols, <span class="math inline">\(Q_{\textit{final}}\subseteq
+Q\)</span> is a set of final states, and <span
+class="math inline">\(\Delta\)</span> is a set of transitions of the
+form <span class="math inline">\(f(q_1,\ldots, q_n)\rightarrow
+q\)</span> where <span class="math inline">\(q,q_1,\ldots, q_n\in
+Q\)</span>. A term <span class="math inline">\(t\)</span> is accepted by
+<span class="math inline">\(\mathcal{A}\)</span> if it can be rewritten
+to a final state <span class="math inline">\(q_{\textit{final}}\in
+Q_{\textit{final}}\)</span> of <span
+class="math inline">\(\mathcal{A}\)</span>, i.e., <span
+class="math inline">\(t\rightarrow^* q_{\textit{final}}\in
+Q_{\textit{final}}\)</span>. Since <span
+class="math inline">\(Q\)</span> and <span
+class="math inline">\(F\)</span> can be determined by <span
+class="math inline">\(\Delta\)</span>, we omit them and use <span
+class="math inline">\((Q_{\textit{final}},\Delta)\)</span> to denote a
+FTA for brevity. Let <span class="math inline">\(\mathcal{L(A)}\)</span>
+be the set of terms accepted by FTA <span
+class="math inline">\(\mathcal{A}\)</span>. A language <span
+class="math inline">\(L\)</span> is called regular if it is accepted by
+some FTA (<span class="math inline">\(\exists \mathcal{A},
+L=\mathcal{L(A)}\)</span>). When the set of transitions <span
+class="math inline">\(\Delta\)</span> is clear from the context, we
+further omit it and use <span
+class="math inline">\(\mathcal{L}(c)\)</span> to denote the language
+accepted the tree automata <span
+class="math inline">\(\mathcal{A}=(c,\Delta)\)</span>.</p>
+<p>Regular languages and FTAs are closed under union, intersection, and
+complementation. Moreover, it is possible to define a tree automaton
+that accepts any term: it is the complement of an empty FTA. To give an
+explicit construction, define <span
+class="math display">\[\mathcal{A}_\ast=(\{q_\ast\},
+\{f(\underbrace{q_\ast,\ldots,q_\ast}_{n} )\rightarrow q_\ast\mid
+n\text{-ary symbol } f\in F \})\]</span> for a fresh state <span
+class="math inline">\(q_\ast\)</span>.</p>
+<p>Left-regularity of a term rewriting system implies the regularity of
+its normal forms: Given a term-rewriting system <span
+class="math inline">\(R\)</span>, the set of normal forms of <span
+class="math inline">\(R\)</span> is the complement of the set of
+rewritable terms, i.e., terms whose subterm match some left-hand side
+patterns of <span class="math inline">\(R\)</span>. Suppose <span
+class="math inline">\(R\)</span> is left-linear. The set of rewritable
+terms is regular. Since regularity is preserved under complementation,
+the set of normal forms of <span class="math inline">\(R\)</span> is
+regular. Below is an algorithm that computes a tree automata whose
+language is the set of normal forms. The construction here requires left
+linearity to ensure that each “hole” in the left-hand side patterns can
+pick terms independently. For example, the set of rewritable terms of
+rule <span class="math inline">\(f(x, x)\rightarrow x\)</span> is not
+regular.</p>
+<blockquote>
+<p><strong>Procedure</strong> <span
+class="math inline">\(\textit{termsMatchingPattern}(p)\)</span></p>
+<p><strong>Input:</strong> A linear pattern <span
+class="math inline">\(p\)</span>.</p>
+<p><strong>Output:</strong> An FTA <span
+class="math inline">\(\mathcal{A}\)</span> satisfying <span
+class="math inline">\(\mathcal{L(A)}\)</span> contains all terms
+matching the given pattern.</p>
+<p><strong>begin</strong></p>
+<ol type="1">
+<li><p><span class="math inline">\(\quad\)</span> <strong>case</strong>
+<span class="math inline">\(p\)</span> <strong>of</strong></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(f(p_1,\ldots, p_k)\Rightarrow\)</span></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span class="math inline">\((q_i,
+\Delta_i) \gets \textit{termsMatchingPattern}(p_i)\)</span>
+<strong>for</strong> <span class="math inline">\(i=1,\ldots,
+k\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span class="math inline">\(q\gets
+\textit{mkFreshState}()\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span class="math inline">\(\Delta
+\gets \{f(q_1,\ldots, q_k)\rightarrow q\}\cup \bigcup_{i=1,\ldots, k}
+\Delta_i\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <strong>return</strong> <span
+class="math inline">\((q, \Delta)\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(x\Rightarrow\)</span> <strong>return</strong>
+<span class="math inline">\(A_\ast\)</span>;</p></li>
+</ol>
+<p><strong>end</strong></p>
+<p><strong>Procedure</strong> <span
+class="math inline">\(\textit{subtermsMatchingPattern}(p)\)</span></p>
+<p><strong>Input:</strong> A linear pattern <span
+class="math inline">\(p\)</span>.</p>
+<p><strong>Output:</strong> An FTA <span
+class="math inline">\(\mathcal{A}\)</span> satisfying <span
+class="math inline">\(\mathcal{L(A)}\)</span> contains all terms
+containing the given pattern.</p>
+<p><strong>begin</strong></p>
+<ol type="1">
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(q_{\textit{final}}\gets
+\textit{mkFreshState}()\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\((q_p, \Delta)\gets
+\textit{termsMatchingPattern}(p)\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\Delta\gets \Delta\cup \{q_p\rightarrow
+q_{\textit{final}}\}\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span> <strong>for
+each</strong> <span class="math inline">\(n\)</span>-ary symbol <span
+class="math inline">\(f\)</span> <strong>where</strong> <span
+class="math inline">\(n &gt; 0\)</span> <strong>do</strong></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <strong>for</strong> <span
+class="math inline">\(i = 1,\ldots,n\)</span>
+<strong>do</strong></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span class="math inline">\(\Delta
+\gets \Delta \cup \{ f(\underbrace{q_\ast, \ldots, q_\ast}_{i-1},
+q_{\textit{final}}, \underbrace{q_\ast, \ldots, q_\ast}_{n-i})
+\rightarrow q_{\textit{final}} \}\)</span>;</p></li>
+<li><p><span class="math inline">\(\quad\)</span>
+<strong>return</strong> <span class="math inline">\((q_{\textit{final}},
+\Delta)\)</span>;</p></li>
+</ol>
+<p><strong>end</strong></p>
+<p><strong>Procedure</strong> <span
+class="math inline">\(\textit{normalForms}(R)\)</span></p>
+<p><strong>Input:</strong> A left-linear TRS <span
+class="math inline">\(R\)</span>.</p>
+<p><strong>Output:</strong> An FTA <span
+class="math inline">\(\mathcal{A}\)</span> satisfying <span
+class="math inline">\(\mathcal{L(A)}\)</span> is the set of normal forms
+of <span class="math inline">\(R\)</span>.</p>
+<p><strong>begin</strong></p>
+<ol type="1">
+<li><strong>return</strong> <span
+class="math inline">\(\overline{\bigcup_{\textit{lhs}\rightarrow
+\textit{rhs}\;\in\; R}
+\textit{subtermsMatchingPattern}(\textit{lhs})}\)</span>;</li>
+</ol>
+<p><strong>end</strong></p>
+</blockquote>
+<h2 id="e-graphs-and-equality-saturation">E-graphs and equality
+saturation</h2>
+<p>We call an FTA deterministic if for every term <span
+class="math inline">\(t\)</span>, <span
+class="math display">\[t\rightarrow^*q_1\land
+t\rightarrow^*q_2\rightarrow q_1=q_2.\]</span> We call an FTA reachable
+for every state <span class="math inline">\(q\)</span> there exists a
+ground term <span class="math inline">\(t\)</span> such that <span
+class="math inline">\(t\rightarrow^* q\)</span>. An e-graph <span
+class="math inline">\(G\)</span> is a deterministic and reachable FTA
+<span class="math inline">\((\{q_\textit{final}\}, \Delta)\)</span> with
+a single final state. Moreover, <span class="math inline">\(G\)</span>
+induces a relation <span class="math inline">\(\approx_G\)</span>
+defined as follows: for any terms <span
+class="math inline">\(t_1\)</span> and <span
+class="math inline">\(t_2\)</span>, if there exists a state <span
+class="math inline">\(q\)</span> in <span
+class="math inline">\(G\)</span> such that <span
+class="math inline">\(t_1\rightarrow^* q\leftarrow^* t_2\)</span>, then
+<span class="math inline">\(t_1\approx t_2\)</span><a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.
+<span class="math inline">\(\approx_G\)</span> is an equivalence
+relation: <span class="math inline">\(\approx_G\)</span> is symmetric
+and reflexive by definition. Moreover, if <span
+class="math inline">\(t_1\rightarrow^* q \leftarrow^* t_2\)</span> and
+<span class="math inline">\(t_2\rightarrow^* q&#39;\leftarrow^*
+t_3\)</span>, since an E-graph is deterministic, <span
+class="math inline">\(t_1\rightarrow^* q=q&#39;\leftarrow^*
+t_3\)</span>, so <span class="math inline">\(\approx_G\)</span> is also
+transitive.</p>
+<p>Equality saturation is defined as the inductive fixed point of rule
+applications and rebuilding: <span
+class="math display">\[\textit{EqSat}(R, w) = (\textit{CC}\circ
+T_p)^{\infty}(\textit{mkEGraph}(w)).\]</span></p>
+<p>We omit the definition of <em>CC</em> and <span
+class="math inline">\(T_p\)</span> here, which can be found in the egg
+and egglog paper. But we remind the readers several properties of
+equality saturation here: First, <span
+class="math inline">\(T_p(G)\)</span> is not necessarily deterministic,
+even when <span class="math inline">\(G\)</span> is an E-graph (i.e.,
+deterministic and reachable tree automaton). The congruence closure
+operator <em>CC</em> recovers the determinicity. Second, <span
+class="math display">\[\{v \mid u\in \mathcal{L}(G), u=v\lor
+u\rightarrow_R v\}\subseteq \mathcal{L}(T_p(G))\subseteq
+\mathcal{L}((\textit{CC}\circ T_p)(G));\]</span> that is, the e-graph
+after rule application at least represents terms derived from the
+initial e-graph by rewriting zero or one time, and the congruence
+closure further grows the E-graph. In many cases, the set containment is
+strict, see my earlier <a
+href="https://effect.systems/blog/ta-completion.html">blog post</a> on
+tree automata completion. As a corollary, <span
+class="math display">\[\{t\mid w\rightarrow_R^* t\}\subseteq
+\textit{EqSat}(w).\]</span> Finally, in terms of the equivalence
+relation derived from E-graphs, we have <span
+class="math display">\[\left(\approx_{G}\right)\subseteq
+\left(\approx_{T_p(G)}\right)\subseteq \left(\approx_{(\texttt{CC}\circ
+T_p)(G)}\right).\]</span></p>
+<p>Given a term rewriting system <span class="math inline">\(R\)</span>
+where every rule preserves the set of variables (i.e., <span
+class="math inline">\(\textit{vars}(\textit{lhs})=\textit{vars}(\textit{rhs})\)</span>),
+let <span class="math inline">\(R^{-1}\)</span> be the term rewriting
+system obtained by swapping left-hand sides and right-hand sides of
+patterns in <span class="math inline">\(R\)</span>. We have <span
+class="math inline">\([w]_R= \mathcal{L}(\textit{EqSat}(R\cup R^{-1},
+w))\)</span></p>
+<h2 id="turing-machines">Turing machines</h2>
+<p>A Turing machine <span class="math inline">\(\mathcal{M}=(Q,\Sigma,
+\Pi,\Delta,q_0,\beta)\)</span> consists of a set of states <span
+class="math inline">\(Q\)</span>, the input and the tape alphabet <span
+class="math inline">\(\Sigma\)</span> and <span
+class="math inline">\(\Pi\)</span> (with <span
+class="math inline">\(\Sigma\subseteq \Pi\)</span>), a set of
+transitions <span class="math inline">\(\Delta\)</span>, an initial
+state <span class="math inline">\(q_0\in Q\)</span>, and a special
+blanket symbol <span class="math inline">\(\beta\in\Pi\)</span>. Each
+transition in <span class="math inline">\(\Delta\)</span> is a quintuple
+in <span class="math inline">\(Q\times \Pi\times \Pi\times \{L,R\}
+\times Q\)</span>. For example, transition <span
+class="math inline">\(q_iabRq_j\)</span> means if the current state is
+<span class="math inline">\(q_i\)</span> and the symbol being scanned is
+<span class="math inline">\(a\)</span>, then replace <span
+class="math inline">\(a\)</span> with <span
+class="math inline">\(b\)</span>, move the head to the right, and
+transit to state <span class="math inline">\(q_j\)</span>. We assume the
+Turing machine is two-way infinite, so that the head can move in both
+directions indefinitely. Each configuration of <span
+class="math inline">\(\mathcal{M}\)</span> can be represented as <span
+class="math inline">\(\rhd uq_i av \lhd\)</span>, where <span
+class="math inline">\(\rhd\)</span>,<span
+class="math inline">\(\lhd\)</span> are left and right end markers,
+<span class="math inline">\(u\)</span> is the string to the left of the
+read/write head, <span class="math inline">\(q_i\)</span> is the current
+state, <span class="math inline">\(a\)</span> is the symbol being
+scanned, and <span class="math inline">\(v\)</span> is the string to the
+right. We say <span class="math inline">\(w_1\vdash_{\mathcal{M}}
+w_2\)</span> if configuration <span class="math inline">\(w_1\)</span>
+can transit to configuration <span class="math inline">\(w_2\)</span> in
+a Turing machine <span class="math inline">\(\mathcal{M}\)</span>, and
+we omit <span class="math inline">\(\mathcal{M}\)</span> when it’s clear
+from the context.</p>
+<h1 id="termination-of-equality-saturation">Termination of Equality
+Saturation</h1>
+<p><strong>Theorem 1.</strong> The following problem is
+R.E.-complete:</p>
+<blockquote>
+<p>Instance: a term rewriting system <span
+class="math inline">\(R\)</span>, a term <span
+class="math inline">\(t\)</span>.</p>
+<p>Question: does EqSat terminate with <span
+class="math inline">\(R\)</span> and <span
+class="math inline">\(t\)</span>?</p>
+</blockquote>
+<p><strong>Proof.</strong> First, this problem is in R.E. since we can
+simply run EqSat with <span class="math inline">\(R\)</span> and <span
+class="math inline">\(t\)</span> to test whether it terminates. To show
+this problem is R.E.-hard, we reduce the termination problem of Turing
+machines to the termination of EqSat. We use the technique by <span
+class="citation"
+data-cites="NARENDRAN1985343">[@NARENDRAN1985343]</span>. In particular,
+for each Turing machine <span
+class="math inline">\(\mathcal{M}\)</span>, we produce a string
+rewriting system <span class="math inline">\(R\)</span> such that the
+equivalence closure of <span class="math inline">\(R\)</span>, <span
+class="math inline">\((\approx_R)=\left(R\cup R^{-1}\right)^*\)</span>,
+satisfies that each equivalence class of <span
+class="math inline">\(\approx_R\)</span> corresponds to a trace of the
+Turing machine. As a result, the following statements are
+equivalent:</p>
+<ul>
+<li>the Turing machine halts;</li>
+<li>the trace of the Turing machine is finite;</li>
+<li>the equivalence class of the initial configuration in <span
+class="math inline">\(R\)</span> is finite;</li>
+<li>EqSat terminates.</li>
+</ul>
+<p>In this proof, we consider a degenerate form of EqSat that works with
+<em>string</em> rewriting systems instead of term rewriting systems.
+Every string corresponds to a term, and every string rewrite rule
+corresponds to a rewrite rule. For example, the string <span
+class="math inline">\(uvw\)</span> corresponds to a term <span
+class="math inline">\(u(v(w(\epsilon)))\)</span>, where <span
+class="math inline">\(u(\cdot), v(\cdot), w(\cdot)\)</span> are unary
+functions and <span class="math inline">\(\epsilon\)</span> is a special
+constant. A string rewrite rule <span
+class="math inline">\(uvw\rightarrow vuw\)</span> corresponds to a
+(linear) term rewriting rule <span
+class="math inline">\(u(v(w(x)))\rightarrow v(u(w(x)))\)</span> where
+<span class="math inline">\(x\)</span> is a variable.</p>
+<p>It is useful to define several sets of symbols for our construction.
+For each Turing machine <span
+class="math inline">\(\mathcal{M}\)</span>, we define <span
+class="math inline">\(\overline Q=\{\overline q\mid q\in Q\}\)</span>.
+We also define <span class="math inline">\(\overline \Sigma\)</span>,
+<span class="math inline">\(\overline \Pi\)</span> in a similar way. In
+our encoding, we use <span class="math inline">\(\overline Q\)</span> to
+denote states where the symbol being scanned is to the left of the
+state, and we use <span class="math inline">\(\overline \Sigma\)</span>
+and <span class="math inline">\(\overline \Pi\)</span> to denote
+alphabets that are to the left of the states. Moreover, we introduce two
+sets of “dummy” symbols <span class="math inline">\(L_z\)</span> and
+<span class="math inline">\(R_z\)</span> for <span
+class="math inline">\(z\)</span> ranges over <span
+class="math inline">\(Q\times (\{\lhd\}\cup \Pi)\)</span> and <span
+class="math inline">\((\{\rhd\}\cup \overline\Pi)\times \overline
+Q\)</span>. Let <span class="math inline">\(D_L\)</span> and <span
+class="math inline">\(D_R\)</span> be the set of all <span
+class="math inline">\(L_z\)</span> and <span
+class="math inline">\(R_z\)</span> respectively. We use these dummy
+symbols to make the string rewriting system that we will later define
+Church-Rosser.</p>
+<p>The rewriting system we are going to define works over the set of
+strings <span class="math inline">\(\textit{CONFIG}=\rhd
+(\overline\Pi\cup D_L)^*(Q\cup \overline Q)(\Pi\cup D_R)^*\lhd\)</span>.
+Strings in <em>CONFIG</em> is in a many-to-one mapping to configurations
+of a Turing machine. We denote this mapping as <span
+class="math inline">\(\pi\)</span>: <span
+class="math inline">\(\pi(w)\)</span> converts each <span
+class="math inline">\(\overline a\overline q_i\)</span> to <span
+class="math inline">\(q_ia\)</span>, removes dummy symbols <span
+class="math inline">\(L_z\)</span> and <span
+class="math inline">\(R_z\)</span>, and replace <span
+class="math inline">\(\overline a\)</span> with <span
+class="math inline">\(a\)</span>. For example <span
+class="math inline">\(\pi(\rhd L_{q_0,a}\overline{b} L_{q_1,b}
+\overline{cq_3}dR_{q_i,\lhd}\lhd)=\rhd bq_3cd\lhd\)</span></p>
+<p>Now, for each transitions in <span
+class="math inline">\(\mathcal{M}\)</span>, we define our string
+rewriting system <span class="math inline">\(R\)</span> as follows.</p>
+<table>
+<colgroup>
+<col style="width: 55%" />
+<col style="width: 44%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>transitions in <span class="math inline">\(\mathcal{M}\)</span></th>
+<th>rewrites in <span class="math inline">\(R\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(q_iabRq_j\)</span></td>
+<td><span class="math inline">\(q_ia\rightarrow_R L_{q_ia}\overline
+bq_j\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\overline a\overline q_i\rightarrow_R
+L_{\overline aq_i}\overline bq_j\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(q_i\beta bRq_j\)</span></td>
+<td><span class="math inline">\(q_i\lhd\rightarrow_R
+L_{q_i\lhd}\overline b q_j\lhd\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\rhd \overline q_i\rightarrow_R \rhd
+L_{\rhd\overline q_i}\overline bq_j\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(q_iabLq_j\)</span></td>
+<td><span class="math inline">\(q_ia\rightarrow_R \overline q_j b
+R_{q_ia}\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\overline a\overline q_i\rightarrow_R
+\overline q_j b R_{\overline a\overline q_i}\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(q_i\beta bLq_j\)</span></td>
+<td><span class="math inline">\(q_i\lhd\rightarrow_R \overline
+q_jbR_{q_i\lhd}\lhd\)</span></td>
+</tr>
+<tr class="even">
+<td></td>
+<td><span class="math inline">\(\rhd \overline q_i\rightarrow_R
+\rhd\overline q_j b R_{\rhd\overline q_i}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Moreover, for each <span class="math inline">\(z\)</span>, we have
+the following two additional (sets of) auxiliary rewrite rules <span
+class="math display">\[\begin{align*}
+q_iR_z&amp;\rightarrow_R L_zL_zq_i\\
+L_z\overline q_i&amp;\rightarrow_R \overline q_iR_zR_z
+\end{align*}\]</span> for any <span
+class="math inline">\(z\)</span>.</p>
+<p>To explain what the two rules do, let us define two types of strings.
+Type-A strings are strings where the symbol being scanned is to the
+immediate right of <span class="math inline">\(q_i\)</span> or to the
+immediate left of <span class="math inline">\(\overline {q_i}\)</span>.
+In other words, we call a string <span class="math inline">\(s\)</span>
+a type-A string if <span class="math inline">\(s\)</span> contains <span
+class="math inline">\(q_ia\)</span> or <span
+class="math inline">\(\overline{aq_i}\)</span>. Type-B strings are
+strings that are not type-A: they are strings where there are dummy
+symbols in between the state and the symbol being scanned. The rewrite
+rules above convert any type-B strings into type-A in a finite number of
+steps.</p>
+<p>Now, we observe that <span class="math inline">\(R\)</span> has
+several properties:</p>
+<ol type="1">
+<li>Reverse convergence: the critical pair lemma implies that if a
+rewriting system is terminating and all its critical pairs are
+convergent, it is convergent. Define <span
+class="math inline">\(R^{-1}\)</span> to be a TRS derived from <span
+class="math inline">\(R\)</span> by swapping left and right hand side.
+<span class="math inline">\(R^{-1}\)</span> is terminating since rewrite
+rules in <span class="math inline">\(R^{-1}\)</span> decreases the sizes
+of terms (that is, rewrite rules in <span
+class="math inline">\(R^{-1}\)</span> increases the sizes of terms), and
+<span class="math inline">\(R^{-1}\)</span> has no critical pairs.
+Therefore, <span class="math inline">\(R^{-1}\)</span> is
+convergent.</li>
+<li>For each type-A string <span class="math inline">\(w\)</span>, then
+either
+<ul>
+<li>there exists no <span class="math inline">\(w&#39;\)</span> with
+<span class="math inline">\(w\rightarrow_R w&#39;\)</span> and <span
+class="math inline">\(\pi(w)\)</span> is a halting configuration;</li>
+<li>there exists a unique <span class="math inline">\(w&#39;\)</span>
+such that <span class="math inline">\(w\rightarrow_R w&#39;\)</span> and
+<span class="math inline">\(\pi(w)\vdash \pi(w&#39;)\)</span>.</li>
+</ul></li>
+<li>For each type-B string <span class="math inline">\(w\)</span>, there
+exists a unique <span class="math inline">\(w&#39;\)</span> such that
+<span class="math inline">\(w\rightarrow_R w&#39;\)</span>, and <span
+class="math inline">\(\pi(w)=\pi(w&#39;)\)</span>. Moreover, if <span
+class="math inline">\(w_0\rightarrow_R w_1\rightarrow_R\ldots\)</span>
+is a sequence of type-B strings, the sequence must be bounded in length,
+since the state symbols <span class="math inline">\(q_i\)</span> and
+<span class="math inline">\(\overline q_i\)</span> move towards one end
+according to the auxillary rules above.</li>
+<li>By 2 and 3, <span class="math inline">\(w\rightarrow_R w_1\)</span>
+and <span class="math inline">\(w\rightarrow_R w_2\)</span> implies
+<span class="math inline">\(w_1=w_2\)</span>. In other words, <span
+class="math inline">\(\rightarrow_R\)</span> is a function.</li>
+</ol>
+<p>These observations allows us to prove the following lemma</p>
+<p><strong>Lemma 2.</strong> Let <span class="math inline">\(w_0=\rhd
+q_0s\lhd\)</span> be an initial configuration. <span
+class="math inline">\(w_0\)</span> is obviously in <em>CONFIG</em>.
+Moreover, given a Turing machine <span
+class="math inline">\(\mathcal{M}\)</span>, construct a string rewriting
+system <span class="math inline">\(R\)</span> as above. <span
+class="math inline">\(\mathcal{M}\)</span> halts on <span
+class="math inline">\(w_0\)</span> if and only if <span
+class="math inline">\([w_0]_R\)</span>, the equivalence class of <span
+class="math inline">\(w_0\)</span> in <span
+class="math inline">\(R\)</span>, is finite.</p>
+<p><strong>Proof.</strong> Consider <span class="math inline">\(S:
+w_0\rightarrow_R w_1\rightarrow_R \ldots\)</span>, a sequence of
+<em>CONFIG</em> starting with <span class="math inline">\(w_0\)</span>.
+By the above observations, <span class="math inline">\(S\)</span> must
+have a subsequence of type-A strings <span
+class="math inline">\(w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*
+w_{a_2}\rightarrow_R^*\ldots\)</span> with <span
+class="math display">\[\pi(w_0)=\ldots =\pi(w_{a_1-1})\vdash
+\pi(w_{a_1})=\ldots=\pi(w_{a_2-1})\vdash \pi(w_{a_2})=
+\ldots.\]</span></p>
+<p>An overview of the trace <span
+class="math inline">\(w_0,w_{a_1},w_{a_2},\ldots\)</span> and its
+properties is shown below:</p>
+<table>
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 25%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 30%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+<col style="width: 5%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">Rw</td>
+<td style="text-align: center;"><span
+class="math inline">\({w_0}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\rightarrow_R\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\underbrace{w_1\rightarrow_R\ldots \rightarrow_R
+w_{a_1-1}}_{\text{finite}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\rightarrow_R\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({w_{a_1}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\underbrace{w_{a_1+1}\rightarrow_R\ldots
+\rightarrow_R w_{a_2-1}}_{\text{finite}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\rightarrow_R\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({w_{a_2}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\ldots\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Type</td>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">B <span
+class="math inline">\(\ldots\)</span> B</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;">B <span
+class="math inline">\(\ldots\)</span> B</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">A</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">Config</td>
+<td style="text-align: center;"><span
+class="math inline">\({\pi(w_0)}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(=\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\pi(w_1)=\ldots =\pi(w_{a_1-1})\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\vdash_{\mathcal{M}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({\pi(w_{a_1})}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\pi(w_{a_1+1})=\ldots
+=\pi(w_{a_2-1})\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\vdash_{\mathcal{M}}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\({\pi(w_{a_2})}\)</span></td>
+<td style="text-align: center;"><span
+class="math inline">\(\ldots\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Now we prove the claim:</p>
+<ul>
+<li><p><span class="math inline">\(\Leftarrow\)</span>: Suppose <span
+class="math inline">\([w_0]_R\)</span> is finite. We show that there
+exists a <em>finite</em> sequence <span class="math inline">\(S\)</span>
+of <span class="math inline">\(w_0\rightarrow_R w_1\rightarrow_R \ldots
+\rightarrow_R w_n\)</span> such that there is no <span
+class="math inline">\(w&#39;\)</span> such that <span
+class="math inline">\(w_n\rightarrow_R w&#39;\)</span>. If this is not
+the case, then an infinite rewriting sequence <span
+class="math inline">\(w_0\rightarrow_R w_1\rightarrow\ldots\)</span>
+must exist. Because <span class="math inline">\([w_0]_R\)</span> is
+finite, for the sequence to be infinite, there must exist distinct <span
+class="math inline">\(i,j\)</span> such that <span
+class="math inline">\(w_i=w_j\)</span> in the sequence. However, this is
+impossible, because <span class="math inline">\(\rightarrow_R\)</span>
+always increases the sizes of terms.</p>
+<p>By our observation above, if there is no such <span
+class="math inline">\(w&#39;\)</span> that <span
+class="math inline">\(w_n\rightarrow_R w&#39;\)</span> in sequence <span
+class="math inline">\(S\)</span>, it has to be the case that <span
+class="math inline">\(w_n\)</span> is type-A and <span
+class="math inline">\(\pi(w)\)</span> is a halting configuration.</p>
+<p>Now, take the subsequence of <span class="math inline">\(S\)</span>
+that contains every type-A string: <span
+class="math display">\[w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*\ldots
+\rightarrow_R^*w_{a_k}=w_n.\]</span> We have <span
+class="math inline">\(\pi(w_{a_i})\vdash\pi(w_{a_{i+1}})\)</span> for
+all <span class="math inline">\(i\)</span> and <span
+class="math inline">\(\pi(w_{a_k})\)</span> is a halting configuration.
+This implies a finite trace of the Turing machine: <span
+class="math display">\[w_0\vdash \pi(w_{a_1})\vdash\ldots\vdash
+\pi(w_{a_n}).\]</span> Since we only consider deterministic Turing
+machines, the Turing machine halts on <span
+class="math inline">\(w_0\)</span>.</p></li>
+<li><p><span class="math inline">\(\Rightarrow\)</span>: Suppose
+otherwise <span class="math inline">\(\mathcal{M}\)</span> halts on
+<span class="math inline">\(w_0\)</span> and <span
+class="math inline">\([w_0]_R\)</span> is infinite.</p>
+<p>By definition, <span class="math inline">\(w_0\)</span> is a normal
+form with respect to <span class="math inline">\(\leftarrow_R\)</span>,
+and because <span class="math inline">\(\leftarrow_R\)</span> is
+convergent, if there exists a <span class="math inline">\(w\)</span>
+such that <span class="math inline">\(w\approx_Rw_0\)</span>, then <span
+class="math inline">\(w_0\rightarrow_R^* w\)</span>. The fact that <span
+class="math inline">\([w_0]_R\)</span> is infinite implies <span
+class="math inline">\(w_0\)</span> can be rewritten to infinitely many
+strings <span class="math inline">\(w\)</span>. Because <span
+class="math inline">\(\rightarrow_R\)</span> satisfies the functional
+dependency, it has to be the case that there exists an infinite
+rewriting sequence: <span class="math inline">\(S:w_0\rightarrow_R
+w_1\rightarrow_R \ldots\)</span>. Taking the subsequence of <span
+class="math inline">\(S\)</span> consisting of every type-A strings:
+<span class="math display">\[w_0\rightarrow_R^* w_{a_1}\rightarrow_R^*
+\ldots.\]</span> This implies an infinite trace of the Turing machine:
+<span class="math display">\[w_0\vdash
+\pi(w_{a_1})\vdash\ldots,\]</span> which is a contradiction.</p></li>
+</ul>
+<p>We are ready to prove the undecidability of the termination problem
+of EqSat:</p>
+<p>Given a Turing machine <span
+class="math inline">\(\mathcal{M}\)</span>. We construct the following
+two-tape Turing machine <span
+class="math inline">\(\mathcal{M}&#39;\)</span>:</p>
+<blockquote>
+<p><span class="math inline">\(\mathcal{M}&#39;\)</span> alternates
+between the following two steps:</p>
+<ol type="1">
+<li><p>Simulate one transition of <span
+class="math inline">\(\mathcal{M}\)</span> on its first tape.</p></li>
+<li><p>Read the string on its second tape as a number, compute the next
+prime number, and write it to the second tape.</p></li>
+</ol>
+<p><span class="math inline">\(\mathcal{M}&#39;\)</span> halts when the
+simulation of <span class="math inline">\(\mathcal{M}\)</span> reaches
+an accepting state.</p>
+</blockquote>
+<p>It is known that a two-tape Turing machine can be simulated using a
+standard Turing machine, so we assume <span
+class="math inline">\(\mathcal{M}&#39;\)</span> is a standard Turing
+machine and takes input string <span
+class="math inline">\((s_1,s_2)\)</span>, where <span
+class="math inline">\(s_1\)</span> is the input on its first tape and
+<span class="math inline">\(s_2\)</span> is the input on its second
+tape. Let <span class="math inline">\(R&#39;\)</span> be the string
+rewriting system derived from <span
+class="math inline">\(\mathcal{M}&#39;\)</span> using the encoding we
+introduced in the lemma.</p>
+<p>Given a string <span class="math inline">\(s\)</span>, let <span
+class="math inline">\(w\)</span> be the initial configuration <span
+class="math inline">\(\rhd q_0(s, 2)\lhd\)</span>. The following
+conditions are equivalent:</p>
+<ol type="1">
+<li><span class="math inline">\(\mathcal{M}\)</span> halts on input
+<span class="math inline">\(s\)</span>.</li>
+<li><span class="math inline">\(\mathcal{M}&#39;\)</span> halts on input
+<span class="math inline">\((s, 2)\)</span>.</li>
+<li><span class="math inline">\([w]_{R&#39;}\)</span> is finite.</li>
+<li><span class="math inline">\([w]_{R&#39;}\)</span> is regular.</li>
+</ol>
+<p>Note that (3) implies (4) trivially, and (4) implies (3) because if
+<span class="math inline">\([w]_{R&#39;}\)</span> is infinite, it must
+not be regular since the trace of <span
+class="math inline">\(\mathcal{M}&#39;\)</span> computes every prime
+number.</p>
+<p>Now run EqSat with initial string <span
+class="math inline">\(w\)</span> and rewriting system <span
+class="math inline">\(\leftrightarrow_{R&#39;}\)</span>. EqSat
+terminates if and only if <span
+class="math inline">\(\mathcal{M}\)</span> halts on <span
+class="math inline">\(s\)</span>:</p>
+<ul>
+<li><span class="math inline">\(\Rightarrow\)</span>: Suppose EqSat
+terminates with output E-graph <span class="math inline">\(G\)</span>.
+Strings equivalent to <span class="math inline">\(w\)</span> in <span
+class="math inline">\(G\)</span> is exactly the equivalence class of
+<span class="math inline">\(w\)</span>, i.e., <span
+class="math inline">\([w]_G=[w]_{R&#39;}\)</span>. Moreover, every
+e-class in an E-graph represents a regular language, so <span
+class="math inline">\([w]_G\)</span> is regular. Therefore, <span
+class="math inline">\([w]_G\)</span> is finite.</li>
+<li><span class="math inline">\(\Leftarrow\)</span>: Suppose <span
+class="math inline">\(\mathcal{M}\)</span> halts on <span
+class="math inline">\(s\)</span>. This implies <span
+class="math inline">\([w]_{R&#39;}\)</span> is finite. Because EqSat
+monotonically enlarges the set of represented terms, it has to stop in a
+finite number of iterations.</li>
+</ul>
+<p>Because the halting problem of a Turing machine is undecidable, the
+termination problem of EqSat is undecidable as well. <span
+class="math inline">\(\blacksquare\)</span></p>
+<h1 id="the-regularity-problem-of-term-rewriting-systems">The regularity
+problem of term rewriting systems</h1>
+<p>In the last section, we have shown that the termination of equality
+saturation is undecidable. Here, we consider a more general question:
+Given a term rewriting system and a term, is the equivalence class of
+the term defined by the term rewriting system regular? In general, for
+term rewriting systems consisting of variable-preserving rewrite rules,
+if equality saturation terminates on <span class="math inline">\(R\cup
+R^{-1}\)</span>, the equivalence class is regular. However, there are
+cases where the equivalence class of a term is regular, equality
+saturation does not terminate: an example is term rewriting system <span
+class="math inline">\(\{f(x)\rightarrow f(g(x))\}\)</span> and term
+<span class="math inline">\(f(a)\)</span>.</p>
+<p>This regularity problem is undecidable, as we show here.</p>
+<p><strong>Theorem 3.</strong> The following problem is undecidable.</p>
+<blockquote>
+<p>Instance: a term rewriting system <span
+class="math inline">\(R\)</span>, a term <span
+class="math inline">\(w\)</span>.</p>
+<p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
+</blockquote>
+<p><strong>Proof.</strong></p>
+<p>To show the undecidability, we reduce the halting problem of Turing
+machines to this problem. As shown in Theorem 1, given a Turing machine
+<span class="math inline">\(\mathcal{M}\)</span>, <span
+class="math inline">\(\mathcal{M}\)</span> halts on an input <span
+class="math inline">\(s\)</span> if and only if <span
+class="math inline">\([w]_{R&#39;}\)</span> (as constructed in Theorem
+1) is regular for <span class="math inline">\(w=\rhd q_0(s,
+2)\lhd\)</span>. <span class="math inline">\(\blacksquare\)</span></p>
+<p>Different from the termination of equality saturation, it is open
+whether this problem is recursive enumerable. However, for a particular
+kind of rewrite systems, we show this regularity problem is
+R.E.-complete.</p>
+<p><strong>Theorem 4.</strong> The following problem is
+R.E.-complete.</p>
+<blockquote>
+<p>Instance: a left-linear and convergent term rewriting system <span
+class="math inline">\(R\)</span>, a term <span
+class="math inline">\(w\)</span>.</p>
+<p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
+</blockquote>
+<p><strong>Proof.</strong></p>
+<p>As we show in Theorem 1, the regularity of <span
+class="math inline">\(R\)</span> (and therefore <span
+class="math inline">\(R^{-1}\)</span>) is undecidable. Because every
+string rewriting system is a linear term rewriting system <span
+class="math inline">\(R^{-1}\)</span> is left-linear. Moreover, <span
+class="math inline">\(R^{-1}\)</span> is convergent. Therefore, the
+regularity of left-linear, convergent term rewriting systems is
+undecidable. Additionally, we show the regularity problem is in R.E. by
+showing a semi-decision procedure for it.</p>
+<blockquote>
+<p><strong>Procedure</strong> <span
+class="math inline">\(\textit{equivClassOf}\)</span>(<span
+class="math inline">\(R\)</span>, <span
+class="math inline">\(w\)</span>)</p>
+<p><strong>Input:</strong> a left-linear, convergent term rewriting
+system <span class="math inline">\(R\)</span>, a term <span
+class="math inline">\(w\)</span>.</p>
+<p><strong>Output:</strong> an E-graph that represents <span
+class="math inline">\([w]_R\)</span> if exists.</p>
+<p><strong>begin</strong></p>
+<ol type="1">
+<li><p><strong>for each</strong> E-graph <span
+class="math inline">\(G\)</span> such that <span
+class="math inline">\(w\in \mathcal{L}(G)\)</span>
+<strong>do</strong></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <strong>if</strong>
+<span class="math inline">\(\textit{isFixPoint}(G, R\cup
+R^{-1})\)</span> <strong>then</strong></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <strong>if</strong> <span
+class="math inline">\(\mathcal{L}(G)\cap\textit{normalForms}(R)=\{w\}\)</span>
+<strong>then</strong></p></li>
+<li><p><span class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <span
+class="math inline">\(\quad\)</span> <strong>return</strong> <span
+class="math inline">\(G\)</span>;</p></li>
+</ol>
+<p><strong>end</strong></p>
+</blockquote>
+<p>In the above algorithm, <em>isFixPoint</em> checks if the E-graph
+<span class="math inline">\(G\)</span> is “saturated” with respect to
+<span class="math inline">\(R\)</span> and <span
+class="math inline">\(R^{-1}\)</span>. It does this by checking that,
+for each matched left-hand side <span
+class="math inline">\(l\sigma\)</span> of the pattern, the right-hand
+side <span class="math inline">\(r\sigma\)</span> exists in the E-graph
+and is equivalent to <span class="math inline">\(l\sigma\)</span>. Some
+care needs to be taken here: consider a rewrite rule <span
+class="math inline">\(f(x,y)\rightarrow g(x)\)</span>. The reverse form
+of this rule is <span class="math inline">\(g(x)\rightarrow
+f(x,y)\)</span>. The right-hand side pattern of this rewrite rule has a
+larger variable set than the left-hand side. To handle this rewrite
+rule, <em>isFixPoint</em> matches the left-hand side pattern <span
+class="math inline">\(g(x)\)</span>, and each match produces a
+substitution <span class="math inline">\(\{x\mapsto c_x\}\)</span> at
+root E-class <span class="math inline">\(c\)</span>. <em>isFixPoint</em>
+checks regular set containment <span class="math inline">\(\{f(t_x,
+t_y)\mid t_x\in \mathcal{L}(c_x), t_b\in \ast\}\subseteq
+\mathcal{L}(c)\)</span>, where <span class="math inline">\(\ast\)</span>
+is the universe of all terms.</p>
+<p>We show the correctness of our algorithm in two steps.</p>
+<ul>
+<li>We show that if an e-graph <span class="math inline">\(G\)</span> is
+returned, <span class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>:
+<ul>
+<li><p>First, we show <span class="math inline">\([w]_R\subseteq
+\mathcal{L}(G)\)</span>: if <span
+class="math inline">\(\textit{isFixPoint}(G, R\cup R^{-1})\)</span>
+holds, we have, for any term <span class="math inline">\(t\)</span>, if
+<span class="math inline">\(t\)</span> is accepted by <span
+class="math inline">\(G\)</span>, the entire equivalence class of <span
+class="math inline">\(t\)</span> is also accepted by <span
+class="math inline">\(G\)</span>; that is <span
+class="math display">\[\begin{align*}
+t\in\mathcal{L}(G)\Rightarrow [t]_R\subseteq \mathcal{L}(G).
+\quad\quad\quad\quad\quad (1)
+\end{align*}\]</span> Since <span class="math inline">\(w\in
+\mathcal{L}(G)\)</span>, <span class="math inline">\([w]_R\subseteq
+\mathcal{L}(G)\)</span>. To prove (1), suppose this is not the case.
+There must exist term <span class="math inline">\(u\)</span>, <span
+class="math inline">\(v\)</span> where <span
+class="math inline">\(u\leftrightarrow_R v\)</span>, <span
+class="math inline">\(u\in \mathcal{L}(G)\)</span>, and <span
+class="math inline">\(v\not\in \mathcal{L}(G)\)</span>, which
+contradicts <span class="math inline">\(\textit{isFixPoint}(G, R\cup
+R^{-1})\)</span>.</p></li>
+<li><p>Second, we show <span
+class="math inline">\(\mathcal{L}(G)\subseteq [w]_R\)</span>. Suppose
+this is not the case. There exists a term <span
+class="math inline">\(u\in \mathcal{L}(G)\)</span> that is in a
+different equivalence class than <span
+class="math inline">\([w]_R\)</span>. By (1), <span
+class="math inline">\([u]_R\subseteq \mathcal{L}(G)\)</span>. Because
+<span class="math inline">\(R\)</span> is convergent, <span
+class="math inline">\([u]_R\)</span> has a normal form <span
+class="math inline">\(n_u\)</span> that is contained in <span
+class="math inline">\(\mathcal{L}(G)\)</span>, but line 3 ensures that
+<span class="math inline">\(\mathcal{L}(G)\)</span> has one normal form
+which is <span class="math inline">\(w\)</span>, a
+contradiction.</p></li>
+</ul></li>
+<li>On the other hand, if there exists an e-graph <span
+class="math inline">\(G\)</span> such that <span
+class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>, it will be
+returned. This case is straightforward: if <span
+class="math inline">\(\mathcal{L}(G)=[w]_R\)</span>, <span
+class="math inline">\(G\)</span> is “saturated” with regard to <span
+class="math inline">\(\leftrightarrow_R\)</span>, so the check at line 3
+passes. Moreover, since <span class="math inline">\(R\)</span> is
+convergent, <span class="math inline">\([w]_R\)</span> has only one
+normal form which is <span class="math inline">\(w\)</span>, so the
+check at line 4 also passes. Therefore, <span
+class="math inline">\(G\)</span> will be returned. <span
+class="math inline">\(\blacksquare\)</span></li>
+</ul>
+<h2 id="relaxing-left-linearity">Relaxing left-linearity</h2>
+<p>In the last theorem, the set of normal forms is intersected with the
+language represented by the e-graph, and checked for equivalence with
+the singleton set <span class="math inline">\(\{w\}\)</span>. This is
+why we require the term rewriting system to be left-linear: the set of
+normal forms of a left-linear term rewriting system is regular, and
+regular languages are closed under intersection and has decidable
+equivalence checking. Therefore, if there is a representation of normal
+forms for general term rewriting systems that is closed under
+intersection and has decidable equivalence checking, then we can lift
+the left linearity condition in the last theorem.</p>
+<p>Indeed, such a representation exists. It is called <em>tree automata
+with global constraints</em> (TAGCs) <span class="citation"
+data-cites="TAGC">[@TAGC]</span>. Essentially, TAGCs extend tree
+automata with <em>global</em> equality and inequality constraints. TAGCs
+are closed under union and intersection, but not under complementation.
+Moreover, the emptiness and membership problem of TAGC is decidable.
+Therefore, if we can represent the set of normal forms of a term
+rewriting system as a TAGC, then line 3 of the algorithm used in the
+last theorem can be checked decidably for a general term rewriting
+system by considering its equivalent form: <span
+class="math display">\[w\in L\land L\cap
+\overline{\{w\}}=\emptyset\]</span> where <span
+class="math inline">\(L=\mathcal{L}(G)\cap\textit{normalForms}(R)\)</span>.
+I claim <span class="math inline">\(\textit{normalForms}(R)\)</span> can
+be represented as an TAGC for an arbitrary term rewriting system,
+although I will omit the details of the construction here since it is a
+bit technical<a href="#fn2" class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a>. Putting everything together, we
+have the following generalization of Theorem 4:</p>
+<p><strong>Theorem 5.</strong> The following problem is
+R.E.-complete.</p>
+<blockquote>
+<p>Instance: a convergent term rewriting system <span
+class="math inline">\(R\)</span>, a term <span
+class="math inline">\(w\)</span>.</p>
+<p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
+</blockquote>
+<h1 id="references">References</h1>
+<section class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1" role="doc-endnote"><p> Note that this definition of <span
+class="math inline">\(\approx_G\)</span> is different from the
+congruence relation defined in the Myhill-Nerode theorem for trees <span
+class="citation" data-cites="kozen1992myhill">[@kozen1992myhill]</span>.
+For example, consider an E-graph with transitions <span
+class="math inline">\(\{a()\rightarrow c_1, b()\rightarrow c_2,
+f(c_1)\rightarrow c_f, f(c_2)\rightarrow c_f\}\)</span>. In the
+Myhill-Nerode theorem, <span class="math inline">\(fa\)</span> and <span
+class="math inline">\(fb\)</span> would be equivalent while in our
+definition they are not because they are accepted by different states.<a
+href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>In particular, we cannot use our
+strategy for left-linear term rewriting systems by first representing
+the set of rewritable terms and taking its complement, since TAGC is not
+closed under complementation. Luckily, for each rewrite rule, we can
+explicitly represent terms that does not match the left-hand side with
+inequality constraints, and then take the intersection of them.<a
+href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
+</body>
+</html>
