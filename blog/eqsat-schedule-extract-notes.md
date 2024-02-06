@@ -3,7 +3,7 @@ title: Notes on the scheduling and extraction problems of EqSat
 author: Yihong Zhang
 ---
 
-*This is a companion to my [PLSE blog post](TODO) on the termination problem of equality saturation.*
+*This is a companion to my [PLSE blog post](https://uwplse.org/2024/02/05/Eqsat-theory-ii.html) on the termination problem of equality saturation.*
 *It is intended to give an overview of two other interesting problems related to equality saturation besides termination, namely extraction and scheduling.*
 
 ## Extraction 
