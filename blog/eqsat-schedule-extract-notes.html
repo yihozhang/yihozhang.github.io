@@ -31,6 +31,9 @@
         font-size: 0.9em;
         padding: 1em;
       }
+      h1 {
+        font-size: 1.8em;
+      }
     }
     @media print {
       body {
@@ -135,35 +138,148 @@
     #TOC li {
       list-style: none;
     }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
     #TOC a:not(:hover) {
       text-decoration: none;
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
   <!--[if lt IE 9]>
     <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
   <![endif]-->
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Notes on the scheduling and extraction problems of EqSat</h1>
+<h1 class="title">Notes on the scheduling and extraction problems of
+EqSat</h1>
 <p class="author">Yihong Zhang</p>
 </header>
-<p><em>This is a companion to my <a href="TODO">PLSE blog post</a> on the termination problem of equality saturation.</em> <em>It is intended to give an overview of two other interesting problems related to equality saturation besides termination, namely extraction and scheduling.</em></p>
+<p><em>This is a companion to my <a
+href="https://uwplse.org/2024/02/05/Eqsat-theory-ii.html">PLSE blog
+post</a> on the termination problem of equality saturation.</em> <em>It
+is intended to give an overview of two other interesting problems
+related to equality saturation besides termination, namely extraction
+and scheduling.</em></p>
 <h2 id="extraction">Extraction</h2>
-<p>E-graph extraction tries to extract an optimal program out of an E-graph. This is both an easy and a hard problem: If we only consider the tree size/cost of programs (e.g., <code>(x + 1) * (x + 1)</code> has size 7), this is an easy problem, as very efficient algorithms for extraction exist. However, in practice we usually want to consider the DAG size/cost of programs (e.g., <code>(x + 1) * (x + 1)</code> has size 4). In a <a href="https://effect.systems/blog/egraph-extraction.html">blog post</a>, I showed this problem is NP-hard via a reduction from the minimal set cover problem. This problem is equivalent to the shortest path problem over hypergraphs, if we consider an E-graph as a directed hypergraph, where e-nodes are hyperedges.</p>
-<p>Despite the NP-hardness, many people have been working on E-graph extraction. Many algorithms are proposed. For example, <a href="https://dl.acm.org/doi/10.1145/1480881.1480915">Peggy</a>, <a href="https://dl.acm.org/doi/10.14778/3407790.3407799">SPORES</a>, and <a href="https://arxiv.org/abs/2101.01332">TenSat</a> use ILP solvers. <a href="https://dl.acm.org/doi/10.1145/3571207">babble</a> and an early prototype of <a href="https://github.com/egraphs-good/eggcc">eggcc</a> use a dynamic programming algorithm. Strikingly, three talks at EGRAPHS 2023 are on this topic: <a href="https://pldi23.sigplan.org/details/egraphs-2023-papers/10/KestRel-Relational-Verification-using-E-Graphs-for-Program-Alignment">KestRel</a> proposed a simulated annealing–based algorithm, Eli Rosenthal proposed a Zero-Suppressed Binary Decision Diagram (ZDD) based <a href="https://pldi23.sigplan.org/details/egraphs-2023-papers/6/E-graph-Extraction-Using-ZDDs">algorithm</a>, and He et al. proposed a MaxSAT-based extraction <a href="https://pldi23.sigplan.org/details/egraphs-2023-papers/3/Improving-Term-Extraction-with-Acyclic-Constraints">algorithm</a>. Yet it is still open to me which extraction algorithm I should use. There is an <a href="https://github.com/egraphs-good/extraction-gym">extraction gym</a> that surveys recent extraction algorithms. A surprising finding is that, despite being much more expensive, these algorithms are not significantly better than the greedy extraction algorithm that is optimal for the tree cost on the benchmark tested. It is not clear if this is because the benchmark is too weak, or the greedy algorithm is just good enough.</p>
-<p>One may wonder if they can develop approximation algorithms or fixed-parameter tractable algorithms for E-graph extraction. Unfortunately, the inapproximability results of the set cover show that no good polynomial-time approximation algorithm exists unless P=NP. On the other hand, we have some early thoughts on a fixed-parameter tractable algorithm for E-graph extraction. We do not know how good it is in practice yet.</p>
+<p>E-graph extraction tries to extract an optimal program out of an
+E-graph. This is both an easy and a hard problem: If we only consider
+the tree size/cost of programs (e.g., <code>(x + 1) * (x + 1)</code> has
+size 7), this is an easy problem, as very efficient algorithms for
+extraction exist. However, in practice we usually want to consider the
+DAG size/cost of programs (e.g., <code>(x + 1) * (x + 1)</code> has size
+4). In a <a
+href="https://effect.systems/blog/egraph-extraction.html">blog post</a>,
+I showed this problem is NP-hard via a reduction from the minimal set
+cover problem. This problem is equivalent to the shortest path problem
+over hypergraphs, if we consider an E-graph as a directed hypergraph,
+where e-nodes are hyperedges.</p>
+<p>Despite the NP-hardness, many people have been working on E-graph
+extraction. Many algorithms are proposed. For example, <a
+href="https://dl.acm.org/doi/10.1145/1480881.1480915">Peggy</a>, <a
+href="https://dl.acm.org/doi/10.14778/3407790.3407799">SPORES</a>, and
+<a href="https://arxiv.org/abs/2101.01332">TenSat</a> use ILP solvers.
+<a href="https://dl.acm.org/doi/10.1145/3571207">babble</a> and an early
+prototype of <a href="https://github.com/egraphs-good/eggcc">eggcc</a>
+use a dynamic programming algorithm. Strikingly, three talks at EGRAPHS
+2023 are on this topic: <a
+href="https://pldi23.sigplan.org/details/egraphs-2023-papers/10/KestRel-Relational-Verification-using-E-Graphs-for-Program-Alignment">KestRel</a>
+proposed a simulated annealing–based algorithm, Eli Rosenthal proposed a
+Zero-Suppressed Binary Decision Diagram (ZDD) based <a
+href="https://pldi23.sigplan.org/details/egraphs-2023-papers/6/E-graph-Extraction-Using-ZDDs">algorithm</a>,
+and He et al. proposed a MaxSAT-based extraction <a
+href="https://pldi23.sigplan.org/details/egraphs-2023-papers/3/Improving-Term-Extraction-with-Acyclic-Constraints">algorithm</a>.
+Yet it is still open to me which extraction algorithm I should use.
+There is an <a
+href="https://github.com/egraphs-good/extraction-gym">extraction gym</a>
+that surveys recent extraction algorithms. A surprising finding is that,
+despite being much more expensive, these algorithms are not
+significantly better than the greedy extraction algorithm that is
+optimal for the tree cost on the benchmark tested. It is not clear if
+this is because the benchmark is too weak, or the greedy algorithm is
+just good enough.</p>
+<p>One may wonder if they can develop approximation algorithms or
+fixed-parameter tractable algorithms for E-graph extraction.
+Unfortunately, the inapproximability results of the set cover show that
+no good polynomial-time approximation algorithm exists unless P=NP. On
+the other hand, we have some early thoughts on a fixed-parameter
+tractable algorithm for E-graph extraction. We do not know how good it
+is in practice yet.</p>
 <h2 id="scheduling">Scheduling</h2>
-<p>Another problem I am very excited about is scheduling. The naive equality saturation algorithm always applies all the rules applicable. The issue with this approach is that it may spend most of its run time in exploring exponential rules (e.g., associativity) without making progress, which is highly inefficient. A slightly better approach is taken by the <code>BackOff</code> scheduler, which bans rules from firing too often. Yet it is still very heuristic.</p>
-<p>Equality saturation can be thought of as a search problem, and the naive scheduling strategy corresponds to the breath-first search (BFS) algorithm. A natural question then is what other classic search algorithms correspond to in equality saturation. For example, best-first search uses the current cost of a search node to guide the search. Can we do something similar in equality saturation by prioritizing E-classes or E-nodes that are more “optimal” than others? For example, if an E-class <span class="math inline">\(c\)</span> is part of the optimal term from extraction at iteration <span class="math inline">\(i\)</span>, prioritizing firing rules whose root is <span class="math inline">\(c\)</span> is an obviously good strategy. On the other hand, if the path from the root to some E-class is very expensive, then spending lots of effort making such E-class super-duper-optimized is not a wise move, since it is unlikely to be included in the extracted program anyway. There seems to be some low-hanging fruit along this line of reasoning. <a href="https://dl.acm.org/doi/10.1145/3632900">Sketch-guided equality saturation</a> achieves something similar by extracting intermediate forms and starting again, an idea <a href="https://rustmagazine.org/issue-2/write-a-sql-optimizer-using-egg/">RisingLight</a> independently came up with. This approach biases equality saturation towards more profitable explorations and is similar to beam search by way of analogy. Other recent approaches include <a href="https://arxiv.org/abs/2303.04651">MCTS-GEB</a>, which uses reinforcement learning for equality saturation scheduling, but it requires many calls to equality saturation, so it is unclear how useful it is in practice.</p>
-<p>As a related note, the scheduling problem is also related to <a href="https://repositum.tuwien.at/handle/20.500.12708/81325">proofs</a> in equality saturation, since the shortest proof essentially gives the optimal rewrite sequence to the target term. I think this is very promising, because, unlike the Monte Carlo Tree Search approach used by MCTS-GEB, constructing a fairly good proof requires only one call to equality saturation and is relatively efficient.</p>
-<p>Another direction I explored in <a href="https://effect.systems/doc/egraphs-2023-theory/paper.pdf">my EGRPAHS 2023 talk</a> is how to design schedulers with <em>guarantees</em>. The naive scheduler indeed provides the guarantee that if two terms can be shown equivalent by rewriting each term for <span class="math inline">\(n\)</span> steps, they can be shown equivalent within <span class="math inline">\(n\)</span> iterations of naive equality saturation. The talk introduced two more schedulers, merge-only scheduler and depth-bounded scheduler, both of which always terminate with the following guarantee: if two terms can be shown equivalent using only terms in the initial E-graph (resp. terms with a bounded depth), the equivalence can be shown with the given scheduler. These schedulers are arguably less powerful than the naive scheduler, but they can be useful in ensuring both the termination and completeness properties of systems and, when composed with other scheduling strategies (e.g., search-inspired ones mentioned above), can be very efficient.</p>
+<p>Another problem I am very excited about is scheduling. The naive
+equality saturation algorithm always applies all the rules applicable.
+The issue with this approach is that it may spend most of its run time
+in exploring exponential rules (e.g., associativity) without making
+progress, which is highly inefficient. A slightly better approach is
+taken by the <code>BackOff</code> scheduler, which bans rules from
+firing too often. Yet it is still very heuristic.</p>
+<p>Equality saturation can be thought of as a search problem, and the
+naive scheduling strategy corresponds to the breath-first search (BFS)
+algorithm. A natural question then is what other classic search
+algorithms correspond to in equality saturation. For example, best-first
+search uses the current cost of a search node to guide the search. Can
+we do something similar in equality saturation by prioritizing E-classes
+or E-nodes that are more “optimal” than others? For example, if an
+E-class <span class="math inline">\(c\)</span> is part of the optimal
+term from extraction at iteration <span
+class="math inline">\(i\)</span>, prioritizing firing rules whose root
+is <span class="math inline">\(c\)</span> is an obviously good strategy.
+On the other hand, if the path from the root to some E-class is very
+expensive, then spending lots of effort making such E-class
+super-duper-optimized is not a wise move, since it is unlikely to be
+included in the extracted program anyway. There seems to be some
+low-hanging fruit along this line of reasoning. <a
+href="https://dl.acm.org/doi/10.1145/3632900">Sketch-guided equality
+saturation</a> achieves something similar by extracting intermediate
+forms and starting again, an idea <a
+href="https://rustmagazine.org/issue-2/write-a-sql-optimizer-using-egg/">RisingLight</a>
+independently came up with. This approach biases equality saturation
+towards more profitable explorations and is similar to beam search by
+way of analogy. Other recent approaches include <a
+href="https://arxiv.org/abs/2303.04651">MCTS-GEB</a>, which uses
+reinforcement learning for equality saturation scheduling, but it
+requires many calls to equality saturation, so it is unclear how useful
+it is in practice.</p>
+<p>As a related note, the scheduling problem is also related to <a
+href="https://repositum.tuwien.at/handle/20.500.12708/81325">proofs</a>
+in equality saturation, since the shortest proof essentially gives the
+optimal rewrite sequence to the target term. I think this is very
+promising, because, unlike the Monte Carlo Tree Search approach used by
+MCTS-GEB, constructing a fairly good proof requires only one call to
+equality saturation and is relatively efficient.</p>
+<p>Another direction I explored in <a
+href="https://effect.systems/doc/egraphs-2023-theory/paper.pdf">my
+EGRPAHS 2023 talk</a> is how to design schedulers with
+<em>guarantees</em>. The naive scheduler indeed provides the guarantee
+that if two terms can be shown equivalent by rewriting each term for
+<span class="math inline">\(n\)</span> steps, they can be shown
+equivalent within <span class="math inline">\(n\)</span> iterations of
+naive equality saturation. The talk introduced two more schedulers,
+merge-only scheduler and depth-bounded scheduler, both of which always
+terminate with the following guarantee: if two terms can be shown
+equivalent using only terms in the initial E-graph (resp. terms with a
+bounded depth), the equivalence can be shown with the given scheduler.
+These schedulers are arguably less powerful than the naive scheduler,
+but they can be useful in ensuring both the termination and completeness
+properties of systems and, when composed with other scheduling
+strategies (e.g., search-inspired ones mentioned above), can be very
+efficient.</p>
 </body>
 </html>
