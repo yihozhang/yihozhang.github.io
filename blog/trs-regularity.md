@@ -154,7 +154,7 @@ We have $[w]_R= \mathcal{L}(\textit{EqSat}(R\cup R^{-1}, w))$
 
 A Turing machine $\mathcal{M}=(Q,\Sigma, \Pi,\Delta,q_0,\beta)$ consists of a set of states $Q$, 
  the input and the tape alphabet $\Sigma$ and $\Pi$ (with $\Sigma\subseteq \Pi$), a set of transitions $\Delta$, an initial state $q_0\in Q$,
- and a special blanket symbol $\beta\in\Pi$. Each transition in $\Delta$ is a quintuple in 
+ and a special blank symbol $\beta\in\Pi$. Each transition in $\Delta$ is a quintuple in 
  $Q\times \Pi\times \Pi\times \{L,R\} \times Q$.
 For example, transition $q_iabRq_j$ means if the current state is $q_i$ and the symbol
  being scanned is $a$, then replace $a$ with $b$, move the head to the right, 
