@@ -257,9 +257,9 @@ Now, we observe that $R$ has several properties:
    Therefore, $R^{-1}$ is convergent.
 2. For each type-A string $w$, then either
    * there exists no $w'$ with $w\rightarrow_R w'$ and $\pi(w)$ is a halting configuration;
-   * there exists a unique $w'$ such that $w\rightarrow_R w'$ and $\pi(w)\vdash \pi(w')$.
-3. For each type-B string $w$, there exists a unique $w'$ such that $w\rightarrow_R w'$,
-   and $\pi(w)=\pi(w')$.
+   * there exists a unique $w'$ such that $w\rightarrow_R w'$. Moreover, $\pi(w)\vdash \pi(w')$.
+3. For each type-B string $w$, there exists a unique $w'$ such that $w\rightarrow_R w'$.
+   It holds that $\pi(w)=\pi(w')$.
    Moreover, 
    if $w_0\rightarrow_R w_1\rightarrow_R\ldots$ is a sequence of type-B strings,
    the sequence must be bounded in length,
