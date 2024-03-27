@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Yihong Zhang" />
+  <title>Semantics of the infinite chase</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Semantics of the infinite chase</h1>
+<p class="author">Yihong Zhang</p>
+<p class="date">Mar 25, 2024</p>
+</header>
+<p>I was trying to grasp the deep chase literature these days and I
+noticed there are two “folklore” claims in the literature that I cannot
+find proofs of. Not all of these claims are trivial to prove, so in this
+blog post we will prove them.</p>
+<p><strong>Theorem 1.</strong> Given a set of dependencies <span
+class="math inline">\(\Sigma\)</span> and a database instance <span
+class="math inline">\(I\)</span>, it is R.E.-complete whether all chase
+sequences of <span class="math inline">\(I\)</span> with <span
+class="math inline">\(\Sigma\)</span> terminate.</p>
+<p>While Deutsch et al. (2008) proved that this problem is undecidable,
+some follow-up papers (e.g. <a
+href="https://content.iospress.com/articles/fundamenta-informaticae/fi1627">Grahne
+and Onet</a>) claimed that this paper is R.E.-complete by referring to
+this paper. At first it is unclear to me why this problem is in R.E.
+After all, we are considering all chase sequences here, so one would
+expect some unbounded forall quantifiers here. To state this problem in
+a more existential-oriented way, a natural idea is to say there is no
+infinite path iff the lengths of all chase sequences are bounded (<span
+class="math inline">\(\exists\)</span> a bound of chase lengths such
+that …). But does this equivalence of conditions hold? It might be the
+case that all paths are finite, but the lengths of their paths are just
+unbounded. For example, all natural numbers are finite, but there is no
+upper bound of natural numbers.</p>
+<p>This is when I start to finally understand König’s lemma. The lemma
+states that every infinite tree either has a vertex of infinite degrees
+or an infinite path. With this lemma the above equivalence is
+straightforward: Consider the derivation tree of chase sequences. Since
+at each step the number of possible firings is finite, the derivation
+tree is infinite if and only if it has an infinite path. Moreover, the
+length of all chase sequences are unbounded if and only if the
+derivation tree is infinite.</p>
+<p><strong>Theorem 2.</strong> Given a set <span
+class="math inline">\(\Sigma\)</span> of TGDs and EGDs and a (possibly
+infinite) chase sequence <span class="math inline">\(\mathcal{S}: I_0,
+I_1,\ldots\)</span>, let <span
+class="math inline">\(I_{\infty}=\bigcup_{i\geq 0}\bigcap_{j\geq i}
+I_j\)</span>. <span class="math inline">\(I_{\infty}\)</span> is a
+universal model of <span class="math inline">\(\Sigma\)</span>.</p>
+<p>In the original paper by <a
+href="https://www.sciencedirect.com/science/article/pii/S030439750400725X">Fagin
+et al.</a>, the universal model is only shown for the finite case: when
+the chase sequence is finite, the last database instance is a finite
+universal model. But Fagin et al. and many follow-up papers don’t
+consider infinite universal models, so the semantics of a
+non-terminating chase sequence is unclear. In <a
+href="https://dl.acm.org/doi/10.1145/3034786.3034796"><em>Benchmarking
+the Chase</em></a> by Benedikt et al., it was claimed that the semantics
+of chase sequences, terminating or not, is <span
+class="math inline">\(I_{\infty}=\bigcup_{i\geq 0}\bigcap_{j\geq i}
+I_j\)</span>, but this claim is not proved in the paper. It is highly
+likely that this claim has been proved but I was just not able to find
+them. But anyway, this is a fun exercise and thanks <a
+href="https://homes.cs.washington.edu/~suciu">Dan</a> and <a
+href="https://remy.wang">Remy</a> for teaching me how to prove it.</p>
+<p>There are two things to prove here: (1) <span
+class="math inline">\(I_{\infty}\)</span> is a model and (2) For any
+model <span class="math inline">\(K\)</span>, there is a homomorphism
+from <span class="math inline">\(I_{\infty}\)</span> to <span
+class="math inline">\(K\)</span>. Since this semantic coincides with
+that of Fagin et al. in the finite case, we will only consider cases
+where the chase sequence is infinite. We will starting by proving (2).
+To do this, we need a basic lemma from <a
+href="https://www.sciencedirect.com/science/article/pii/S030439750400725X">Fagin
+et al.</a>: If <span class="math inline">\(I\xrightarrow{d,h} J\)</span>
+is a chase step with trigger <span class="math inline">\(h\)</span> on
+dependency <span class="math inline">\(d\)</span>, let <span
+class="math inline">\(K\)</span> be an instance such that <span
+class="math inline">\(K\models d\)</span> and there exists a
+homomorphism <span class="math inline">\(h:I\rightarrow K\)</span>, then
+there exists a homomorphism <span
+class="math inline">\(h&#39;:J\rightarrow K\)</span>. It can also be
+observed that <span class="math inline">\(h|_{I\cap J}=h&#39;|_{I\cap
+J}\)</span>. This is crucial for establishing this claim.</p>
+<p>Let <span class="math inline">\(K\)</span> be a model, by repeatedly
+applying the above lemma, there are homomorphisms <span
+class="math inline">\(h_i:I_i\rightarrow K\)</span>. Define <span
+class="math inline">\(J_i=\bigcap_{j\geq i} I_j\)</span> and it is
+obvious <span class="math inline">\(J_i\subseteq J_{i+1}\)</span> and
+<span class="math inline">\(J_i\subseteq I_i\)</span>. We claim that
+there exists a sequence of <span class="math inline">\(g_i:
+J_i\rightarrow K\)</span>, defined by <span
+class="math inline">\(g_i=h_i|_{J_i}\)</span>, that satisfies <span
+class="math inline">\(g_i\subseteq g_{i+1}\)</span> (alternatively,
+<span class="math inline">\(g_i=g_{i+1}|_{J_i}\)</span>).</p>
+<p>Consider an arbitrary chase step <span
+class="math inline">\(I_i\xrightarrow{d,h}I_{i+1}\)</span>. We have
+<span class="math display">\[\begin{align*}
+g_{i+1}|_{J_i}
+&amp;=h_{i+1}|_{J_{i+1}\cup J_i}\quad \text{by dfn of $g_{i+1}$}\\
+&amp;=h_{i+1}|_{J_i}\quad \text{since $J_i\subseteq J_{i+1}$}\\
+&amp;=h_{i+1}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad \text{by dfn of
+$J_i$}\\
+&amp;=h_{i}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad\text{since
+$h_i|_{I_i\cap I_{i+1}}=h_{i+1}|_{I_i\cap I_{i+1}}$}\\
+&amp;=h_{i}|_{J_i}\quad\text{by dfn. of $J_i$}\\
+&amp;=g_i\quad\text{by dfn of $g_i$}
+\end{align*}
+\]</span></p>
+<p>Finally, take <span class="math inline">\(h_\infty=\bigcup_{i\geq 0}
+h_i\)</span> and it is obvious that <span
+class="math inline">\(h_\infty\)</span> is a homomorphism from <span
+class="math inline">\(I_\infty=\bigcup_{i\geq 0} J_i\)</span> to <span
+class="math inline">\(K\)</span>. This finishes (2).</p>
+<p>TODO: prove (1)</p>
+</body>
+</html>
