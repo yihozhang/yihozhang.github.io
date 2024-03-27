@@ -53,7 +53,7 @@ We will starting by proving (2). To do this, we need a basic lemma from [Fagin e
  If $I\xrightarrow{d,h} J$ is a chase step with trigger $h$ on dependency $d$,
  let $K$ be an instance such that $K\models d$ and there exists a homomorphism $h:I\rightarrow K$, then
  there exists a homomorphism $h':J\rightarrow K$.
-It can also be observed that $h|_{I\cap J}=h'|_{I\cap J}$. This is crucial for establishing this claim.
+Crucially, it can also be observed that $h|_{I\cap J}=h'|_{I\cap J}$ (the homomorphisms before and after agree on values that are not changed).
 
 Let $K$ be a model, by repeatedly applying the above lemma, there are homomorphisms $h_i:I_i\rightarrow K$.
 Define $J_i=\bigcap_{j\geq i} I_j$ and it is obvious $J_i\subseteq J_{i+1}$ and $J_i\subseteq I_i$.
@@ -64,15 +64,24 @@ Consider an arbitrary chase step $I_i\xrightarrow{d,h}I_{i+1}$.
 We have 
 $$\begin{align*}
 g_{i+1}|_{J_i}
-&=h_{i+1}|_{J_{i+1}\cup J_i}\quad \text{by dfn of $g_{i+1}$}\\
+&=h_{i+1}|_{J_{i+1}\cup J_i}\quad \text{by dfn. of $g_{i+1}$}\\
 &=h_{i+1}|_{J_i}\quad \text{since $J_i\subseteq J_{i+1}$}\\
-&=h_{i+1}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad \text{by dfn of $J_i$}\\
+&=h_{i+1}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad \text{by dfn. of $J_i$}\\
 &=h_{i}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad\text{since $h_i|_{I_i\cap I_{i+1}}=h_{i+1}|_{I_i\cap I_{i+1}}$}\\
 &=h_{i}|_{J_i}\quad\text{by dfn. of $J_i$}\\
-&=g_i\quad\text{by dfn of $g_i$}
+&=g_i\quad\text{by dfn. of $g_i$}
 \end{align*}
 $$
 
-Finally, take $h_\infty=\bigcup_{i\geq 0} h_i$ and it is obvious that $h_\infty$ is a homomorphism from $I_\infty=\bigcup_{i\geq 0} J_i$ to $K$. This finishes (2).
+Take $h_\infty=\bigcup_{i\geq 0} h_i$ and it is obvious that $h_\infty$ is a homomorphism from $I_\infty=\bigcup_{i\geq 0} J_i$ to $K$. This finishes (2).
 
-TODO: prove (1)
+<!-- Now we prove that $I_\infty$ is a model of $\Sigma$. Suppose for the sake of contradiction that 
+ there exists a dependency $d\in \Sigma:\lambda(\vec{x})\rightarrow \phi(\vec{x})$ (where $\vec{x}$ are
+ variables shared in both the head and the body),
+ an active trigger (substitution) $h:\vec{x}\rightarrow \text{dom}(I_\infty)$
+ such that $I_{\infty}\models \lambda(h(\vec{x}))$ and $I_{\infty}\not\models \phi(h(\vec{x}))$.
+Since $\vec{x}$ is finite, there exists some $n$ such that the image of $h$ is included in $\text{dom}(J_n)$.
+Suppose $d$ is a TGD and $\phi(\vec{x})=\exists \vec{z} \bigwedge_i R_i(\ldots)$.
+
+Since the chase sequence is fair, there must exists some $i$ such that $I_i\xrightarrow{d, h} I_{i+1}$
+ that fires $d$ with active trigger $h$ of $d$. -->

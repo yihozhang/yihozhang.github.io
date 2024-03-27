@@ -242,9 +242,10 @@ class="math inline">\(K\)</span> be an instance such that <span
 class="math inline">\(K\models d\)</span> and there exists a
 homomorphism <span class="math inline">\(h:I\rightarrow K\)</span>, then
 there exists a homomorphism <span
-class="math inline">\(h&#39;:J\rightarrow K\)</span>. It can also be
-observed that <span class="math inline">\(h|_{I\cap J}=h&#39;|_{I\cap
-J}\)</span>. This is crucial for establishing this claim.</p>
+class="math inline">\(h&#39;:J\rightarrow K\)</span>. Crucially, it can
+also be observed that <span class="math inline">\(h|_{I\cap
+J}=h&#39;|_{I\cap J}\)</span> (the homomorphisms before and after agree
+on values that are not changed).</p>
 <p>Let <span class="math inline">\(K\)</span> be a model, by repeatedly
 applying the above lemma, there are homomorphisms <span
 class="math inline">\(h_i:I_i\rightarrow K\)</span>. Define <span
@@ -260,21 +261,30 @@ class="math inline">\(g_i\subseteq g_{i+1}\)</span> (alternatively,
 class="math inline">\(I_i\xrightarrow{d,h}I_{i+1}\)</span>. We have
 <span class="math display">\[\begin{align*}
 g_{i+1}|_{J_i}
-&amp;=h_{i+1}|_{J_{i+1}\cup J_i}\quad \text{by dfn of $g_{i+1}$}\\
+&amp;=h_{i+1}|_{J_{i+1}\cup J_i}\quad \text{by dfn. of $g_{i+1}$}\\
 &amp;=h_{i+1}|_{J_i}\quad \text{since $J_i\subseteq J_{i+1}$}\\
-&amp;=h_{i+1}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad \text{by dfn of
+&amp;=h_{i+1}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad \text{by dfn. of
 $J_i$}\\
 &amp;=h_{i}|_{I_i\cap I_{i+1}\cap J_{i+2}}\quad\text{since
 $h_i|_{I_i\cap I_{i+1}}=h_{i+1}|_{I_i\cap I_{i+1}}$}\\
 &amp;=h_{i}|_{J_i}\quad\text{by dfn. of $J_i$}\\
-&amp;=g_i\quad\text{by dfn of $g_i$}
+&amp;=g_i\quad\text{by dfn. of $g_i$}
 \end{align*}
 \]</span></p>
-<p>Finally, take <span class="math inline">\(h_\infty=\bigcup_{i\geq 0}
+<p>Take <span class="math inline">\(h_\infty=\bigcup_{i\geq 0}
 h_i\)</span> and it is obvious that <span
 class="math inline">\(h_\infty\)</span> is a homomorphism from <span
 class="math inline">\(I_\infty=\bigcup_{i\geq 0} J_i\)</span> to <span
 class="math inline">\(K\)</span>. This finishes (2).</p>
-<p>TODO: prove (1)</p>
+<!-- Now we prove that $I_\infty$ is a model of $\Sigma$. Suppose for the sake of contradiction that 
+ there exists a dependency $d\in \Sigma:\lambda(\vec{x})\rightarrow \phi(\vec{x})$ (where $\vec{x}$ are
+ variables shared in both the head and the body),
+ an active trigger (substitution) $h:\vec{x}\rightarrow \text{dom}(I_\infty)$
+ such that $I_{\infty}\models \lambda(h(\vec{x}))$ and $I_{\infty}\not\models \phi(h(\vec{x}))$.
+Since $\vec{x}$ is finite, there exists some $n$ such that the image of $h$ is included in $\text{dom}(J_n)$.
+Suppose $d$ is a TGD and $\phi(\vec{x})=\exists \vec{z} \bigwedge_i R_i(\ldots)$.
+
+Since the chase sequence is fair, there must exists some $i$ such that $I_i\xrightarrow{d, h} I_{i+1}$
+ that fires $d$ with active trigger $h$ of $d$. -->
 </body>
 </html>
