@@ -154,7 +154,7 @@ We have $[w]_R= \mathcal{L}(\textit{EqSat}(R\cup R^{-1}, w))$
 
 A Turing machine $\mathcal{M}=(Q,\Sigma, \Pi,\Delta,q_0,\beta)$ consists of a set of states $Q$, 
  the input and the tape alphabet $\Sigma$ and $\Pi$ (with $\Sigma\subseteq \Pi$), a set of transitions $\Delta$, an initial state $q_0\in Q$,
- and a special blanket symbol $\beta\in\Pi$. Each transition in $\Delta$ is a quintuple in 
+ and a special blank symbol $\beta\in\Pi$. Each transition in $\Delta$ is a quintuple in 
  $Q\times \Pi\times \Pi\times \{L,R\} \times Q$.
 For example, transition $q_iabRq_j$ means if the current state is $q_i$ and the symbol
  being scanned is $a$, then replace $a$ with $b$, move the head to the right, 
@@ -257,9 +257,9 @@ Now, we observe that $R$ has several properties:
    Therefore, $R^{-1}$ is convergent.
 2. For each type-A string $w$, then either
    * there exists no $w'$ with $w\rightarrow_R w'$ and $\pi(w)$ is a halting configuration;
-   * there exists a unique $w'$ such that $w\rightarrow_R w'$ and $\pi(w)\vdash \pi(w')$.
-3. For each type-B string $w$, there exists a unique $w'$ such that $w\rightarrow_R w'$,
-   and $\pi(w)=\pi(w')$.
+   * there exists a unique $w'$ such that $w\rightarrow_R w'$. Moreover, $\pi(w)\vdash \pi(w')$.
+3. For each type-B string $w$, there exists a unique $w'$ such that $w\rightarrow_R w'$.
+   It holds that $\pi(w)=\pi(w')$.
    Moreover, 
    if $w_0\rightarrow_R w_1\rightarrow_R\ldots$ is a sequence of type-B strings,
    the sequence must be bounded in length,

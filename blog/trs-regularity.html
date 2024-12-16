@@ -149,10 +149,15 @@
     }
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    span.underline{text-decoration: underline;}
-    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
   </style>
   <script
   src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
@@ -444,11 +449,11 @@ class="math inline">\(\Sigma\)</span> and <span
 class="math inline">\(\Pi\)</span> (with <span
 class="math inline">\(\Sigma\subseteq \Pi\)</span>), a set of
 transitions <span class="math inline">\(\Delta\)</span>, an initial
-state <span class="math inline">\(q_0\in Q\)</span>, and a special
-blanket symbol <span class="math inline">\(\beta\in\Pi\)</span>. Each
-transition in <span class="math inline">\(\Delta\)</span> is a quintuple
-in <span class="math inline">\(Q\times \Pi\times \Pi\times \{L,R\}
-\times Q\)</span>. For example, transition <span
+state <span class="math inline">\(q_0\in Q\)</span>, and a special blank
+symbol <span class="math inline">\(\beta\in\Pi\)</span>. Each transition
+in <span class="math inline">\(\Delta\)</span> is a quintuple in <span
+class="math inline">\(Q\times \Pi\times \Pi\times \{L,R\} \times
+Q\)</span>. For example, transition <span
 class="math inline">\(q_iabRq_j\)</span> means if the current state is
 <span class="math inline">\(q_i\)</span> and the symbol being scanned is
 <span class="math inline">\(a\)</span>, then replace <span
@@ -654,17 +659,19 @@ either
 <span class="math inline">\(w\rightarrow_R w&#39;\)</span> and <span
 class="math inline">\(\pi(w)\)</span> is a halting configuration;</li>
 <li>there exists a unique <span class="math inline">\(w&#39;\)</span>
-such that <span class="math inline">\(w\rightarrow_R w&#39;\)</span> and
-<span class="math inline">\(\pi(w)\vdash \pi(w&#39;)\)</span>.</li>
+such that <span class="math inline">\(w\rightarrow_R w&#39;\)</span>.
+Moreover, <span class="math inline">\(\pi(w)\vdash
+\pi(w&#39;)\)</span>.</li>
 </ul></li>
 <li>For each type-B string <span class="math inline">\(w\)</span>, there
 exists a unique <span class="math inline">\(w&#39;\)</span> such that
-<span class="math inline">\(w\rightarrow_R w&#39;\)</span>, and <span
-class="math inline">\(\pi(w)=\pi(w&#39;)\)</span>. Moreover, if <span
-class="math inline">\(w_0\rightarrow_R w_1\rightarrow_R\ldots\)</span>
-is a sequence of type-B strings, the sequence must be bounded in length,
-since the state symbols <span class="math inline">\(q_i\)</span> and
-<span class="math inline">\(\overline q_i\)</span> move towards one end
+<span class="math inline">\(w\rightarrow_R w&#39;\)</span>. It holds
+that <span class="math inline">\(\pi(w)=\pi(w&#39;)\)</span>. Moreover,
+if <span class="math inline">\(w_0\rightarrow_R
+w_1\rightarrow_R\ldots\)</span> is a sequence of type-B strings, the
+sequence must be bounded in length, since the state symbols <span
+class="math inline">\(q_i\)</span> and <span
+class="math inline">\(\overline q_i\)</span> move towards one end
 according to the auxillary rules above.</li>
 <li>By 2 and 3, <span class="math inline">\(w\rightarrow_R w_1\)</span>
 and <span class="math inline">\(w\rightarrow_R w_2\)</span> implies
@@ -1099,11 +1106,11 @@ class="math inline">\(w\)</span>.</p>
 <p>Problem: Is <span class="math inline">\([w]_R\)</span> regular?</p>
 </blockquote>
 <h1 id="references">References</h1>
-<section class="footnotes footnotes-end-of-document"
+<section id="footnotes" class="footnotes footnotes-end-of-document"
 role="doc-endnotes">
 <hr />
 <ol>
-<li id="fn1" role="doc-endnote"><p> Note that this definition of <span
+<li id="fn1"><p> Note that this definition of <span
 class="math inline">\(\approx_G\)</span> is different from the
 congruence relation defined in the Myhill-Nerode theorem for trees <span
 class="citation" data-cites="kozen1992myhill">[@kozen1992myhill]</span>.
@@ -1114,13 +1121,13 @@ Myhill-Nerode theorem, <span class="math inline">\(fa\)</span> and <span
 class="math inline">\(fb\)</span> would be equivalent while in our
 definition they are not because they are accepted by different states.<a
 href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2" role="doc-endnote"><p>In particular, we cannot use our
-strategy for left-linear term rewriting systems by first representing
-the set of rewritable terms and taking its complement, since TAGC is not
-closed under complementation. Luckily, for each rewrite rule, we can
-explicitly represent terms that does not match the left-hand side with
-inequality constraints, and then take the intersection of them.<a
-href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>In particular, we cannot use our strategy for
+left-linear term rewriting systems by first representing the set of
+rewritable terms and taking its complement, since TAGC is not closed
+under complementation. Luckily, for each rewrite rule, we can explicitly
+represent terms that does not match the left-hand side with inequality
+constraints, and then take the intersection of them.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section>
 </body>
