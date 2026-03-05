@@ -1,16 +1,19 @@
 ---
-title: Vectorizing Linear Time-Varying Recurrences via Local Window Decomposition
+title: Vectorizing Linear Time-Varying Recurrences
 author: Yihong Zhang
 date: Mar 4, 2026
 ---
 
-Many image processing operations reduce to evaluating a **linear time-varying (LTV) recurrence**. For example, below is a second-order LTV recurrence:
+Many image processing operations reduce to evaluating a **linear time-varying (LTV) recurrence**. A linear recurrence relation is a recurrence relation where each term is a linear function of the previous terms. A linear time-varying recurrence is a linear recurrence relation where the coefficients vary with the index (time). For example, below is a second-order LTV recurrence:
 
 $$f(x) = a(x)\,f(x-1) + b(x)\,f(x-2) + g(x)$$
 
-where $a$, $b$, and $g$ are coefficient arrays (provided or computed on-the-fly) that vary with position. A linear time-varying recurrences is the most general form of linear recurrences, and many IIR filters are instances of it. To compute it naively is straightforward, to maximize single-core performance requires us to process multiple pixels simultaneously, with SIMD instruction sets like AVX-512. On the other hand, this recurrence has a sequential dependency chain on its previous values. You cannot start computing $f(x)$ until you have $f(x-1)$ and $f(x-2)$.
+where $a$, $b$, and $g$ are coefficient arrays (provided or computed on-the-fly) that vary with position (time). A linear time-varying recurrences is the most general form of linear recurrences, and many IIR filters are instances of it. 
+To compute it naively is straightforward, we can just write a simple for loop ranging over $x$, computing one pixel at a time.
+But to maximize single-core throughput on modern CPUs, we need to process multiple pixels simultaneously, with SIMD instruction sets like AVX or AVX-512. 
+On the other hand, recurrences like this have a sequential dependency chain on the previous values. You cannot start computing $f(x)$ until you have $f(x-1)$ and $f(x-2)$. This forces a serial, one-pixel-at-a-time implementation.
 
-This post describes a new algorithm that breaks the dependency chain and vectorizes LTV recurrences with better practical constants than existing approaches, making the vectorization actually worthwhile.
+There has been previously known algorithms to parallelize the computation of LTV recurrences, but it's not very practical. This post describes a new algorithm that breaks the dependency chain and vectorizes LTV recurrences with better practical constants than existing approaches.
 
 # The Classical Approach: Matrix Prefix Scans
 
@@ -18,19 +21,23 @@ The standard technique for parallelizing recurrences goes back at least to Karp,
 
 $$\begin{pmatrix} f(x) \\ f(x-1) \\ 1 \end{pmatrix} = \underbrace{\begin{pmatrix} a(x) & b(x) & g(x) \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{pmatrix}}_{M(x)} \begin{pmatrix} f(x-1) \\ f(x-2) \\ 1 \end{pmatrix}$$
 
-So computing all values $f(0), f(1), \ldots, f(n-1)$ is equivalent to computing the prefix products $M(x) \cdot M(x-1) \cdots M(0)$ for each $x$. Prefix products can be computed in $O(\log n)$ depth and $O(n \log n)$ work via a divide-and-conquer up-sweep and down-sweep, which is parallelizable across $k$ SIMD lanes.
+So to say compute 16 output pixels $f(x-15), f(x-14), \ldots, f(x)$ in parallel,
+ we can compute the prefix product scan of $M(x-15), M(x-14), \ldots, M(x)$ with initial value $\begin{pmatrix} f(x-16) \\ f(x-17) \\ 1 \end{pmatrix}$.
+Because matrix multiplication is associative, its prefix scans can be easily parallelized:
+We can first compute $M_1(x) = M(x)\times M(x-1)$, then $M_2(x) = M_1(x) \times M(x-2)$, and so on, doubling the window size at each step until we have the full prefix product. Finally,
+$$f(x) = {M_{16}}(x)_{1,1}*f(x-16) + {M_{16}}(x)_{1,2}*f(x-17) + {M_{16}}(x)_{1,3}$$
 
-The key structural observation is that the last row of every $M(x)$ is always $(0, 0, 1)$, and this is preserved under matrix multiplication. So rather than tracking all 9 entries of a $3\times 3$ matrix through the prefix scan, we only need to track the first two rows — 6 values per position. Each combine step costs 2 multiplications per tracked value, for a total of 12 multiplications per step, and there are $1 + \log_2 k$ steps to vectorize $k$ lanes.
+One observation is that the last row of every $M(x)$ is always $(0, 0, 1)$, and this is preserved under matrix multiplication. So rather than tracking all 9 entries of a $3\times 3$ matrix through the prefix scan, we only need to track the first two rows, which is 6 values per position. Each combine step costs 2 multiplications per tracked value, for a total of 12 multiplications per step, and there are $1 + \log_2 k$ steps to vectorize $k$ lanes.
 
-The work multiplier compared to scalar evaluation is roughly $\mathbf{6 \cdot (1 + \log k)}$ per output element. For $k = 16$ (AVX-512), this works out to about $6 \cdot 5 = 30$ times the scalar work — a significant overhead just to exploit the parallelism. Whether this is worth it depends on the problem, but a $30\times$ overhead for $16\times$ throughput is a pretty poor trade, especially when memory bandwidth and instruction decode are already bottlenecks in image processing pipelines.
+The work multiplier compared to scalar evaluation is about^[This is approximate because for $M_16$ we only need to compute the first row and the second row of $M_1$ is just $[a(x), b(x), g(x)]$.] $\mathbf{6 \cdot (1 + \log k)}$ per output element. For $k = 16$ (AVX-512), this works out to about $6 \cdot 5 = 30$ times the scalar work. This overhead makes it likely impractical for exposing parallel work.
 
 # A Better Decomposition
 
 The bottleneck in the matrix scan is that each combine step needs to track 6 values (the two nontrivial rows of the matrix). What if we could reduce that to 4?
 
-The key insight is that the matrix $M(x)$ has more structure than just its bottom row. We can exploit the *sparsity of the recurrence* — the fact that only two previous values appear ($f(x-1)$ and $f(x-2)$) — to decompose the computation differently.
+The key insight is that the matrix $M_k(x)$ has more structure than just its bottom row. It actually computes some redundant information in the matrix that we can get rid of.
 
-Instead of maintaining full matrix prefix products, we maintain two families of precomputed arrays across a **logarithmic tower of layers**, where each layer covers a window of twice the size of the previous one. At each layer, exactly **4 arrays** suffice: two **propagation weights** $d_k$ and $d_{k-1}$, and two **windowed partial sums** $f_k$ and $f_{k-1}$. Let me explain each family.
+We maintain two families of precomputed arrays across a logarithmic tower of layers, where each layer covers a window of twice the size of the previous one (similar to the $M_k$ matrix). And we claim that, at each layer, exactly **4 arrays** suffice: two **propagation weights** $d_k$ and $d_{k-1}$, and two **windowed partial sums** $f_k$ and $f_{k-1}$. Let me explain each family.
 
 ## The Propagation Weights $d_k$
 
@@ -104,11 +111,11 @@ $$f(x) = f_{16}(x) + d_{16}(x) \cdot f(x-16) + d_{15}(x) \cdot b(x-15) \cdot f(x
 
 The three terms are exactly analogous to the base recurrence itself: $f_{16}(x)$ is the self-contained contribution of the current window, $d_{16}(x) \cdot f(x-16)$ propagates the accumulated history through paths that visit $x-16$, and $d_{15}(x) \cdot b(x-15) \cdot f(x-17)$ propagates history through paths that 2-step over $x-16$ (landing at $x-15$ from $x-17$ with weight $b(x-15)$, then traveling the remaining 15 positions with weight $d_{15}(x)$).
 
-For readers familiar with the matrix prefix scan formulation: the coefficient $d_{15}(x) \cdot b(x-15)$ is exactly the $(0,1)$ entry of the combined matrix — the one capturing the indirect influence of $f(x-17)$ via a 2-step over the boundary (otherwise the matrix multiplication form will double count). The local window decomposition recovers this matrix structure implicitly, without ever forming full matrix products.
+Comparing the construction here with the matrix prefix scan formulation, the coefficient $d_{15}(x) \cdot b(x-15)$ is exactly the $(1,2)$ entry of the combined matrix — the one capturing the indirect influence of $f(x-17)$ via a 2-step over the boundary (otherwise the matrix multiplication form will double count). The local window decomposition recovers this matrix structure implicitly, without ever forming full matrix products.
 
 ## Work Analysis
 
-At each layer of the tower, we compute exactly 4 arrays ($d_{2k}$, $d_{2k-1}$, $f_{2k}$, $f_{2k-1}$), each requiring a constant number of operations per element. The tower has $1 + \log_2 k$ layers. So the work multiplier compared to scalar evaluation is roughly $\mathbf{4 \cdot (1 + \log k)}$ per output element.
+At each layer of the tower, we compute exactly 4 arrays ($d_{2k}$, $d_{2k-1}$, $f_{2k}$, $f_{2k-1}$), each requiring a constant number of operations per element. The tower has $1 + \log_2 k$ layers. So the work multiplier compared to scalar evaluation is roughly $\mathbf{4 \cdot (1 + \log k)}$^[Again this is an approximation because for example $d_1(x) = a(x)$ and we don't need to compute $f_{15}(x)$.] per output element.
 
 For $k = 16$, this gives $4 \cdot 5 = 20$, which is better than the matrix scan's $6 \cdot 5 = 30$. The asymptotic depth remains $O(\log n)$ and the total work remains $O(n \log n)$.
 This suggests this algorithm is still probably not more efficient than the serial implementation for 32 bits datatypes, but likely worth it for datatypes like `int8` or `int16`. 
@@ -121,13 +128,19 @@ $$f(x) = a(x)\,f(x-1) + b(x)\,f(x-2) + c(x)\,f(x-3) + g(x),$$
 
 the path model extends by adding 3-steps (with weight $c$). The even-split formula for $d_{2k}$ gains two new terms capturing paths that 3-step over the midpoint:
 
-$$d_{16}(x) = d_8(x)\,d_8(x-8) + d_7(x)\,b(x-7)\,d_7(x-9) + d_7(x)\,c(x-7)\,d_6(x-10) + d_6(x)\,c(x-6)\,d_7(x-9)$$
+\begin{align*}
+d_{16}(x) = &d_8(x)\,d_8(x-8) + d_7(x)\,b(x-7)\,d_7(x-9) \\
+&+ d_7(x)\,c(x-7)\,d_6(x-10) + d_6(x)\,c(x-6)\,d_7(x-9)
+\end{align*}
 
 The first two terms handle the 1-step crossing through $x-8$ and the 2-step crossing over it; the third and fourth terms are new, handling 3-step crossings: one departs from $x-10$ and lands at $x-7$ (weight $c(x-7)$), and the other departs from $x-9$ and lands at $x-6$ (weight $c(x-6)$).
 
 The odd-split formula looks as follows:
 
-$$d_{15}(x) = d_8(x)\,d_7(x-8) + d_7(x)\,d_8(x-7) - d_7(x)\,a(x-7)\,d_7(x-8) + d_6(x)\,c(x-6)\,d_6(x-7)$$
+\begin{align*}
+    d_{15}(x) = &d_8(x)\,d_7(x-8) + d_7(x)\,d_8(x-7) - d_7(x)\,a(x-7)\,d_7(x-8)\\
+    & + d_6(x)\,c(x-6)\,d_6(x-7)
+\end{align*}
 
 The four terms correspond to four cases: paths that pass through $x-7$ but not $x-8$, paths that pass through $x-8$ but not $x-7$, paths that pass through both (the overlap), and paths that pass through neither and instead do 3-step at $x-6$ (the new case).
 

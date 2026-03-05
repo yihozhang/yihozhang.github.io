@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Yihong Zhang" />
-  <title>Vectorizing Linear Time-Varying Recurrences via Local Window Decomposition</title>
+  <title>Vectorizing Linear Time-Varying Recurrences</title>
   <style>
     html {
       color: #1a1a1a;
@@ -173,32 +173,39 @@
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">Vectorizing Linear Time-Varying Recurrences via Local
-Window Decomposition</h1>
+<h1 class="title">Vectorizing Linear Time-Varying Recurrences</h1>
 <p class="author">Yihong Zhang</p>
 <p class="date">Mar 4, 2026</p>
 </header>
 <p>Many image processing operations reduce to evaluating a
-<strong>linear time-varying (LTV) recurrence</strong>. For example,
-below is a second-order LTV recurrence:</p>
+<strong>linear time-varying (LTV) recurrence</strong>. A linear
+recurrence relation is a recurrence relation where each term is a linear
+function of the previous terms. A linear time-varying recurrence is a
+linear recurrence relation where the coefficients vary with the index
+(time). For example, below is a second-order LTV recurrence:</p>
 <p><span class="math display">\[f(x) = a(x)\,f(x-1) + b(x)\,f(x-2) +
 g(x)\]</span></p>
 <p>where <span class="math inline">\(a\)</span>, <span
 class="math inline">\(b\)</span>, and <span
 class="math inline">\(g\)</span> are coefficient arrays (provided or
-computed on-the-fly) that vary with position. A linear time-varying
-recurrences is the most general form of linear recurrences, and many IIR
-filters are instances of it. To compute it naively is straightforward,
-to maximize single-core performance requires us to process multiple
-pixels simultaneously, with SIMD instruction sets like AVX-512. On the
-other hand, this recurrence has a sequential dependency chain on its
-previous values. You cannot start computing <span
-class="math inline">\(f(x)\)</span> until you have <span
+computed on-the-fly) that vary with position (time). A linear
+time-varying recurrences is the most general form of linear recurrences,
+and many IIR filters are instances of it. To compute it naively is
+straightforward, we can just write a simple for loop ranging over <span
+class="math inline">\(x\)</span>, computing one pixel at a time. But to
+maximize single-core throughput on modern CPUs, we need to process
+multiple pixels simultaneously, with SIMD instruction sets like AVX or
+AVX-512. On the other hand, recurrences like this have a sequential
+dependency chain on the previous values. You cannot start computing
+<span class="math inline">\(f(x)\)</span> until you have <span
 class="math inline">\(f(x-1)\)</span> and <span
-class="math inline">\(f(x-2)\)</span>.</p>
-<p>This post describes a new algorithm that breaks the dependency chain
-and vectorizes LTV recurrences with better practical constants than
-existing approaches, making the vectorization actually worthwhile.</p>
+class="math inline">\(f(x-2)\)</span>. This forces a serial,
+one-pixel-at-a-time implementation.</p>
+<p>There has been previously known algorithms to parallelize the
+computation of LTV recurrences, but it’s not very practical. This post
+describes a new algorithm that breaks the dependency chain and
+vectorizes LTV recurrences with better practical constants than existing
+approaches.</p>
 <h1 id="the-classical-approach-matrix-prefix-scans">The Classical
 Approach: Matrix Prefix Scans</h1>
 <p>The standard technique for parallelizing recurrences goes back at
@@ -210,50 +217,51 @@ as:</p>
 \end{pmatrix} = \underbrace{\begin{pmatrix} a(x) &amp; b(x) &amp; g(x)
 \\ 1 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{pmatrix}}_{M(x)}
 \begin{pmatrix} f(x-1) \\ f(x-2) \\ 1 \end{pmatrix}\]</span></p>
-<p>So computing all values <span class="math inline">\(f(0), f(1),
-\ldots, f(n-1)\)</span> is equivalent to computing the prefix products
-<span class="math inline">\(M(x) \cdot M(x-1) \cdots M(0)\)</span> for
-each <span class="math inline">\(x\)</span>. Prefix products can be
-computed in <span class="math inline">\(O(\log n)\)</span> depth and
-<span class="math inline">\(O(n \log n)\)</span> work via a
-divide-and-conquer up-sweep and down-sweep, which is parallelizable
-across <span class="math inline">\(k\)</span> SIMD lanes.</p>
-<p>The key structural observation is that the last row of every <span
+<p>So to say compute 16 output pixels <span
+class="math inline">\(f(x-15), f(x-14), \ldots, f(x)\)</span> in
+parallel, we can compute the prefix product scan of <span
+class="math inline">\(M(x-15), M(x-14), \ldots, M(x)\)</span> with
+initial value <span class="math inline">\(\begin{pmatrix} f(x-16) \\
+f(x-17) \\ 1 \end{pmatrix}\)</span>. Because matrix multiplication is
+associative, its prefix scans can be easily parallelized: We can first
+compute <span class="math inline">\(M_1(x) = M(x)\times M(x-1)\)</span>,
+then <span class="math inline">\(M_2(x) = M_1(x) \times M(x-2)\)</span>,
+and so on, doubling the window size at each step until we have the full
+prefix product. Finally, <span class="math display">\[f(x) =
+{M_{16}}(x)_{1,1}*f(x-16) + {M_{16}}(x)_{1,2}*f(x-17) +
+{M_{16}}(x)_{1,3}\]</span></p>
+<p>One observation is that the last row of every <span
 class="math inline">\(M(x)\)</span> is always <span
 class="math inline">\((0, 0, 1)\)</span>, and this is preserved under
 matrix multiplication. So rather than tracking all 9 entries of a <span
 class="math inline">\(3\times 3\)</span> matrix through the prefix scan,
-we only need to track the first two rows — 6 values per position. Each
-combine step costs 2 multiplications per tracked value, for a total of
-12 multiplications per step, and there are <span class="math inline">\(1
-+ \log_2 k\)</span> steps to vectorize <span
+we only need to track the first two rows, which is 6 values per
+position. Each combine step costs 2 multiplications per tracked value,
+for a total of 12 multiplications per step, and there are <span
+class="math inline">\(1 + \log_2 k\)</span> steps to vectorize <span
 class="math inline">\(k\)</span> lanes.</p>
-<p>The work multiplier compared to scalar evaluation is roughly <span
+<p>The work multiplier compared to scalar evaluation is about<a
+href="#fn1" class="footnote-ref" id="fnref1"
+role="doc-noteref"><sup>1</sup></a> <span
 class="math inline">\(\mathbf{6 \cdot (1 + \log k)}\)</span> per output
 element. For <span class="math inline">\(k = 16\)</span> (AVX-512), this
 works out to about <span class="math inline">\(6 \cdot 5 = 30\)</span>
-times the scalar work — a significant overhead just to exploit the
-parallelism. Whether this is worth it depends on the problem, but a
-<span class="math inline">\(30\times\)</span> overhead for <span
-class="math inline">\(16\times\)</span> throughput is a pretty poor
-trade, especially when memory bandwidth and instruction decode are
-already bottlenecks in image processing pipelines.</p>
+times the scalar work. This overhead makes it likely impractical for
+exposing parallel work.</p>
 <h1 id="a-better-decomposition">A Better Decomposition</h1>
 <p>The bottleneck in the matrix scan is that each combine step needs to
 track 6 values (the two nontrivial rows of the matrix). What if we could
 reduce that to 4?</p>
 <p>The key insight is that the matrix <span
-class="math inline">\(M(x)\)</span> has more structure than just its
-bottom row. We can exploit the <em>sparsity of the recurrence</em> — the
-fact that only two previous values appear (<span
-class="math inline">\(f(x-1)\)</span> and <span
-class="math inline">\(f(x-2)\)</span>) — to decompose the computation
-differently.</p>
-<p>Instead of maintaining full matrix prefix products, we maintain two
-families of precomputed arrays across a <strong>logarithmic tower of
-layers</strong>, where each layer covers a window of twice the size of
-the previous one. At each layer, exactly <strong>4 arrays</strong>
-suffice: two <strong>propagation weights</strong> <span
+class="math inline">\(M_k(x)\)</span> has more structure than just its
+bottom row. It actually computes some redundant information in the
+matrix that we can get rid of.</p>
+<p>We maintain two families of precomputed arrays across a logarithmic
+tower of layers, where each layer covers a window of twice the size of
+the previous one (similar to the <span
+class="math inline">\(M_k\)</span> matrix). And we claim that, at each
+layer, exactly <strong>4 arrays</strong> suffice: two
+<strong>propagation weights</strong> <span
 class="math inline">\(d_k\)</span> and <span
 class="math inline">\(d_{k-1}\)</span>, and two <strong>windowed partial
 sums</strong> <span class="math inline">\(f_k\)</span> and <span
@@ -455,10 +463,11 @@ class="math inline">\(x-17\)</span> with weight <span
 class="math inline">\(b(x-15)\)</span>, then traveling the remaining 15
 positions with weight <span
 class="math inline">\(d_{15}(x)\)</span>).</p>
-<p>For readers familiar with the matrix prefix scan formulation: the
-coefficient <span class="math inline">\(d_{15}(x) \cdot b(x-15)\)</span>
-is exactly the <span class="math inline">\((0,1)\)</span> entry of the
-combined matrix — the one capturing the indirect influence of <span
+<p>Comparing the construction here with the matrix prefix scan
+formulation, the coefficient <span class="math inline">\(d_{15}(x) \cdot
+b(x-15)\)</span> is exactly the <span
+class="math inline">\((1,2)\)</span> entry of the combined matrix — the
+one capturing the indirect influence of <span
 class="math inline">\(f(x-17)\)</span> via a 2-step over the boundary
 (otherwise the matrix multiplication form will double count). The local
 window decomposition recovers this matrix structure implicitly, without
@@ -472,8 +481,9 @@ class="math inline">\(f_{2k-1}\)</span>), each requiring a constant
 number of operations per element. The tower has <span
 class="math inline">\(1 + \log_2 k\)</span> layers. So the work
 multiplier compared to scalar evaluation is roughly <span
-class="math inline">\(\mathbf{4 \cdot (1 + \log k)}\)</span> per output
-element.</p>
+class="math inline">\(\mathbf{4 \cdot (1 + \log k)}\)</span><a
+href="#fn2" class="footnote-ref" id="fnref2"
+role="doc-noteref"><sup>2</sup></a> per output element.</p>
 <p>For <span class="math inline">\(k = 16\)</span>, this gives <span
 class="math inline">\(4 \cdot 5 = 20\)</span>, which is better than the
 matrix scan’s <span class="math inline">\(6 \cdot 5 = 30\)</span>. The
@@ -493,9 +503,10 @@ c(x)\,f(x-3) + g(x),\]</span></p>
 class="math inline">\(c\)</span>). The even-split formula for <span
 class="math inline">\(d_{2k}\)</span> gains two new terms capturing
 paths that 3-step over the midpoint:</p>
-<p><span class="math display">\[d_{16}(x) = d_8(x)\,d_8(x-8) +
-d_7(x)\,b(x-7)\,d_7(x-9) + d_7(x)\,c(x-7)\,d_6(x-10) +
-d_6(x)\,c(x-6)\,d_7(x-9)\]</span></p>
+<p><span class="math display">\[\begin{align*}
+d_{16}(x) = &amp;d_8(x)\,d_8(x-8) + d_7(x)\,b(x-7)\,d_7(x-9) \\
+&amp;+ d_7(x)\,c(x-7)\,d_6(x-10) + d_6(x)\,c(x-6)\,d_7(x-9)
+\end{align*}\]</span></p>
 <p>The first two terms handle the 1-step crossing through <span
 class="math inline">\(x-8\)</span> and the 2-step crossing over it; the
 third and fourth terms are new, handling 3-step crossings: one departs
@@ -506,9 +517,11 @@ class="math inline">\(x-9\)</span> and lands at <span
 class="math inline">\(x-6\)</span> (weight <span
 class="math inline">\(c(x-6)\)</span>).</p>
 <p>The odd-split formula looks as follows:</p>
-<p><span class="math display">\[d_{15}(x) = d_8(x)\,d_7(x-8) +
-d_7(x)\,d_8(x-7) - d_7(x)\,a(x-7)\,d_7(x-8) +
-d_6(x)\,c(x-6)\,d_6(x-7)\]</span></p>
+<p><span class="math display">\[\begin{align*}
+    d_{15}(x) = &amp;d_8(x)\,d_7(x-8) + d_7(x)\,d_8(x-7) -
+d_7(x)\,a(x-7)\,d_7(x-8)\\
+    &amp; + d_6(x)\,c(x-6)\,d_6(x-7)
+\end{align*}\]</span></p>
 <p>The four terms correspond to four cases: paths that pass through
 <span class="math inline">\(x-7\)</span> but not <span
 class="math inline">\(x-8\)</span>, paths that pass through <span
@@ -558,5 +571,20 @@ order-<span class="math inline">\(p\)</span> recurrences and, on the
 experimental side, I have not measured the actual performance of this
 improvement and the original matrix scan and understood the trade-offs
 in practice.</p>
+<section id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>This is approximate because for <span
+class="math inline">\(M_16\)</span> we only need to compute the first
+row and the second row of <span class="math inline">\(M_1\)</span> is
+just <span class="math inline">\([a(x), b(x), g(x)]\)</span>.<a
+href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>Again this is an approximation because for example <span
+class="math inline">\(d_1(x) = a(x)\)</span> and we don’t need to
+compute <span class="math inline">\(f_{15}(x)\)</span>.<a href="#fnref2"
+class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section>
 </body>
 </html>
