@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Yihong Zhang" />
+  <title>Vectorizing Linear Time-Varying Recurrences via Local Window Decomposition</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Vectorizing Linear Time-Varying Recurrences via Local
+Window Decomposition</h1>
+<p class="author">Yihong Zhang</p>
+<p class="date">Mar 4, 2026</p>
+</header>
+<p>Many image processing operations reduce to evaluating a
+<strong>linear time-varying (LTV) recurrence</strong>. For example,
+below is a second-order LTV recurrence:</p>
+<p><span class="math display">\[f(x) = a(x)\,f(x-1) + b(x)\,f(x-2) +
+g(x)\]</span></p>
+<p>where <span class="math inline">\(a\)</span>, <span
+class="math inline">\(b\)</span>, and <span
+class="math inline">\(g\)</span> are coefficient arrays (provided or
+computed on-the-fly) that vary with position. A linear time-varying
+recurrences is the most general form of linear recurrences, and many IIR
+filters are instances of it. To compute it naively is straightforward,
+to maximize single-core performance requires us to process multiple
+pixels simultaneously, with SIMD instruction sets like AVX-512. On the
+other hand, this recurrence has a sequential dependency chain on its
+previous values. You cannot start computing <span
+class="math inline">\(f(x)\)</span> until you have <span
+class="math inline">\(f(x-1)\)</span> and <span
+class="math inline">\(f(x-2)\)</span>.</p>
+<p>This post describes a new algorithm that breaks the dependency chain
+and vectorizes LTV recurrences with better practical constants than
+existing approaches, making the vectorization actually worthwhile.</p>
+<h1 id="the-classical-approach-matrix-prefix-scans">The Classical
+Approach: Matrix Prefix Scans</h1>
+<p>The standard technique for parallelizing recurrences goes back at
+least to Karp, Miller, and Winograd (1967), later popularized by
+Blelloch as a general parallel primitive. The idea is to lift the scalar
+recurrence into matrix form. Observe that the update can be written
+as:</p>
+<p><span class="math display">\[\begin{pmatrix} f(x) \\ f(x-1) \\ 1
+\end{pmatrix} = \underbrace{\begin{pmatrix} a(x) &amp; b(x) &amp; g(x)
+\\ 1 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{pmatrix}}_{M(x)}
+\begin{pmatrix} f(x-1) \\ f(x-2) \\ 1 \end{pmatrix}\]</span></p>
+<p>So computing all values <span class="math inline">\(f(0), f(1),
+\ldots, f(n-1)\)</span> is equivalent to computing the prefix products
+<span class="math inline">\(M(x) \cdot M(x-1) \cdots M(0)\)</span> for
+each <span class="math inline">\(x\)</span>. Prefix products can be
+computed in <span class="math inline">\(O(\log n)\)</span> depth and
+<span class="math inline">\(O(n \log n)\)</span> work via a
+divide-and-conquer up-sweep and down-sweep, which is parallelizable
+across <span class="math inline">\(k\)</span> SIMD lanes.</p>
+<p>The key structural observation is that the last row of every <span
+class="math inline">\(M(x)\)</span> is always <span
+class="math inline">\((0, 0, 1)\)</span>, and this is preserved under
+matrix multiplication. So rather than tracking all 9 entries of a <span
+class="math inline">\(3\times 3\)</span> matrix through the prefix scan,
+we only need to track the first two rows — 6 values per position. Each
+combine step costs 2 multiplications per tracked value, for a total of
+12 multiplications per step, and there are <span class="math inline">\(1
++ \log_2 k\)</span> steps to vectorize <span
+class="math inline">\(k\)</span> lanes.</p>
+<p>The work multiplier compared to scalar evaluation is roughly <span
+class="math inline">\(\mathbf{6 \cdot (1 + \log k)}\)</span> per output
+element. For <span class="math inline">\(k = 16\)</span> (AVX-512), this
+works out to about <span class="math inline">\(6 \cdot 5 = 30\)</span>
+times the scalar work — a significant overhead just to exploit the
+parallelism. Whether this is worth it depends on the problem, but a
+<span class="math inline">\(30\times\)</span> overhead for <span
+class="math inline">\(16\times\)</span> throughput is a pretty poor
+trade, especially when memory bandwidth and instruction decode are
+already bottlenecks in image processing pipelines.</p>
+<h1 id="a-better-decomposition">A Better Decomposition</h1>
+<p>The bottleneck in the matrix scan is that each combine step needs to
+track 6 values (the two nontrivial rows of the matrix). What if we could
+reduce that to 4?</p>
+<p>The key insight is that the matrix <span
+class="math inline">\(M(x)\)</span> has more structure than just its
+bottom row. We can exploit the <em>sparsity of the recurrence</em> — the
+fact that only two previous values appear (<span
+class="math inline">\(f(x-1)\)</span> and <span
+class="math inline">\(f(x-2)\)</span>) — to decompose the computation
+differently.</p>
+<p>Instead of maintaining full matrix prefix products, we maintain two
+families of precomputed arrays across a <strong>logarithmic tower of
+layers</strong>, where each layer covers a window of twice the size of
+the previous one. At each layer, exactly <strong>4 arrays</strong>
+suffice: two <strong>propagation weights</strong> <span
+class="math inline">\(d_k\)</span> and <span
+class="math inline">\(d_{k-1}\)</span>, and two <strong>windowed partial
+sums</strong> <span class="math inline">\(f_k\)</span> and <span
+class="math inline">\(f_{k-1}\)</span>. Let me explain each family.</p>
+<h2 id="the-propagation-weights-d_k">The Propagation Weights <span
+class="math inline">\(d_k\)</span></h2>
+<p>Define <span class="math inline">\(d_k(x)\)</span> as the total
+weighted contribution of <span class="math inline">\(f(x-k)\)</span> to
+<span class="math inline">\(f(x)\)</span>, summing over all valid
+<strong>paths</strong> from position <span
+class="math inline">\(x-k\)</span> to position <span
+class="math inline">\(x\)</span>. A path is a sequence of steps that can
+either advance by 1 (incurring the local weight <span
+class="math inline">\(a\)</span>) or advance by 2 (incurring the local
+weight <span class="math inline">\(b\)</span>). Concretely:</p>
+<ul>
+<li>A 1-step from <span class="math inline">\(y-1\)</span> to <span
+class="math inline">\(y\)</span> contributes a factor of <span
+class="math inline">\(a(y)\)</span>.</li>
+<li>A 2-step from <span class="math inline">\(y-2\)</span> to <span
+class="math inline">\(y\)</span> contributes a factor of <span
+class="math inline">\(b(y)\)</span>.</li>
+</ul>
+<p>For instance, <span class="math inline">\(d_1(x) = a(x)\)</span> (the
+only path from <span class="math inline">\(x-1\)</span> to <span
+class="math inline">\(x\)</span> is a single 1-step), and <span
+class="math inline">\(d_2(x) = b(x) + a(x)\,a(x-1)\)</span> (either a
+direct 2-step, or two 1-steps). The value <span
+class="math inline">\(d_k(x)\)</span> is a kind of transfer function —
+it tells you how much <span class="math inline">\(f(x-k)\)</span>
+propagates into <span class="math inline">\(f(x)\)</span> through the
+recurrence, summed over all routing choices.</p>
+<h3 id="building-d_k-inductively-for-even-k">Building <span
+class="math inline">\(d_k\)</span> inductively for even <span
+class="math inline">\(k\)</span></h3>
+<p>The construction is recursive. To compute <span
+class="math inline">\(d_{2k}(x)\)</span> (paths from <span
+class="math inline">\(x-2k\)</span> to <span
+class="math inline">\(x\)</span>), we split at the midpoint <span
+class="math inline">\(x-k\)</span> and consider two mutually exclusive
+cases:</p>
+<ol type="1">
+<li><p><strong>Paths that pass through <span
+class="math inline">\(x-k\)</span></strong>: These contribute <span
+class="math inline">\(d_k(x-k) \cdot d_k(x)\)</span> — first travel from
+<span class="math inline">\(x-2k\)</span> to <span
+class="math inline">\(x-k\)</span> (weight <span
+class="math inline">\(d_k(x-k)\)</span>), then from <span
+class="math inline">\(x-k\)</span> to <span
+class="math inline">\(x\)</span> (weight <span
+class="math inline">\(d_k(x)\)</span>).</p></li>
+<li><p><strong>Paths that 2-step over <span
+class="math inline">\(x-k\)</span></strong>: These land at <span
+class="math inline">\(x-k+1\)</span> after arriving at <span
+class="math inline">\(x-k-1\)</span>, skipping the midpoint. They
+contribute <span class="math inline">\(d_{k-1}(x-k-1) \cdot b(x-k+1)
+\cdot d_{k-1}(x)\)</span> — travel from <span
+class="math inline">\(x-2k\)</span> to <span
+class="math inline">\(x-k-1\)</span>, then 2-step to <span
+class="math inline">\(x-k+1\)</span> (weight <span
+class="math inline">\(b(x-k+1)\)</span>), then continue to <span
+class="math inline">\(x\)</span>.</p></li>
+</ol>
+<p>These two sets of paths are genuinely disjoint: any path either
+visits <span class="math inline">\(x-k\)</span> or skips over it. So we
+get the exact formula:</p>
+<p><span class="math display">\[d_{2k}(x) = d_k(x) \cdot d_k(x-k) +
+d_{k-1}(x) \cdot b(x-k+1) \cdot d_{k-1}(x-k-1)\]</span></p>
+<p>For example, at window size 16 (i.e., <span
+class="math inline">\(k=8\)</span>):</p>
+<p><span class="math display">\[d_{16}(x) = d_8(x) \cdot d_8(x-8) +
+d_7(x) \cdot b(x-7) \cdot d_7(x-9)\]</span></p>
+<figure>
+<img src="img/recurrence-d16.png"
+alt="Visualization of the d_{16} decomposition" />
+<figcaption aria-hidden="true">Visualization of the <span
+class="math inline">\(d_{16}\)</span> decomposition</figcaption>
+</figure>
+<h3 id="building-d_k-for-odd-k-inclusion-exclusion">Building <span
+class="math inline">\(d_k\)</span> for odd <span
+class="math inline">\(k\)</span>: inclusion-exclusion</h3>
+<p>For odd <span class="math inline">\(k = 2m+1\)</span>, we cannot
+split cleanly at a single midpoint because <span
+class="math inline">\(k\)</span> is not divisible by 2. Instead, we
+consider two <em>overlapping</em> splits — at <span
+class="math inline">\(x-m\)</span> and <span
+class="math inline">\(x-m-1\)</span> — and correct for double-counting
+via inclusion-exclusion.</p>
+<ul>
+<li><strong>Split A</strong> (at <span
+class="math inline">\(x-m\)</span>): paths from <span
+class="math inline">\(x-k\)</span> to <span
+class="math inline">\(x-m\)</span>, then from <span
+class="math inline">\(x-m\)</span> to <span
+class="math inline">\(x\)</span>. Contributes <span
+class="math inline">\(d_{m+1}(x) \cdot d_m(x-m-1)\)</span>.</li>
+<li><strong>Split B</strong> (at <span
+class="math inline">\(x-m-1\)</span>): paths from <span
+class="math inline">\(x-k\)</span> to <span
+class="math inline">\(x-m-1\)</span>, then from <span
+class="math inline">\(x-m-1\)</span> to <span
+class="math inline">\(x\)</span>. Contributes <span
+class="math inline">\(d_m(x) \cdot d_{m+1}(x-m)\)</span>.</li>
+</ul>
+<p>The two splits overlap on paths that pass through <em>both</em> <span
+class="math inline">\(x-m-1\)</span> and <span
+class="math inline">\(x-m\)</span>. These are paths that make a 1-step
+from <span class="math inline">\(x-m-1\)</span> to <span
+class="math inline">\(x-m\)</span>, with weight <span
+class="math inline">\(a(x-m)\)</span>. Subtracting the overlap:</p>
+<p><span class="math display">\[d_{2m+1}(x) = d_{m+1}(x) \cdot
+d_m(x-m-1) + d_m(x) \cdot d_{m+1}(x-m) - d_m(x) \cdot a(x-m) \cdot
+d_m(x-m-1)\]</span></p>
+<p>For example, at window size 15 (i.e., <span
+class="math inline">\(m=3\)</span>):</p>
+<p><span class="math display">\[d_{15}(x) = d_8(x) \cdot d_7(x-8) +
+d_7(x) \cdot d_8(x-7) - d_7(x) \cdot a(x-7) \cdot d_7(x-8)\]</span></p>
+<p>This three-term formula has a geometric reading: count paths through
+the left boundary, count paths through the right boundary, subtract
+those counted by both. The subtracted paths are precisely the ones that
+1-step across the boundary, which the recurrence weights by <span
+class="math inline">\(a\)</span>.</p>
+<figure>
+<img src="img/recurrence-d15.png"
+alt="Visualization of the d_{15} decomposition" />
+<figcaption aria-hidden="true">Visualization of the <span
+class="math inline">\(d_{15}\)</span> decomposition</figcaption>
+</figure>
+<h2 id="the-windowed-partial-sums-f_k">The Windowed Partial Sums <span
+class="math inline">\(f_k\)</span></h2>
+<p>The arrays <span class="math inline">\(f_k(x)\)</span> play a
+complementary role. Define <span class="math inline">\(f_k(x)\)</span>
+as the value <span class="math inline">\(f\)</span> would take at
+position <span class="math inline">\(x\)</span> if all positions
+strictly before <span class="math inline">\(x-k\)</span> were set to
+zero — in other words, the contribution from <span
+class="math inline">\(g\)</span>-values and from the boundary conditions
+<em>within</em> the local window <span class="math inline">\([x-k,
+x]\)</span>.</p>
+<p>These satisfy a recurrence structurally identical to the <span
+class="math inline">\(d_k\)</span> formulas. For even window size <span
+class="math inline">\(2k\)</span>:</p>
+<p><span class="math display">\[f_{2k}(x) = f_k(x) + d_k(x) \cdot
+f_k(x-k) + d_{k-1}(x) \cdot b(x-k+1) \cdot f_{k-1}(x-k-1)\]</span></p>
+<p>Reading right to left: <span class="math inline">\(f_k(x)\)</span>
+captures the right-half contribution; <span class="math inline">\(d_k(x)
+\cdot f_k(x-k)\)</span> is the left-half contribution propagated forward
+through paths crossing the midpoint; and <span
+class="math inline">\(d_{k-1}(x) \cdot b(x-k+1) \cdot
+f_{k-1}(x-k-1)\)</span> is the left-half contribution propagated through
+paths that 2-step over the midpoint.</p>
+<figure>
+<img src="img/recurrence-f16.png"
+alt="Visualization of the f_{16} decomposition" />
+<figcaption aria-hidden="true">Visualization of the <span
+class="math inline">\(f_{16}\)</span> decomposition</figcaption>
+</figure>
+<p>The odd window size formula is analogous, with a similar
+inclusion-exclusion structure as <span
+class="math inline">\(d_{2m+1}\)</span>.</p>
+<h2 id="building-the-tower-and-stitching-together">Building the Tower
+and Stitching Together</h2>
+<p>The computation proceeds in a logarithmic tower of layers. Starting
+from the base cases <span class="math inline">\(d_1(x) = a(x)\)</span>,
+<span class="math inline">\(d_0(x) = 1\)</span>, <span
+class="math inline">\(f_1(x) = g(x)\)</span>, and <span
+class="math inline">\(f_0(x) = 0\)</span>, each layer doubles the window
+size, computing <span class="math inline">\(d_{2k}\)</span>, <span
+class="math inline">\(d_{2k-1}\)</span>, <span
+class="math inline">\(f_{2k}\)</span>, and <span
+class="math inline">\(f_{2k-1}\)</span> from <span
+class="math inline">\(d_k\)</span>, <span
+class="math inline">\(d_{k-1}\)</span>, <span
+class="math inline">\(f_k\)</span>, and <span
+class="math inline">\(f_{k-1}\)</span> of the previous layer. After
+<span class="math inline">\(\log_2 k\)</span> layers, we have window-16
+arrays in hand.</p>
+<p>The final pass resolves the full recurrence by stitching windows
+together:</p>
+<p><span class="math display">\[f(x) = f_{16}(x) + d_{16}(x) \cdot
+f(x-16) + d_{15}(x) \cdot b(x-15) \cdot f(x-17)\]</span></p>
+<figure>
+<img src="img/recurrence-f.png"
+alt="Visualization of the final stitching" />
+<figcaption aria-hidden="true">Visualization of the final
+stitching</figcaption>
+</figure>
+<p>The three terms are exactly analogous to the base recurrence itself:
+<span class="math inline">\(f_{16}(x)\)</span> is the self-contained
+contribution of the current window, <span
+class="math inline">\(d_{16}(x) \cdot f(x-16)\)</span> propagates the
+accumulated history through paths that visit <span
+class="math inline">\(x-16\)</span>, and <span
+class="math inline">\(d_{15}(x) \cdot b(x-15) \cdot f(x-17)\)</span>
+propagates history through paths that 2-step over <span
+class="math inline">\(x-16\)</span> (landing at <span
+class="math inline">\(x-15\)</span> from <span
+class="math inline">\(x-17\)</span> with weight <span
+class="math inline">\(b(x-15)\)</span>, then traveling the remaining 15
+positions with weight <span
+class="math inline">\(d_{15}(x)\)</span>).</p>
+<p>For readers familiar with the matrix prefix scan formulation: the
+coefficient <span class="math inline">\(d_{15}(x) \cdot b(x-15)\)</span>
+is exactly the <span class="math inline">\((0,1)\)</span> entry of the
+combined matrix — the one capturing the indirect influence of <span
+class="math inline">\(f(x-17)\)</span> via a 2-step over the boundary
+(otherwise the matrix multiplication form will double count). The local
+window decomposition recovers this matrix structure implicitly, without
+ever forming full matrix products.</p>
+<h2 id="work-analysis">Work Analysis</h2>
+<p>At each layer of the tower, we compute exactly 4 arrays (<span
+class="math inline">\(d_{2k}\)</span>, <span
+class="math inline">\(d_{2k-1}\)</span>, <span
+class="math inline">\(f_{2k}\)</span>, <span
+class="math inline">\(f_{2k-1}\)</span>), each requiring a constant
+number of operations per element. The tower has <span
+class="math inline">\(1 + \log_2 k\)</span> layers. So the work
+multiplier compared to scalar evaluation is roughly <span
+class="math inline">\(\mathbf{4 \cdot (1 + \log k)}\)</span> per output
+element.</p>
+<p>For <span class="math inline">\(k = 16\)</span>, this gives <span
+class="math inline">\(4 \cdot 5 = 20\)</span>, which is better than the
+matrix scan’s <span class="math inline">\(6 \cdot 5 = 30\)</span>. The
+asymptotic depth remains <span class="math inline">\(O(\log n)\)</span>
+and the total work remains <span class="math inline">\(O(n \log
+n)\)</span>. This suggests this algorithm is still probably not more
+efficient than the serial implementation for 32 bits datatypes, but
+likely worth it for datatypes like <code>int8</code> or
+<code>int16</code>.</p>
+<h1 id="extension-to-third-order-recurrences">Extension to Third-Order
+Recurrences</h1>
+<p>We also briefly describe how the algorithm extends to higher-order
+recurrences. For a third-order LTV recurrence</p>
+<p><span class="math display">\[f(x) = a(x)\,f(x-1) + b(x)\,f(x-2) +
+c(x)\,f(x-3) + g(x),\]</span></p>
+<p>the path model extends by adding 3-steps (with weight <span
+class="math inline">\(c\)</span>). The even-split formula for <span
+class="math inline">\(d_{2k}\)</span> gains two new terms capturing
+paths that 3-step over the midpoint:</p>
+<p><span class="math display">\[d_{16}(x) = d_8(x)\,d_8(x-8) +
+d_7(x)\,b(x-7)\,d_7(x-9) + d_7(x)\,c(x-7)\,d_6(x-10) +
+d_6(x)\,c(x-6)\,d_7(x-9)\]</span></p>
+<p>The first two terms handle the 1-step crossing through <span
+class="math inline">\(x-8\)</span> and the 2-step crossing over it; the
+third and fourth terms are new, handling 3-step crossings: one departs
+from <span class="math inline">\(x-10\)</span> and lands at <span
+class="math inline">\(x-7\)</span> (weight <span
+class="math inline">\(c(x-7)\)</span>), and the other departs from <span
+class="math inline">\(x-9\)</span> and lands at <span
+class="math inline">\(x-6\)</span> (weight <span
+class="math inline">\(c(x-6)\)</span>).</p>
+<p>The odd-split formula looks as follows:</p>
+<p><span class="math display">\[d_{15}(x) = d_8(x)\,d_7(x-8) +
+d_7(x)\,d_8(x-7) - d_7(x)\,a(x-7)\,d_7(x-8) +
+d_6(x)\,c(x-6)\,d_6(x-7)\]</span></p>
+<p>The four terms correspond to four cases: paths that pass through
+<span class="math inline">\(x-7\)</span> but not <span
+class="math inline">\(x-8\)</span>, paths that pass through <span
+class="math inline">\(x-8\)</span> but not <span
+class="math inline">\(x-7\)</span>, paths that pass through both (the
+overlap), and paths that pass through neither and instead do 3-step at
+<span class="math inline">\(x-6\)</span> (the new case).</p>
+<p>In the second-order case, a 2-step can skip at most one of the two
+adjacent positions, so two-term inclusion-exclusion sufficed; with
+3-steps available, a single jump can skip both, which correspond to the
+new case above.</p>
+<p>Complexity-wise, each layer of the tower now requires 3 <span
+class="math inline">\(d\)</span>-arrays (<span
+class="math inline">\(d_k\)</span>, <span
+class="math inline">\(d_{k-1}\)</span>, <span
+class="math inline">\(d_{k-2}\)</span>) and 3 <span
+class="math inline">\(f\)</span>-arrays — 6 arrays total per layer,
+versus 4 for the second-order case.</p>
+<p>The general pattern seems to be <span
+class="math inline">\(2p\)</span> arrays per layer for a <span
+class="math inline">\(p\)</span>-th order recurrence. This matches the
+intuition: a <span class="math inline">\(p\)</span>-th order recurrence
+allows <span class="math inline">\(p\)</span> ways to cross any boundary
+(1-step, 2-step, …, <span class="math inline">\(p\)</span>-step), and
+each introduces an independent <span class="math inline">\(d_{k-1},
+d_{k-2}, \ldots\)</span> interaction. The inclusion-exclusion correction
+for odd windows generalizes correspondingly, though the precise formula
+for <span class="math inline">\(p &gt; 2\)</span> is left as future
+work.</p>
+<p>Compared to the matrix prefix scan, where a <span
+class="math inline">\(p\)</span>-th order recurrence requires a <span
+class="math inline">\((p+1)\times(p+1)\)</span> matrix with <span
+class="math inline">\(p(p+1)\)</span> nontrivial entries, the local
+window decomposition’s <span class="math inline">\(2p\)</span> arrays
+per layer scales much more favorably. For <span class="math inline">\(p
+= 2\)</span>, the matrix approach needs 6 entries versus our 4 arrays;
+for <span class="math inline">\(p = 3\)</span>, the comparison is 12
+versus 6.</p>
+<h1 id="closing-thoughts">Closing Thoughts</h1>
+<p>This algorithm replaces the sequential dependency chain with a
+parallel tower-building phase while tracking fewer arrays per layer than
+a matrix prefix scan. One helpful intuition for this improvement is that
+the matrix form of the recurrence is sparse, and the six non-constant
+entries compute overlapping information.</p>
+<p>As for future work, I have not formalized the general recipe for
+order-<span class="math inline">\(p\)</span> recurrences and, on the
+experimental side, I have not measured the actual performance of this
+improvement and the original matrix scan and understood the trade-offs
+in practice.</p>
+</body>
+</html>
