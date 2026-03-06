@@ -238,16 +238,19 @@ class="math inline">\(3\times 3\)</span> matrix through the prefix scan,
 we only need to track the first two rows, which is 6 values per
 position. Each combine step costs 2 multiplications per tracked value,
 for a total of 12 multiplications per step, and there are <span
-class="math inline">\(1 + \log_2 k\)</span> steps to vectorize <span
+class="math inline">\(\log_2 k\)</span> steps to vectorize <span
 class="math inline">\(k\)</span> lanes.</p>
-<p>The work multiplier compared to scalar evaluation is about<a
-href="#fn1" class="footnote-ref" id="fnref1"
-role="doc-noteref"><sup>1</sup></a> <span
-class="math inline">\(\mathbf{6 \cdot (1 + \log k)}\)</span> per output
-element. For <span class="math inline">\(k = 16\)</span> (AVX-512), this
-works out to about <span class="math inline">\(6 \cdot 5 = 30\)</span>
-times the scalar work. This overhead makes it likely impractical for
-exposing parallel work.</p>
+<p>The work multiplier compared to scalar evaluation is about <span
+class="math inline">\(\mathbf{1+6 \cdot \log k}\)</span> per output
+element. This is approximate because the second row of <span
+class="math inline">\(M_1\)</span> is always <span
+class="math inline">\([a(x), b(x), g(x)]\)</span> and does not require
+computation, and, similarly, for <span
+class="math inline">\(M_{16}\)</span> we only need to compute the first
+row. For <span class="math inline">\(k = 16\)</span> (floats on
+AVX-512), this works out to about <span class="math inline">\(1 + 6
+\cdot 4 - 6 = 19\)</span> times the scalar work. This overhead makes it
+likely impractical for exposing parallel work.</p>
 <h1 id="a-better-decomposition">A Better Decomposition</h1>
 <p>The bottleneck in the matrix scan is that each combine step needs to
 track 6 values (the two nontrivial rows of the matrix). What if we could
@@ -479,19 +482,21 @@ class="math inline">\(d_{2k-1}\)</span>, <span
 class="math inline">\(f_{2k}\)</span>, <span
 class="math inline">\(f_{2k-1}\)</span>), each requiring a constant
 number of operations per element. The tower has <span
-class="math inline">\(1 + \log_2 k\)</span> layers. So the work
-multiplier compared to scalar evaluation is roughly <span
-class="math inline">\(\mathbf{4 \cdot (1 + \log k)}\)</span><a
-href="#fn2" class="footnote-ref" id="fnref2"
-role="doc-noteref"><sup>2</sup></a> per output element.</p>
-<p>For <span class="math inline">\(k = 16\)</span>, this gives <span
-class="math inline">\(4 \cdot 5 = 20\)</span>, which is better than the
-matrix scan’s <span class="math inline">\(6 \cdot 5 = 30\)</span>. The
-asymptotic depth remains <span class="math inline">\(O(\log n)\)</span>
-and the total work remains <span class="math inline">\(O(n \log
-n)\)</span>. This suggests this algorithm is still probably not more
-efficient than the serial implementation for 32 bits datatypes, but
-likely worth it for datatypes like <code>int8</code> or
+class="math inline">\(\log_2 k\)</span> layers, bottoming at <span
+class="math inline">\(d_1,d_2,f_1,f_2\)</span>. So the work multiplier
+compared to scalar evaluation is roughly <span
+class="math inline">\(\mathbf{1+4 \cdot \log k}\)</span> per output
+element. Again this is an approximation because for example <span
+class="math inline">\(d_1(x) = a(x)\)</span> and <span
+class="math inline">\(f_1(x) = g(x)\)</span>, and we don’t need to
+compute the odd window size of the last layer (e.g., <span
+class="math inline">\(f_{15}(x)\)</span>).</p>
+<p>For <span class="math inline">\(k = 16\)</span>, this gives
+multiplier <span class="math inline">\(1 + 4 \cdot 4 - 3 = 14\)</span>,
+which is better than the matrix scan’s 18x. This suggests this algorithm
+is in the best case only marginally more efficient than the serial
+implementation for 32 bits datatypes on 512-bit instructions, but likely
+show greater efficiency for datatypes like <code>int8</code> or
 <code>int16</code>.</p>
 <h1 id="extension-to-third-order-recurrences">Extension to Third-Order
 Recurrences</h1>
@@ -571,20 +576,5 @@ order-<span class="math inline">\(p\)</span> recurrences and, on the
 experimental side, I have not measured the actual performance of this
 improvement and the original matrix scan and understood the trade-offs
 in practice.</p>
-<section id="footnotes" class="footnotes footnotes-end-of-document"
-role="doc-endnotes">
-<hr />
-<ol>
-<li id="fn1"><p>This is approximate because for <span
-class="math inline">\(M_16\)</span> we only need to compute the first
-row and the second row of <span class="math inline">\(M_1\)</span> is
-just <span class="math inline">\([a(x), b(x), g(x)]\)</span>.<a
-href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2"><p>Again this is an approximation because for example <span
-class="math inline">\(d_1(x) = a(x)\)</span> and we don’t need to
-compute <span class="math inline">\(f_{15}(x)\)</span>.<a href="#fnref2"
-class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-</ol>
-</section>
 </body>
 </html>

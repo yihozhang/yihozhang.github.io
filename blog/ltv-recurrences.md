@@ -27,9 +27,9 @@ Because matrix multiplication is associative, its prefix scans can be easily par
 We can first compute $M_1(x) = M(x)\times M(x-1)$, then $M_2(x) = M_1(x) \times M(x-2)$, and so on, doubling the window size at each step until we have the full prefix product. Finally,
 $$f(x) = {M_{16}}(x)_{1,1}*f(x-16) + {M_{16}}(x)_{1,2}*f(x-17) + {M_{16}}(x)_{1,3}$$
 
-One observation is that the last row of every $M(x)$ is always $(0, 0, 1)$, and this is preserved under matrix multiplication. So rather than tracking all 9 entries of a $3\times 3$ matrix through the prefix scan, we only need to track the first two rows, which is 6 values per position. Each combine step costs 2 multiplications per tracked value, for a total of 12 multiplications per step, and there are $1 + \log_2 k$ steps to vectorize $k$ lanes.
+One observation is that the last row of every $M(x)$ is always $(0, 0, 1)$, and this is preserved under matrix multiplication. So rather than tracking all 9 entries of a $3\times 3$ matrix through the prefix scan, we only need to track the first two rows, which is 6 values per position. Each combine step costs 2 multiplications per tracked value, for a total of 12 multiplications per step, and there are $\log_2 k$ steps to vectorize $k$ lanes.
 
-The work multiplier compared to scalar evaluation is about^[This is approximate because for $M_16$ we only need to compute the first row and the second row of $M_1$ is just $[a(x), b(x), g(x)]$.] $\mathbf{6 \cdot (1 + \log k)}$ per output element. For $k = 16$ (AVX-512), this works out to about $6 \cdot 5 = 30$ times the scalar work. This overhead makes it likely impractical for exposing parallel work.
+The work multiplier compared to scalar evaluation is about $\mathbf{1+6 \cdot \log k}$ per output element. This is approximate because the second row of $M_1$ is always $[a(x), b(x), g(x)]$ and does not require computation, and, similarly, for $M_{16}$ we only need to compute the first row. For $k = 16$ (floats on AVX-512), this works out to about $1 + 6 \cdot 4 - 6 = 19$ times the scalar work. This overhead makes it likely impractical for exposing parallel work.
 
 # A Better Decomposition
 
@@ -115,10 +115,10 @@ Comparing the construction here with the matrix prefix scan formulation, the coe
 
 ## Work Analysis
 
-At each layer of the tower, we compute exactly 4 arrays ($d_{2k}$, $d_{2k-1}$, $f_{2k}$, $f_{2k-1}$), each requiring a constant number of operations per element. The tower has $1 + \log_2 k$ layers. So the work multiplier compared to scalar evaluation is roughly $\mathbf{4 \cdot (1 + \log k)}$^[Again this is an approximation because for example $d_1(x) = a(x)$ and we don't need to compute $f_{15}(x)$.] per output element.
+At each layer of the tower, we compute exactly 4 arrays ($d_{2k}$, $d_{2k-1}$, $f_{2k}$, $f_{2k-1}$), each requiring a constant number of operations per element. The tower has $\log_2 k$ layers, bottoming at $d_1,d_2,f_1,f_2$. So the work multiplier compared to scalar evaluation is roughly $\mathbf{1+4 \cdot \log k}$ per output element. Again this is an approximation because for example $d_1(x) = a(x)$ and $f_1(x) = g(x)$, and we don't need to compute the odd window size of the last layer (e.g., $f_{15}(x)$).
 
-For $k = 16$, this gives $4 \cdot 5 = 20$, which is better than the matrix scan's $6 \cdot 5 = 30$. The asymptotic depth remains $O(\log n)$ and the total work remains $O(n \log n)$.
-This suggests this algorithm is still probably not more efficient than the serial implementation for 32 bits datatypes, but likely worth it for datatypes like `int8` or `int16`. 
+For $k = 16$, this gives multiplier $1 + 4 \cdot 4 - 3 = 14$, which is better than the matrix scan's 18x.
+This suggests this algorithm is in the best case only marginally more efficient than the serial implementation for 32 bits datatypes on 512-bit instructions, but likely show greater efficiency for datatypes like `int8` or `int16`. 
 
 # Extension to Third-Order Recurrences
 
