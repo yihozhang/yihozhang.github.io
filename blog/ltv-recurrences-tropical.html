@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Yihong Zhang" />
+  <title>Vectorizing Tropical Recurrences</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="/usr/share/javascript/mathjax/MathJax.js"
+  type="text/javascript"></script>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Vectorizing Tropical Recurrences</h1>
+<p class="author">Yihong Zhang</p>
+<p class="date">Mar 8, 2026</p>
+</header>
+<p>This post is a sequel to <a href="ltv-recurrences.html">Vectorizing
+Linear Time-Varying Recurrences</a>. That post showed how to break the
+dependency chain in a second-order LTV recurrence by decomposing it into
+a logarithmic tower of <em>propagation weights</em> <span
+class="math inline">\(d_k\)</span> and <em>windowed partial sums</em>
+<span class="math inline">\(f_k\)</span>, each covering an exponentially
+growing window. The key was a path model: each position can step forward
+by 1 (weight <span class="math inline">\(a\)</span>) or by 2 (weight
+<span class="math inline">\(b\)</span>), and <span
+class="math inline">\(d_k(x)\)</span> is the total weight — a polynomial
+sum — of all paths from <span class="math inline">\(x-k\)</span> to
+<span class="math inline">\(x\)</span>.</p>
+<p>Here we apply the same idea to the <strong>tropical
+semiring</strong>, where multiplication becomes addition and addition
+becomes <span class="math inline">\(\min\)</span>. A second-order
+time-varying recurrence in tropical algebra looks like this:</p>
+<p><span class="math display">\[f(x) = \min\bigl(f(x-1) + a(x),\; f(x-2)
++ b(x),\; g(x)\bigr)\]</span></p>
+<p>Recurrences of this form arise in shortest-path problems and sequence
+alignment in bioinformatics, where <span
+class="math inline">\(g(x)\)</span> is the cost of starting fresh at
+position <span class="math inline">\(x\)</span>, <span
+class="math inline">\(a\)</span> and <span
+class="math inline">\(b\)</span> are gap-extension costs, and <span
+class="math inline">\(f(x)\)</span> is the minimum-cost solution ending
+at <span class="math inline">\(x\)</span>.</p>
+<p>The path model carries over directly. <span
+class="math inline">\(d_k(x)\)</span> is now the <strong>minimum total
+weight</strong> of any path from <span
+class="math inline">\(x-k\)</span> to <span
+class="math inline">\(x\)</span>, where a 1-step from <span
+class="math inline">\(y-1\)</span> to <span
+class="math inline">\(y\)</span> costs <span
+class="math inline">\(a(y)\)</span> and a 2-step from <span
+class="math inline">\(y-2\)</span> to <span
+class="math inline">\(y\)</span> costs <span
+class="math inline">\(b(y)\)</span>. For instance, <span
+class="math inline">\(d_{16}(x)\)</span> is the cheapest way to travel
+from <span class="math inline">\(x-16\)</span> to <span
+class="math inline">\(x\)</span> by combining 1-steps and 2-steps.
+Similarly, <span class="math inline">\(f_k(x)\)</span> is the value
+<span class="math inline">\(f(x)\)</span> would take if all positions
+before <span class="math inline">\(x-k+1\)</span> had <span
+class="math inline">\(g = +\infty\)</span> (the tropical zero) — so
+<span class="math inline">\(f_{16}(x)\)</span> is the best solution
+reachable entirely from sources within the local window <span
+class="math inline">\([x-15, x]\)</span>.</p>
+<p>The decomposition strategy carries over with surprisingly little
+change. Two structural simplifications emerge from the tropical setting,
+making the algorithm indeed slighly better than the arithmetic case in
+the last post.</p>
+<h1 id="the-propagation-weights-d_k">The Propagation Weights <span
+class="math inline">\(d_k\)</span></h1>
+<h2 id="even-windows">Even Windows</h2>
+<p>For even window sizes, the formula is structurally identical to the
+standard arithmetic case, with <span
+class="math inline">\(\times\)</span> replaced by <span
+class="math inline">\(+\)</span> and <span
+class="math inline">\(+\)</span> replaced by <span
+class="math inline">\(\min\)</span>. To compute <span
+class="math inline">\(d_{16}(x)\)</span> — the minimum-weight path from
+<span class="math inline">\(x-16\)</span> to <span
+class="math inline">\(x\)</span> — we split at the midpoint <span
+class="math inline">\(x-8\)</span>:</p>
+<ol type="1">
+<li><p><strong>Paths through <span
+class="math inline">\(x-8\)</span></strong>: travel from <span
+class="math inline">\(x-16\)</span> to <span
+class="math inline">\(x-8\)</span> (weight <span
+class="math inline">\(d_8(x-8)\)</span>), then from <span
+class="math inline">\(x-8\)</span> to <span
+class="math inline">\(x\)</span> (weight <span
+class="math inline">\(d_8(x)\)</span>).</p></li>
+<li><p><strong>Paths that 2-step over <span
+class="math inline">\(x-8\)</span></strong>: arrive at <span
+class="math inline">\(x-9\)</span>, 2-step to <span
+class="math inline">\(x-7\)</span> (weight <span
+class="math inline">\(d_2(x-7)\)</span>), then continue to <span
+class="math inline">\(x\)</span> (weight <span
+class="math inline">\(d_7(x)\)</span>).</p></li>
+</ol>
+<p><span class="math display">\[d_{16}(x) = \min\bigl(d_8(x) +
+d_8(x-8),\; d_7(x) + d_2(x-7) + d_7(x-9)\bigr)\]</span></p>
+<p>This is exactly the standard arithmetic formula translated
+term-by-term into the tropical semiring: <span
+class="math inline">\(\times\)</span> becomes <span
+class="math inline">\(+\)</span> and <span
+class="math inline">\(+\)</span> becomes <span
+class="math inline">\(\min\)</span>. The same two-case split — paths
+through the midpoint versus paths that 2-step over it — is exhaustive in
+both algebras. Nothing new here.</p>
+<figure>
+<img src="img/recurrence-d16.png"
+alt="Visualization of the d_{16} decomposition" />
+<figcaption aria-hidden="true">Visualization of the <span
+class="math inline">\(d_{16}\)</span> decomposition</figcaption>
+</figure>
+<h2 id="odd-windows-idempotency-replaces-inclusion-exclusion">Odd
+Windows: Idempotency Replaces Inclusion-Exclusion</h2>
+<p>In standard arithmetic, computing <span
+class="math inline">\(d_{15}(x)\)</span> — paths from <span
+class="math inline">\(x-15\)</span> to <span
+class="math inline">\(x\)</span> — required three terms: count paths
+through <span class="math inline">\(x-8\)</span>, count paths through
+<span class="math inline">\(x-7\)</span>, then subtract the overlap
+(paths through both, which make a 1-step from <span
+class="math inline">\(x-8\)</span> to <span
+class="math inline">\(x-7\)</span>). The subtraction was necessary
+because those paths were counted twice and arithmetic inflates with
+repetition.</p>
+<p>In tropical algebra, <strong>there is nothing to subtract</strong>.
+Consider any path from <span class="math inline">\(x-15\)</span> to
+<span class="math inline">\(x\)</span>. It must visit at least one of
+<span class="math inline">\(x-8\)</span> or <span
+class="math inline">\(x-7\)</span>: a 2-step can skip at most one of two
+adjacent positions, so no single step can leap over both simultaneously.
+This gives us two overlapping cases:</p>
+<ul>
+<li><strong>Split at <span class="math inline">\(x-8\)</span></strong>:
+paths from <span class="math inline">\(x-15\)</span> to <span
+class="math inline">\(x-8\)</span> (weight <span
+class="math inline">\(d_7(x-8)\)</span>), then from <span
+class="math inline">\(x-8\)</span> to <span
+class="math inline">\(x\)</span> (weight <span
+class="math inline">\(d_8(x)\)</span>).</li>
+<li><strong>Split at <span class="math inline">\(x-7\)</span></strong>:
+paths from <span class="math inline">\(x-15\)</span> to <span
+class="math inline">\(x-7\)</span> (weight <span
+class="math inline">\(d_8(x-7)\)</span>), then from <span
+class="math inline">\(x-7\)</span> to <span
+class="math inline">\(x\)</span> (weight <span
+class="math inline">\(d_7(x)\)</span>).</li>
+</ul>
+<p><span class="math display">\[d_{15}(x) = \min\bigl(d_8(x) +
+d_7(x-8),\; d_7(x) + d_8(x-7)\bigr)\]</span></p>
+<p>This is correct even though paths through <em>both</em> <span
+class="math inline">\(x-8\)</span> and <span
+class="math inline">\(x-7\)</span> appear in both terms, because <span
+class="math inline">\(\min\)</span> is <strong>idempotent</strong>:
+<span class="math inline">\(\min(v, v) = v\)</span>. Any path counted in
+both splits contributes its weight <span
+class="math inline">\(v\)</span> to both branches, and <span
+class="math inline">\(\min(v, v) = v\)</span> recovers the correct
+answer. Double-counting under <span class="math inline">\(\min\)</span>
+is automatically harmless.</p>
+<p>The full tower of odd-window formulas:</p>
+<p><span class="math display">\[d_7(x) = \min\bigl(d_4(x) + d_3(x-4),\;
+d_3(x) + d_4(x-3)\bigr)\]</span></p>
+<p><span class="math display">\[d_3(x) = \min\bigl(d_2(x) + a(x-2),\;
+a(x) + d_2(x-1)\bigr)\]</span></p>
+<p>In each case, the two splits cover all paths because the maximum step
+size is 2, and two adjacent positions cannot both be skipped by a single
+jump.</p>
+<figure>
+<img src="img/recurrence-d15.png"
+alt="Visualization of the d_{15} decomposition" />
+<figcaption aria-hidden="true">Visualization of the <span
+class="math inline">\(d_{15}\)</span> decomposition</figcaption>
+</figure>
+<h1 id="the-windowed-partial-sums-f_k">The Windowed Partial Sums <span
+class="math inline">\(f_k\)</span></h1>
+<p>Similarly, define <span class="math inline">\(f_k(x)\)</span> as:
+<span class="math display">\[f_k(x) = \min_{y \in [x-k+1,\, x]}
+\bigl(g(y) + d_{x-y}(x)\bigr)\]</span> the cheapest way to start a new
+path at some position <span class="math inline">\(y\)</span> within the
+local window <span class="math inline">\([x-k+1, x]\)</span> and reach
+<span class="math inline">\(x\)</span>.</p>
+<h2 id="even-windows-1">Even Windows</h2>
+<p>For even window sizes, we split the window <span
+class="math inline">\([x-2k+1, x]\)</span> at the midpoint <span
+class="math inline">\(x-k\)</span>. The contributions from the right
+half <span class="math inline">\([x-k+1, x]\)</span> are <span
+class="math inline">\(f_k(x)\)</span>. For the left half <span
+class="math inline">\([x-2k+1, x-k]\)</span>, a path to <span
+class="math inline">\(x\)</span> either passes through <span
+class="math inline">\(x-k\)</span> or 2-steps over it from <span
+class="math inline">\(x-k-1\)</span> to <span
+class="math inline">\(x-k+1\)</span>:</p>
+<p><span class="math display">\[f_{16}(x) = \min\bigl(f_8(x),\; d_8(x) +
+f_8(x-8),\; d_7(x) + b(x-7) + f_7(x-9)\bigr)\]</span></p>
+<p>Reading left to right: <span class="math inline">\(f_8(x)\)</span>
+captures the right-half contribution; <span class="math inline">\(d_8(x)
++ f_8(x-8)\)</span> propagates the left-half contribution forward
+through paths visiting <span class="math inline">\(x-8\)</span>; and
+<span class="math inline">\(d_7(x) + b(x-7) + f_7(x-9)\)</span>
+propagates through paths that 2-step over <span
+class="math inline">\(x-8\)</span>, bridging from <span
+class="math inline">\(x-9\)</span> to <span
+class="math inline">\(x-7\)</span> with the 2-step cost <span
+class="math inline">\(b(x-7)\)</span>, then continuing to <span
+class="math inline">\(x\)</span>.</p>
+<figure>
+<img src="img/recurrence-f16.png"
+alt="Visualization of the f_{16} decomposition" />
+<figcaption aria-hidden="true">Visualization of the <span
+class="math inline">\(f_{16}\)</span> decomposition</figcaption>
+</figure>
+<h2 id="odd-windows-not-needed">Odd Windows: Not Needed</h2>
+<p>In standard arithmetic, we needed both <span
+class="math inline">\(f_{2k}\)</span> and <span
+class="math inline">\(f_{2k-1}\)</span> at every layer. The stitching
+formula used <span class="math inline">\(f_{15}\)</span> as the windowed
+partial sum for the 2-step-over-boundary term, because contributions
+from the left had to be accounted for <em>exactly</em>: any slippage
+would inflate the sum.</p>
+<p>In tropical algebra, <strong>no odd-window <span
+class="math inline">\(f\)</span> arrays are needed at any
+layer</strong>. The key observation is that in the formula for <span
+class="math inline">\(f_{16}\)</span>, the third term uses <span
+class="math inline">\(f_7(x-9)\)</span> — a window of size 7 covering
+exactly <span class="math inline">\([x-15, x-9]\)</span>. In tropical,
+we can replace it with <span class="math inline">\(f_8(x-9)\)</span>,
+which covers the wider window <span class="math inline">\([x-16,
+x-9]\)</span>:</p>
+<p><span class="math display">\[f_{16}(x) = \min\bigl(f_8(x),\; d_8(x) +
+f_8(x-8),\; d_7(x) + b(x-7) + f_8(x-9)\bigr)\]</span></p>
+<p>Why is this valid? Because <span class="math inline">\(f_8(x-9) \leq
+f_7(x-9)\)</span>: by including one extra starting position (<span
+class="math inline">\(y = x-16\)</span>), we take a minimum over a
+<em>superset</em> of paths, so the value can only stay the same or
+decrease. <span class="math inline">\(f_8\)</span> <em>subsumes</em>
+<span class="math inline">\(f_7\)</span> — it is always at least as
+good. Any contribution from <span class="math inline">\(y =
+x-16\)</span> that <span class="math inline">\(f_8\)</span> picks up is
+also captured by the stitching term <span
+class="math inline">\(d_{16}(x) + f(x-16)\)</span>; idempotency ensures
+the double coverage is harmless.</p>
+<p>By the same argument, at every layer of the tower wherever <span
+class="math inline">\(f_{2k-1}\)</span> would appear, <span
+class="math inline">\(f_{2k}\)</span> serves equally well. No odd-window
+<span class="math inline">\(f\)</span> array is ever required.</p>
+<h1 id="building-the-tower-and-stitching-together">Building the Tower
+and Stitching Together</h1>
+<p>The computation proceeds in a logarithmic tower. Starting from <span
+class="math inline">\(d_1(x) = a(x)\)</span>, <span
+class="math inline">\(d_2(x) = \min(b(x), a(x) + a(x-1))\)</span>, and
+<span class="math inline">\(f_2(x) = \min(g(x), g(x-1) + a(x))\)</span>,
+each layer computes three arrays — <span
+class="math inline">\(d_{2k}\)</span>, <span
+class="math inline">\(d_{2k-1}\)</span>, and <span
+class="math inline">\(f_{2k}\)</span> — from the previous layer’s <span
+class="math inline">\(d_k\)</span>, <span
+class="math inline">\(d_{k-1}\)</span>, and <span
+class="math inline">\(f_k\)</span>, in <span
+class="math inline">\(O(1)\)</span> operations per element. After <span
+class="math inline">\(\log_2 k\)</span> layers, the final stitching
+resolves the recurrence:</p>
+<p><span class="math display">\[f(x) = \min\bigl(f_{16}(x),\; d_{16}(x)
++ f(x-16),\; d_{15}(x) + b(x-15) + f(x-17)\bigr)\]</span></p>
+<figure>
+<img src="img/recurrence-f.png"
+alt="Visualization of the final stitching" />
+<figcaption aria-hidden="true">Visualization of the final
+stitching</figcaption>
+</figure>
+<p>The three terms are: the local window contribution <span
+class="math inline">\(f_{16}(x)\)</span>; the accumulated history at
+<span class="math inline">\(x-16\)</span> propagated forward through
+<span class="math inline">\(d_{16}\)</span>; and the history at <span
+class="math inline">\(x-17\)</span> propagated via a 2-step of cost
+<span class="math inline">\(b(x-15)\)</span> to <span
+class="math inline">\(x-15\)</span>, then forward with <span
+class="math inline">\(d_{15}\)</span>.</p>
+<h1 id="work-analysis">Work Analysis</h1>
+<p>In standard arithmetic, each layer of the tower maintained <strong>4
+arrays</strong>: <span class="math inline">\(d_{2k}\)</span>, <span
+class="math inline">\(d_{2k-1}\)</span>, <span
+class="math inline">\(f_{2k}\)</span>, and <span
+class="math inline">\(f_{2k-1}\)</span>. The work multiplier was roughly
+<span class="math inline">\(1 + 4 \cdot \log k\)</span> per output
+element, which for <span class="math inline">\(k = 16\)</span> gives
+<span class="math inline">\(1 + 4 \cdot 4 - 3 = 14\)</span>, where the
+<span class="math inline">\(-3\)</span> accounts for the free base cases
+<span class="math inline">\(d_1 = a\)</span> and <span
+class="math inline">\(f_1 = g\)</span>, and the unneeded <span
+class="math inline">\(f_{15}\)</span> at the final layer.</p>
+<p>In the tropical case, each layer maintains only <strong>3
+arrays</strong>: <span class="math inline">\(d_{2k}\)</span>, <span
+class="math inline">\(d_{2k-1}\)</span>, and <span
+class="math inline">\(f_{2k}\)</span>. The odd-window <span
+class="math inline">\(f_{2k-1}\)</span> is eliminated at every layer,
+not just the last. The work multiplier is roughly <span
+class="math inline">\(1 + 3 \cdot \log k\)</span>, which for <span
+class="math inline">\(k = 16\)</span> gives:</p>
+<p><span class="math display">\[1 + 3 \cdot 4 - 1 = 12\]</span></p>
+<p>where the <span class="math inline">\(-1\)</span> accounts for the
+free base case <span class="math inline">\(d_1 = a\)</span>. The full
+array count for <span class="math inline">\(k = 16\)</span>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Arrays</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Base</td>
+<td><span class="math inline">\(d_2\)</span>, <span
+class="math inline">\(f_2\)</span></td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\(d_4\)</span>, <span
+class="math inline">\(d_3\)</span>, <span
+class="math inline">\(f_4\)</span></td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\(d_8\)</span>, <span
+class="math inline">\(d_7\)</span>, <span
+class="math inline">\(f_8\)</span></td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\(d_{16}\)</span>, <span
+class="math inline">\(d_{15}\)</span>, <span
+class="math inline">\(f_{16}\)</span></td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td>Stitching</td>
+<td><span class="math inline">\(f\)</span></td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total: 12 array operations per output element</strong>,
+compared to 14 for standard arithmetic. The saving of 2 comes from
+eliminating <span class="math inline">\(f_3\)</span> and <span
+class="math inline">\(f_7\)</span> (the odd-window <span
+class="math inline">\(f\)</span> arrays at layers 1 and 2). At the final
+layer, standard arithmetic also omits <span
+class="math inline">\(f_{15}\)</span>, so there is no additional saving
+there.</p>
+<p>Why does idempotency produce exactly this reduction? In standard
+arithmetic, <span class="math inline">\(f_{2k-1}\)</span> was needed
+because substituting <span class="math inline">\(f_{2k}\)</span> would
+include contributions from starting positions outside the intended
+window, inflating the sum. In tropical, <span
+class="math inline">\(f_{2k}\)</span> takes the minimum over a
+<em>superset</em> of those positions, so <span
+class="math inline">\(f_{2k}(x) \leq f_{2k-1}(x)\)</span>: using it is
+always at least as good. Any extra contributions it picks up from
+outside the intended window are also covered by adjacent terms in the
+formula, and idempotency absorbs the overlap — <span
+class="math inline">\(\min(v, v) = v\)</span> costs nothing.</p>
+<p>The practical conclusion mirrors the standard arithmetic case: for
+32-bit floats on AVX-512 with <span class="math inline">\(k =
+16\)</span> lanes, the <span class="math inline">\(12\times\)</span>
+overhead makes vectorization marginal. But for narrower types like
+<code>int16</code> or <code>int8</code>, where a 512-bit register holds
+32 or 64 lanes respectively, the per-lane overhead becomes
+proportionally smaller and the benefit grows.</p>
+<h1 id="closing-thoughts">Closing Thoughts</h1>
+<p>The tropical variant of the vectorization algorithm is a clean
+illustration of how algebraic structure drives algorithm design. The
+single identity <span class="math inline">\(\min(v, v) = v\)</span>
+eliminates two separate complications: the inclusion-exclusion
+correction for odd-window <span class="math inline">\(d_k\)</span>, and
+all odd-window <span class="math inline">\(f_k\)</span> arrays
+throughout the tower. Both simplifications stem from the same source —
+overlapping decompositions that would be costly in a ring are free in a
+semiring with idempotent addition.</p>
+<p>One could view the standard arithmetic algorithm as the “careful”
+version that tracks contributions exactly to avoid double-counting, and
+the tropical algorithm as the “lax” version that permits double-counting
+because the algebra renders it harmless. The lax version is strictly
+simpler and, in this case, also more efficient.</p>
+<p>As with the standard arithmetic case, the extension to higher-order
+tropical recurrences — where 3-steps or longer are permitted — remains
+future work.</p>
+</body>
+</html>
