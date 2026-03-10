@@ -61,6 +61,10 @@
     img {
       max-width: 100%;
     }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
     h1, h2, h3, h4, h5, h6 {
       margin-top: 1.4em;
     }
@@ -104,8 +108,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -163,8 +167,8 @@
       vertical-align: middle;
     }
   </style>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="/usr/share/javascript/mathjax/MathJax.js"
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
 </head>
 <body>
@@ -265,7 +269,7 @@ class="math inline">\(\min\)</span>. The same two-case split — paths
 through the midpoint versus paths that 2-step over it — is exhaustive in
 both algebras. Nothing new here.</p>
 <figure>
-<img src="img/recurrence-d16.png"
+<img src="img/recurrence-d16-tropical.png"
 alt="Visualization of the d_{16} decomposition" />
 <figcaption aria-hidden="true">Visualization of the <span
 class="math inline">\(d_{16}\)</span> decomposition</figcaption>
@@ -327,7 +331,7 @@ a(x) + d_2(x-1)\bigr)\]</span></p>
 size is 2, and two adjacent positions cannot both be skipped by a single
 jump.</p>
 <figure>
-<img src="img/recurrence-d15.png"
+<img src="img/recurrence-d15-tropical.png"
 alt="Visualization of the d_{15} decomposition" />
 <figcaption aria-hidden="true">Visualization of the <span
 class="math inline">\(d_{15}\)</span> decomposition</figcaption>
@@ -365,7 +369,7 @@ class="math inline">\(x-7\)</span> with the 2-step cost <span
 class="math inline">\(b(x-7)\)</span>, then continuing to <span
 class="math inline">\(x\)</span>.</p>
 <figure>
-<img src="img/recurrence-f16.png"
+<img src="img/recurrence-f16-tropical.png"
 alt="Visualization of the f_{16} decomposition" />
 <figcaption aria-hidden="true">Visualization of the <span
 class="math inline">\(f_{16}\)</span> decomposition</figcaption>
@@ -423,7 +427,7 @@ resolves the recurrence:</p>
 <p><span class="math display">\[f(x) = \min\bigl(f_{16}(x),\; d_{16}(x)
 + f(x-16),\; d_{15}(x) + b(x-15) + f(x-17)\bigr)\]</span></p>
 <figure>
-<img src="img/recurrence-f.png"
+<img src="img/recurrence-f-tropical.png"
 alt="Visualization of the final stitching" />
 <figcaption aria-hidden="true">Visualization of the final
 stitching</figcaption>
@@ -435,7 +439,8 @@ class="math inline">\(f_{16}(x)\)</span>; the accumulated history at
 class="math inline">\(x-17\)</span> propagated via a 2-step of cost
 <span class="math inline">\(b(x-15)\)</span> to <span
 class="math inline">\(x-15\)</span>, then forward with <span
-class="math inline">\(d_{15}\)</span>.</p>
+class="math inline">\(d_{15}\)</span>. This is the same as the
+arithmetic case in the previous post, only with a different algebra.</p>
 <h1 id="work-analysis">Work Analysis</h1>
 <p>In standard arithmetic, each layer of the tower maintained <strong>4
 arrays</strong>: <span class="math inline">\(d_{2k}\)</span>, <span
@@ -463,41 +468,41 @@ free base case <span class="math inline">\(d_1 = a\)</span>. The full
 array count for <span class="math inline">\(k = 16\)</span>:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Layer</th>
 <th>Arrays</th>
 <th>Count</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Base</td>
 <td><span class="math inline">\(d_2\)</span>, <span
 class="math inline">\(f_2\)</span></td>
 <td>2</td>
 </tr>
-<tr class="even">
+<tr>
 <td>1</td>
 <td><span class="math inline">\(d_4\)</span>, <span
 class="math inline">\(d_3\)</span>, <span
 class="math inline">\(f_4\)</span></td>
 <td>3</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>2</td>
 <td><span class="math inline">\(d_8\)</span>, <span
 class="math inline">\(d_7\)</span>, <span
 class="math inline">\(f_8\)</span></td>
 <td>3</td>
 </tr>
-<tr class="even">
+<tr>
 <td>3</td>
 <td><span class="math inline">\(d_{16}\)</span>, <span
 class="math inline">\(d_{15}\)</span>, <span
 class="math inline">\(f_{16}\)</span></td>
 <td>3</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Stitching</td>
 <td><span class="math inline">\(f\)</span></td>
 <td>1</td>
@@ -532,22 +537,20 @@ overhead makes vectorization marginal. But for narrower types like
 32 or 64 lanes respectively, the per-lane overhead becomes
 proportionally smaller and the benefit grows.</p>
 <h1 id="closing-thoughts">Closing Thoughts</h1>
-<p>The tropical variant of the vectorization algorithm is a clean
-illustration of how algebraic structure drives algorithm design. The
-single identity <span class="math inline">\(\min(v, v) = v\)</span>
-eliminates two separate complications: the inclusion-exclusion
-correction for odd-window <span class="math inline">\(d_k\)</span>, and
-all odd-window <span class="math inline">\(f_k\)</span> arrays
-throughout the tower. Both simplifications stem from the same source —
-overlapping decompositions that would be costly in a ring are free in a
-semiring with idempotent addition.</p>
+<p>Unlike the standard arithmetic algebra, tropical algebra does not
+have subtraction nor inclusion-exclusion; instead, it enjoys idempotence
+of the addition operation: <span class="math inline">\(\min(v, v) =
+v\)</span> eliminates two separate complications: we don’t need
+inclusion-exclusion for odd-window <span
+class="math inline">\(d_k\)</span>, and we can eliminate all odd-window
+<span class="math inline">\(f_{2k-1}\)</span> arrays by using a
+subsuming <span class="math inline">\(f_{2k}\)</span>.</p>
 <p>One could view the standard arithmetic algorithm as the “careful”
 version that tracks contributions exactly to avoid double-counting, and
 the tropical algorithm as the “lax” version that permits double-counting
-because the algebra renders it harmless. The lax version is strictly
-simpler and, in this case, also more efficient.</p>
-<p>As with the standard arithmetic case, the extension to higher-order
-tropical recurrences — where 3-steps or longer are permitted — remains
-future work.</p>
+because the algebra renders it harmless. The lax version is simpler and,
+in this case, also more efficient.</p>
+<p>As with the standard arithmetic case, this saving can also be
+extended to higher-order tropical recurrences.</p>
 </body>
 </html>

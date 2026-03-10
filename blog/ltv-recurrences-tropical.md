@@ -30,7 +30,7 @@ $$d_{16}(x) = \min\bigl(d_8(x) + d_8(x-8),\; d_7(x) + d_2(x-7) + d_7(x-9)\bigr)$
 
 This is exactly the standard arithmetic formula translated term-by-term into the tropical semiring: $\times$ becomes $+$ and $+$ becomes $\min$. The same two-case split — paths through the midpoint versus paths that 2-step over it — is exhaustive in both algebras. Nothing new here.
 
-![Visualization of the $d_{16}$ decomposition](img/recurrence-d16.png)
+![Visualization of the $d_{16}$ decomposition](img/recurrence-d16-tropical.png)
 
 ## Odd Windows: Idempotency Replaces Inclusion-Exclusion
 
@@ -53,7 +53,7 @@ $$d_3(x) = \min\bigl(d_2(x) + a(x-2),\; a(x) + d_2(x-1)\bigr)$$
 
 In each case, the two splits cover all paths because the maximum step size is 2, and two adjacent positions cannot both be skipped by a single jump.
 
-![Visualization of the $d_{15}$ decomposition](img/recurrence-d15.png)
+![Visualization of the $d_{15}$ decomposition](img/recurrence-d15-tropical.png)
 
 # The Windowed Partial Sums $f_k$
 
@@ -69,7 +69,7 @@ $$f_{16}(x) = \min\bigl(f_8(x),\; d_8(x) + f_8(x-8),\; d_7(x) + b(x-7) + f_7(x-9
 
 Reading left to right: $f_8(x)$ captures the right-half contribution; $d_8(x) + f_8(x-8)$ propagates the left-half contribution forward through paths visiting $x-8$; and $d_7(x) + b(x-7) + f_7(x-9)$ propagates through paths that 2-step over $x-8$, bridging from $x-9$ to $x-7$ with the 2-step cost $b(x-7)$, then continuing to $x$.
 
-![Visualization of the $f_{16}$ decomposition](img/recurrence-f16.png)
+![Visualization of the $f_{16}$ decomposition](img/recurrence-f16-tropical.png)
 
 ## Odd Windows: Not Needed
 
@@ -89,9 +89,9 @@ The computation proceeds in a logarithmic tower. Starting from $d_1(x) = a(x)$, 
 
 $$f(x) = \min\bigl(f_{16}(x),\; d_{16}(x) + f(x-16),\; d_{15}(x) + b(x-15) + f(x-17)\bigr)$$
 
-![Visualization of the final stitching](img/recurrence-f.png)
+![Visualization of the final stitching](img/recurrence-f-tropical.png)
 
-The three terms are: the local window contribution $f_{16}(x)$; the accumulated history at $x-16$ propagated forward through $d_{16}$; and the history at $x-17$ propagated via a 2-step of cost $b(x-15)$ to $x-15$, then forward with $d_{15}$.
+The three terms are: the local window contribution $f_{16}(x)$; the accumulated history at $x-16$ propagated forward through $d_{16}$; and the history at $x-17$ propagated via a 2-step of cost $b(x-15)$ to $x-15$, then forward with $d_{15}$. This is the same as the arithmetic case in the previous post, only with a different algebra.
 
 # Work Analysis
 
@@ -119,8 +119,8 @@ The practical conclusion mirrors the standard arithmetic case: for 32-bit floats
 
 # Closing Thoughts
 
-The tropical variant of the vectorization algorithm is a clean illustration of how algebraic structure drives algorithm design. The single identity $\min(v, v) = v$ eliminates two separate complications: the inclusion-exclusion correction for odd-window $d_k$, and all odd-window $f_k$ arrays throughout the tower. Both simplifications stem from the same source — overlapping decompositions that would be costly in a ring are free in a semiring with idempotent addition.
+Unlike the standard arithmetic algebra, tropical algebra does not have subtraction nor inclusion-exclusion; instead, it enjoys idempotence of the addition operation: $\min(v, v) = v$ eliminates two separate complications: we don't need inclusion-exclusion for odd-window $d_k$, and we can eliminate all odd-window $f_{2k-1}$ arrays by using a subsuming $f_{2k}$.
 
-One could view the standard arithmetic algorithm as the "careful" version that tracks contributions exactly to avoid double-counting, and the tropical algorithm as the "lax" version that permits double-counting because the algebra renders it harmless. The lax version is strictly simpler and, in this case, also more efficient.
+One could view the standard arithmetic algorithm as the "careful" version that tracks contributions exactly to avoid double-counting, and the tropical algorithm as the "lax" version that permits double-counting because the algebra renders it harmless. The lax version is simpler and, in this case, also more efficient.
 
-As with the standard arithmetic case, the extension to higher-order tropical recurrences — where 3-steps or longer are permitted — remains future work.
+As with the standard arithmetic case, this saving can also be extended to higher-order tropical recurrences.

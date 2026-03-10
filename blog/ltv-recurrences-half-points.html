@@ -61,6 +61,10 @@
     img {
       max-width: 100%;
     }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
     h1, h2, h3, h4, h5, h6 {
       margin-top: 1.4em;
     }
@@ -104,8 +108,8 @@
      overflow: visible;
     }
     hr {
-      background-color: #1a1a1a;
       border: none;
+      border-top: 1px solid #1a1a1a;
       height: 1px;
       margin: 1em 0;
     }
@@ -163,8 +167,9 @@
       vertical-align: middle;
     }
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -226,8 +231,8 @@
     code span.vs { color: #cc9393; } /* VerbatimString */
     code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
   </style>
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script src="/usr/share/javascript/mathjax/MathJax.js"
+  <script
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js"
   type="text/javascript"></script>
 </head>
 <body>
@@ -243,168 +248,213 @@ the classical matrix prefix scan and a new <span
 class="math inline">\(d_k/f_k\)</span> decomposition. The background
 section on matrix prefix scans noted that a work multiplier of roughly
 <span class="math inline">\(1 + 6\log k \approx 19\)</span> for <span
-class="math inline">\(k=16\)</span> makes the approach marginal in
-practice — but also that an optimization was being left on the table.
+class="math inline">\(k=16\)</span> makes the approach likely
+impractical — but also that an optimization was being left on the table.
 This post fills in that gap.</p>
 <h1 id="the-key-observation">The Key Observation</h1>
 <p>Recall from the previous post that the matrix prefix scan computes,
 for each output position <span class="math inline">\(x\)</span>, the
 combined matrix <span class="math inline">\(M_{16}(x) = M(x)\cdot
 M(x-1)\cdots M(x-15)\)</span>. Applying it to the boundary gives:</p>
-<p><span class="math display">\[M_{16}(x) \begin{pmatrix} f(x-16) \\
-f(x-17) \\ 1 \end{pmatrix} = \begin{pmatrix} f(x) \\ f(x-1) \\ 1
+<p><span class="math display">\[ \begin{pmatrix} f(x) \\ f(x-1) \\ 1
+\end{pmatrix} = M_{16}(x) \begin{pmatrix} f(x-16) \\ f(x-17) \\ 1
 \end{pmatrix}\]</span></p>
 <p>This means <span class="math inline">\(M_{16}(x)\)</span>
 simultaneously encodes two consecutive outputs: <span
 class="math inline">\(f(x)\)</span> in its first row, and <span
-class="math inline">\(f(x-1)\)</span> in its second row. In the standard
-algorithm, we throw away the second row.</p>
+class="math inline">\(f(x-1)\)</span> in its second row. The previous
+algorithm discards the second row and uses only the first to compute
+<span class="math inline">\(f(x)\)</span>.</p>
 <p>We can do better. Instead of computing <span
 class="math inline">\(M_{16}(x)\)</span> for each of the <span
-class="math inline">\(k = 16\)</span> positions in a block (getting 16
-outputs), we compute <span class="math inline">\(M_{32}(x)\)</span> for
-every <em>other</em> position in a block of 32 (getting 32 outputs).
-Specifically:</p>
-<p><span class="math display">\[M_{32}(x) \begin{pmatrix} f(x-32) \\
-f(x-33) \\ 1 \end{pmatrix} = \begin{pmatrix} f(x) \\ f(x-1) \\ 1
-\end{pmatrix}\]</span></p>
-<p>So <span class="math inline">\(M_{32}(x)\)</span> gives us <span
+class="math inline">\(k = 16\)</span> positions in a block, we compute
+every <em>other</em> position of <span
+class="math inline">\(M_{32}(x)\)</span>. As in the previous post, each
+<span class="math inline">\(k\)</span>-lane vector still holds <span
+class="math inline">\(k = 16\)</span> outputs, but we are covering a
+twice as large window (32 vs 16). Specifically, since</p>
+<p><span class="math display">\[ \begin{pmatrix} f(x) \\ f(x-1) \\ 1
+\end{pmatrix} = M_{32}(x) \begin{pmatrix} f(x-32) \\ f(x-33) \\ 1
+\end{pmatrix}, \]</span></p>
+<p><span class="math inline">\(M_{32}(x)\)</span> gives us <span
 class="math inline">\(f(x)\)</span> from its first row and <span
 class="math inline">\(f(x-1)\)</span> from its second row. Computing
-<span class="math inline">\(M_{32}(x)\)</span> for even positions <span
-class="math inline">\(x = 2, 4, \ldots, 2k\)</span> (with <span
+<span class="math inline">\(M_{32}(x)\)</span> for odd positions <span
+class="math inline">\(x+1, x+3, x+5, \ldots, x+2k-1\)</span> (with <span
 class="math inline">\(k = 16\)</span>) recovers all 32 outputs <span
-class="math inline">\(f(1), f(2), \ldots, f(32)\)</span>.</p>
-<p>The key insight is that we only need to compute these matrices at
-<em>half</em> the positions — hence the name.</p>
+class="math inline">\(f(x), f(x+1), \ldots, f(x+31)\)</span>.</p>
 <h1 id="the-algorithm">The Algorithm</h1>
+<p>The computation is somewhat more involved than before, since each
+layer now processes a different number of matrix elements. Here we give
+a sketch of how the algorithm works.</p>
 <p>We process the output in blocks of <span
 class="math inline">\(2k\)</span>. The computation at each block
 proceeds in three phases.</p>
 <p><strong>Phase 1: Compute <span class="math inline">\(M_2\)</span> at
 even positions.</strong></p>
-<p>Define <span class="math inline">\(M_2&#39;(x) = M_2(2x) = M(2x)\cdot
-M(2x-1)\)</span>. For each even position <span
+<p>Define <span class="math inline">\(M_2&#39;(x) = M_2(2x+1) =
+M(2x-1)\cdot M(2x)\)</span>. For each even position <span
 class="math inline">\(2x\)</span> in the block, this is the product of
 two consecutive matrices. Working out the matrix product:</p>
-<p><span class="math display">\[M_2&#39;(x) = \begin{pmatrix} a(2x)\cdot
-a(2x-1) + b(2x) &amp; a(2x)\cdot b(2x-1) &amp; a(2x)\cdot g(2x-1) +
-g(2x) \\ a(2x-1) &amp; b(2x-1) &amp; g(2x-1) \\ 0 &amp; 0 &amp; 1
+<p><span class="math display">\[M_2&#39;(x) = \begin{pmatrix}
+a(2x+1)\cdot a(2x) + b(2x+1) &amp; a(2x+1)\cdot b(2x) &amp; a(2x+1)\cdot
+g(2x) + g(2x+1) \\ a(2x) &amp; b(2x) &amp; g(2x) \\ 0 &amp; 0 &amp; 1
 \end{pmatrix}\]</span></p>
-<p>The second row of <span class="math inline">\(M_2&#39;(x)\)</span> is
-just <span class="math inline">\([a(2x-1),\, b(2x-1),\,
-g(2x-1)]\)</span> — the input values at the odd position, which we
-already hold. So forming <span
-class="math inline">\(M_2&#39;(x)\)</span> costs only <strong>3
-multiplications</strong> per lane (for the first row).</p>
 <p>To compute these <span class="math inline">\(k\)</span> values of
 <span class="math inline">\(M_2&#39;\)</span> using <span
 class="math inline">\(k\)</span>-wide SIMD, we load two vectors of
 length <span class="math inline">\(k\)</span> for each of <span
 class="math inline">\(a\)</span>, <span
 class="math inline">\(b\)</span>, <span class="math inline">\(g\)</span>
-(covering 32 elements total), then interleave/zip them so that even and
-odd elements pair up within the same lanes.</p>
+(covering 32 elements total), then unzip them so that each vector only
+holds values from even or odd positions.</p>
+<p>The second row of <span class="math inline">\(M_2&#39;(x)\)</span> is
+just <span class="math inline">\([a(2x),\, b(2x),\, g(2x)]\)</span> —
+the input values at the odd position, which are already available from
+the input. So like the previous algorithm, at the base layer we only
+need to compute three new arrays.</p>
 <p><strong>Phase 2: Parallel prefix scan over <span
 class="math inline">\(M_2&#39;\)</span>.</strong></p>
-<p>Next, define <span class="math inline">\(M_4&#39;(x) = M_4(2x) =
-M_2&#39;(x)\cdot M_2&#39;(x-1)\)</span>, and similarly:</p>
-<p><span class="math display">\[M_8&#39;(x) = M_4&#39;(x)\cdot
-M_4&#39;(x-2), \quad M_{16}&#39;(x) = M_8&#39;(x)\cdot M_8&#39;(x-4),
-\quad M_{32}&#39;(x) = M_{16}&#39;(x)\cdot M_{16}&#39;(x-8)\]</span></p>
-<p>Each step doubles the window, so <span class="math inline">\(\log_2 k
-= 4\)</span> layers suffice to compute <span
-class="math inline">\(M_{32}&#39;(x) = M_{32}(2x)\)</span> at all <span
-class="math inline">\(k = 16\)</span> positions. Each layer combines
-pairs of <span class="math inline">\(3\times 3\)</span> matrices
-(restricted to the two nontrivial rows, 6 values), costing <strong>6
-multiplications</strong> per lane.</p>
+<p>Next, define <span class="math inline">\(M_4&#39;(x) = M_4(2x+1) =
+M_2&#39;(x)\cdot M_2&#39;(x-1)\)</span>, <span
+class="math inline">\(M_8&#39;(x) = M_4&#39;(x)\cdot
+M_4&#39;(x-2)\)</span>, and similarly for other <span
+class="math inline">\(M&#39;\)</span>s all the way to <span
+class="math inline">\(M&#39;_{2k}\)</span>, which is <span
+class="math inline">\(M&#39;_{32}\)</span> if we assume AVX-512 with
+floats.</p>
+<p>To compute <span class="math inline">\(M&#39;_{2k}\)</span> requires
+<span class="math inline">\(\log k\)</span> layers besides the base
+layer in Phase 1. So <span class="math inline">\(M_{32}&#39;(x)\)</span>
+requires <span class="math inline">\(\log 16=4\)</span> layers, each
+layer combining pairs of <span class="math inline">\(3\times 3\)</span>
+matrices (restricted to the two nontrivial rows and six values).</p>
 <p><strong>Phase 3: Extract both rows.</strong></p>
-<p>Finally, for each position <span class="math inline">\(x = 1, \ldots,
-k\)</span>:</p>
-<p><span class="math display">\[M_{32}&#39;(x) \begin{pmatrix} f(2x-32)
-\\ f(2x-33) \\ 1 \end{pmatrix} = \begin{pmatrix} f(2x) \\ f(2x-1) \\ 1
+<p>Finally, we can compute the even and odd positions of the local <span
+class="math inline">\([x, x+2k-1]\)</span> window:</p>
+<p><span class="math display">\[\begin{pmatrix} f(2x+1) \\ f(2x) \\ 1
+\end{pmatrix} = M_{32}&#39;(x) \begin{pmatrix} f(2x-31) \\ f(2x-32) \\ 1
 \end{pmatrix}\]</span></p>
-<ul>
-<li>Row 1 of <span class="math inline">\(M_{32}&#39;(x)\)</span> dotted
-with <span class="math inline">\([f(2x-32),\, f(2x-33),\, 1]\)</span> →
-<span class="math inline">\(f(2x)\)</span> (even output)</li>
-<li>Row 2 of <span class="math inline">\(M_{32}&#39;(x)\)</span> dotted
-with <span class="math inline">\([f(2x-32),\, f(2x-33),\, 1]\)</span> →
-<span class="math inline">\(f(2x-1)\)</span> (odd output)</li>
-</ul>
-<p>where <span class="math inline">\(f(2x-32)\)</span> and <span
-class="math inline">\(f(2x-33)\)</span> are the boundary values carried
-in from the previous block. We then unzip the even and odd outputs into
-two consecutive <span class="math inline">\(k\)</span>-element vectors
-and store.</p>
+<p>The dot product of row 1 of <span
+class="math inline">\(M_{32}&#39;(x)\)</span> and <span
+class="math inline">\([f(2x-31),\, f(2x-32),\, 1]\)</span> gives <span
+class="math inline">\(f(2x)\)</span>, and similarly the dot product with
+row 2 of <span class="math inline">\(M_{32}&#39;(x)\)</span> gives <span
+class="math inline">\(f(2x-1)\)</span>.</p>
+<p>To execute this in vectorized fashion, we first load vectors <span
+class="math inline">\([f(2(x+i)-32) \mid i\in0,\ldots,k-1]\)</span> and
+<span class="math inline">\([f(2(x-i)-31) \mid
+i\in0,\ldots,k-1]\)</span> from the last local window’s output. They can
+be loaded from the memory and then interleaved using the same unzipping
+instruction as in Phase 1, or better, using the output vector from the
+last local window computation, which is already un-interleaved.</p>
+<p>Then, we separately compute <span class="math inline">\([f(2(x+i)+1)
+\mid i\in0,\ldots,k-1]\)</span> and <span
+class="math inline">\([f(2(x+i))\mid i\in0,\ldots,k-1]\)</span> using
+the first row and the second row of <span
+class="math inline">\(M_{32}&#39;(x)\)</span> and the loaded <span
+class="math inline">\(f\)</span> vectors. This gives all the odd and
+even entries for the current local window, each of which is stored in a
+<span class="math inline">\(k\)</span>-lane vector.</p>
+<p>Finally, we zip the odd and even vectors into two consecutive <span
+class="math inline">\(k\)</span>-lane vectors and store to the
+memory.</p>
 <p><strong>Pseudocode.</strong></p>
+<p>The following pseudocode computes the full <span
+class="math inline">\(f\)</span> array, processing one block of <span
+class="math inline">\(2k\)</span> outputs at a time. Auxiliary arrays
+<code>M2</code>, <code>M4</code>, <code>M8</code>, <code>M16</code>,
+<code>M32</code> hold two-row <span
+class="math inline">\(2\times3\)</span> matrices for the <span
+class="math inline">\(k\)</span> even positions in the current block.
+<code>mat_mul(A, B)</code> multiplies two such matrices (6
+multiply-accumulates).</p>
 <div class="sourceCode" id="cb1"><pre
-class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> half_points_scan(a, b, g, f_prev1, f_prev2):</span>
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> half_points_scan(a, b, g, f):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Computes f[0..2k-1] given boundary f[-1]=f_prev1, f[-2]=f_prev2.</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">    All variables are k-element vectors (k = SIMD width).</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">    a/b/g each have 2k input values, loaded as two k-vectors.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Computes f[0..N-1] for f[x] = a[x]*f[x-1] + b[x]*f[x-2] + g[x],</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">    with boundary values f[-1] and f[-2] given.</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">    N must be a multiple of 2k = 32  (k = 16 SIMD lanes).</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Interleave: a_even[j] = a[2j], a_odd[j] = a[2j-1]</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    a_even, a_odd <span class="op">=</span> <span class="bu">zip</span>(a[<span class="dv">0</span>::<span class="dv">2</span>], a[<span class="dv">1</span>::<span class="dv">2</span>])</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    b_even, b_odd <span class="op">=</span> <span class="bu">zip</span>(b[<span class="dv">0</span>::<span class="dv">2</span>], b[<span class="dv">1</span>::<span class="dv">2</span>])</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    g_even, g_odd <span class="op">=</span> <span class="bu">zip</span>(g[<span class="dv">0</span>::<span class="dv">2</span>], g[<span class="dv">1</span>::<span class="dv">2</span>])</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Phase 1: compute M2&#39;(x) = M2(2x), first row only</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Row 1: [a_even*a_odd + b_even, a_even*b_odd, a_even*g_odd + g_even]</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Row 2: [a_odd, b_odd, g_odd]  (free from input)</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    r1 <span class="op">=</span> a_even <span class="op">*</span> a_odd <span class="op">+</span> b_even</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    r2 <span class="op">=</span> a_even <span class="op">*</span> b_odd</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    r3 <span class="op">=</span> a_even <span class="op">*</span> g_odd <span class="op">+</span> g_even</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># s1, s2, s3 = a_odd, b_odd, g_odd  (Row 2, no computation)</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Phase 2: log2(k) layers of parallel prefix scan</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># At layer l, stride = 2^(l-1): M_{2^(l+1)}&#39;[j] = M_{2^l}&#39;[j] * M_{2^l}&#39;[j-stride]</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> stride <span class="kw">in</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>, ..., k<span class="op">//</span><span class="dv">2</span>]:</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        r1, r2, r3, a_odd, b_odd, g_odd <span class="op">=</span> matrix_combine(</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>            (r1, r2, r3), (a_odd, b_odd, g_odd),   <span class="co"># M&#39;[j]</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            shift((r1, r2, r3), stride),             <span class="co"># M&#39;[j-stride], row 1</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>            shift((a_odd, b_odd, g_odd), stride),    <span class="co"># M&#39;[j-stride], row 2</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Phase 3: apply both rows to boundary [f_prev1, f_prev2, 1]</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    f_even <span class="op">=</span> r1 <span class="op">*</span> f_prev1 <span class="op">+</span> r2 <span class="op">*</span> f_prev2 <span class="op">+</span> r3           <span class="co"># Row 1 -&gt; f(2x)</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    f_odd  <span class="op">=</span> a_odd <span class="op">*</span> f_prev1 <span class="op">+</span> b_odd <span class="op">*</span> f_prev2 <span class="op">+</span> g_odd  <span class="co"># Row 2 -&gt; f(2x-1)</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Unzip interleaved outputs into two consecutive vectors</span></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> unzip(f_even, f_odd)   <span class="co"># returns f[0..2k-1] in order</span></span></code></pre></div>
-<p>where <code>matrix_combine(A, B)</code> computes the two-row matrix
-product <span class="math inline">\(A \cdot B\)</span> (6
-multiply-accumulates per entry), and <code>shift(v, stride)</code>
-shifts a vector by <code>stride</code> lanes, drawing boundary values
-from the previous block.</p>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    N <span class="op">=</span> <span class="bu">len</span>(a)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    M2  <span class="op">=</span> zeros((<span class="dv">2</span>, <span class="dv">3</span>, N<span class="op">//</span><span class="dv">2</span>))</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    M4  <span class="op">=</span> zeros((<span class="dv">2</span>, <span class="dv">3</span>, N<span class="op">//</span><span class="dv">2</span>))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    M8  <span class="op">=</span> zeros((<span class="dv">2</span>, <span class="dv">3</span>, N<span class="op">//</span><span class="dv">2</span>))</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    M16 <span class="op">=</span> zeros((<span class="dv">2</span>, <span class="dv">3</span>, N<span class="op">//</span><span class="dv">2</span>))</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    M32 <span class="op">=</span> zeros((<span class="dv">2</span>, <span class="dv">3</span>, N<span class="op">//</span><span class="dv">2</span>))</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> base <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, N<span class="op">//</span><span class="dv">2</span>, k):</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> load_interleaved(arr, base):</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>            v0 <span class="op">=</span> arr[<span class="dv">2</span><span class="op">*</span>base:<span class="dv">2</span><span class="op">*</span>base<span class="op">+</span>k]</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>            v1 <span class="op">=</span> arr[<span class="dv">2</span><span class="op">*</span>base<span class="op">+</span>k:<span class="dv">2</span><span class="op">*</span>base<span class="op">+</span><span class="dv">2</span><span class="op">*</span>k]</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> unzip(v0, v1)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        a_even, a_odd <span class="op">=</span> load_interleaved(a, base)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        b_even, b_odd <span class="op">=</span> load_interleaved(b, base)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        g_even, g_odd <span class="op">=</span> load_interleaved(g, base)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Phase 1</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>        M2[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k] <span class="op">=</span> (</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>            (a_odd<span class="op">*</span>a_even <span class="op">+</span> b_odd,  a_odd<span class="op">*</span>b_even,  a_odd<span class="op">*</span>g_even <span class="op">+</span> g_odd),</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>            (a_even,                b_even,         g_even             ),</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Phase 2</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>        <span class="kw">def</span> combine(M_left, M_right):</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> (</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>                (</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>                    M_left[<span class="dv">0</span>][<span class="dv">0</span>]<span class="op">*</span>M_right[<span class="dv">0</span>][<span class="dv">0</span>] <span class="op">+</span> M_left[<span class="dv">0</span>][<span class="dv">1</span>]<span class="op">*</span>M_right[<span class="dv">1</span>][<span class="dv">0</span>],</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>                    M_left[<span class="dv">0</span>][<span class="dv">0</span>]<span class="op">*</span>M_right[<span class="dv">0</span>][<span class="dv">1</span>] <span class="op">+</span> M_left[<span class="dv">0</span>][<span class="dv">1</span>]<span class="op">*</span>M_right[<span class="dv">1</span>][<span class="dv">1</span>],</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>                    M_left[<span class="dv">0</span>][<span class="dv">0</span>]<span class="op">*</span>M_right[<span class="dv">0</span>][<span class="dv">2</span>] <span class="op">+</span> M_left[<span class="dv">0</span>][<span class="dv">1</span>]<span class="op">*</span>M_right[<span class="dv">1</span>][<span class="dv">2</span>] <span class="op">+</span> M_left[<span class="dv">0</span>][<span class="dv">2</span>],</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>                ),(</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>                    M_left[<span class="dv">1</span>][<span class="dv">0</span>]<span class="op">*</span>M_right[<span class="dv">0</span>][<span class="dv">0</span>] <span class="op">+</span> M_left[<span class="dv">1</span>][<span class="dv">1</span>]<span class="op">*</span>M_right[<span class="dv">1</span>][<span class="dv">0</span>],</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>                    M_left[<span class="dv">1</span>][<span class="dv">0</span>]<span class="op">*</span>M_right[<span class="dv">0</span>][<span class="dv">1</span>] <span class="op">+</span> M_left[<span class="dv">1</span>][<span class="dv">1</span>]<span class="op">*</span>M_right[<span class="dv">1</span>][<span class="dv">1</span>],</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>                    M_left[<span class="dv">1</span>][<span class="dv">0</span>]<span class="op">*</span>M_right[<span class="dv">0</span>][<span class="dv">2</span>] <span class="op">+</span> M_left[<span class="dv">1</span>][<span class="dv">1</span>]<span class="op">*</span>M_right[<span class="dv">1</span>][<span class="dv">2</span>] <span class="op">+</span> M_left[<span class="dv">1</span>][<span class="dv">2</span>],</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        M4[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k] <span class="op">=</span> combine(M2[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k], M2[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base<span class="op">-</span><span class="dv">1</span>:base<span class="op">-</span><span class="dv">1</span><span class="op">+</span>k])</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>        M8[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k] <span class="op">=</span> combine(M4[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k], M4[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base<span class="op">-</span><span class="dv">2</span>:base<span class="op">-</span><span class="dv">2</span><span class="op">+</span>k])</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>        M16[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k] <span class="op">=</span> combine(M8[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k], M8[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base<span class="op">-</span><span class="dv">4</span>:base<span class="op">-</span><span class="dv">4</span><span class="op">+</span>k])</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>        M32[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k] <span class="op">=</span> combine(M16[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base:base<span class="op">+</span>k], M16[<span class="dv">0</span>:<span class="dv">2</span>][<span class="dv">0</span>:<span class="dv">3</span>][base<span class="op">-</span><span class="dv">8</span>:base<span class="op">-</span><span class="dv">8</span><span class="op">+</span>k])</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Phase 3</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>        f_prev0, f_prev1 <span class="op">=</span> load_interleaved(f, base<span class="op">-</span>k)</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>        f_odd <span class="op">=</span> M32[<span class="dv">0</span>][<span class="dv">0</span>][base:base<span class="op">+</span>k]<span class="op">*</span>f_prev1 <span class="op">+</span> M32[<span class="dv">0</span>][<span class="dv">1</span>][base:base<span class="op">+</span>k]<span class="op">*</span>f_prev0 <span class="op">+</span> M32[<span class="dv">0</span>][<span class="dv">2</span>][base:base<span class="op">+</span>k]</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>        f_even  <span class="op">=</span> M32[<span class="dv">1</span>][<span class="dv">0</span>][base:base<span class="op">+</span>k]<span class="op">*</span>f_prev1 <span class="op">+</span> M32[<span class="dv">1</span>][<span class="dv">1</span>][base:base<span class="op">+</span>k]<span class="op">*</span>f_prev0 <span class="op">+</span> M32[<span class="dv">1</span>][<span class="dv">2</span>][base:base<span class="op">+</span>k]</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>        f_first, f_second <span class="op">=</span> <span class="bu">zip</span>(f_even, f_odd)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>        f[<span class="dv">2</span><span class="op">*</span>base:<span class="dv">2</span><span class="op">*</span>base<span class="op">+</span>k] <span class="op">=</span> f_first</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>        f[<span class="dv">2</span><span class="op">*</span>base<span class="op">+</span>k:<span class="dv">2</span><span class="op">*</span>base<span class="op">+</span><span class="dv">2</span><span class="op">*</span>k] <span class="op">=</span> f_second</span></code></pre></div>
 <h1 id="work-analysis">Work Analysis</h1>
 <p>The total work per block of <span class="math inline">\(2k\)</span>
 outputs, measured in multiply-accumulate operations per lane:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Step</th>
 <th>Cost per lane</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Phase 1: <span class="math inline">\(M_2&#39;\)</span> (first row
 only)</td>
 <td>3</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Phase 2: <span class="math inline">\(\log_2 k\)</span> scan layers
 (6 per layer)</td>
 <td><span class="math inline">\(6\log k\)</span></td>
 </tr>
-<tr class="odd">
-<td>Phase 3: two row dot products</td>
+<tr>
+<td>Phase 3: one dot product per row of <span
+class="math inline">\(M_{32}&#39;\)</span></td>
 <td>2</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Total</strong></td>
 <td><span class="math inline">\(5 + 6\log k\)</span></td>
 </tr>
@@ -420,37 +470,41 @@ produce <span class="math inline">\(k = 16\)</span> outputs using <span
 class="math inline">\(k\)</span>-wide vectors:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Algorithm</th>
 <th>Work per output (<span class="math inline">\(k=16\)</span>)</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Matrix prefix scan</td>
 <td><span class="math inline">\(19/16 \approx 1.19\)</span></td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Half-points scan (this post)</strong></td>
 <td><strong><span class="math inline">\(29/32 \approx
 0.91\)</span></strong></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><span class="math inline">\(d_k/f_k\)</span> decomposition</td>
 <td><span class="math inline">\(14/16 \approx 0.875\)</span></td>
 </tr>
 </tbody>
 </table>
-<p>The half-points scan is cheaper per output than the matrix scan by
-about <span class="math inline">\(1.3\times\)</span>, and comes close to
-the <span class="math inline">\(d_k/f_k\)</span> decomposition, though
-the decomposition remains slightly ahead.</p>
-<p>The improvement over the plain matrix scan comes from amortizing the
-<span class="math inline">\(O(\log k)\)</span> overhead over <span
-class="math inline">\(2k\)</span> outputs instead of <span
-class="math inline">\(k\)</span>, and from the first layer costing only
-3 operations (not 6) because the second row of <span
-class="math inline">\(M_2&#39;\)</span> is free.</p>
+<p>The half-points scan is cheaper per output than the matrix scan and
+comes close to the <span class="math inline">\(d_k/f_k\)</span>
+decomposition, though the decomposition remains slightly better.
+However, this assumes floats with AVX-512. In terms of register
+pressure, the half-points scan requires <span
+class="math inline">\(6\)</span> arrays per layer to produce <span
+class="math inline">\(2k\)</span> outputs (<span
+class="math inline">\(3/16\)</span> arrays per output), while the <span
+class="math inline">\(d_k/f_k\)</span> decomposition requires <span
+class="math inline">\(4\)</span> arrays per layer to produce <span
+class="math inline">\(k\)</span> outputs (<span
+class="math inline">\(1/4\)</span> arrays per output). The half-points
+scan is therefore more register-efficient per output element, which can
+matter in practice.</p>
 <h1 id="why-this-doesnt-apply-to-the-d_kf_k-decomposition">Why This
 Doesn’t Apply to the <span class="math inline">\(d_k/f_k\)</span>
 Decomposition</h1>
@@ -472,12 +526,14 @@ structure.</p>
 <h1 id="closing-thoughts">Closing Thoughts</h1>
 <p>The half-points trick brings the matrix prefix scan’s work per output
 below 1× scalar, making it competitive with the <span
-class="math inline">\(d_k/f_k\)</span> decomposition. One practical
-consideration: the algorithm processes blocks of <span
-class="math inline">\(2k\)</span> elements and requires zip/unzip
-(interleave/deinterleave) operations, which are cheap but not free on
-most architectures. The block size is also twice as large, which doubles
-the latency before the first output of each block is available — though
-this is generally not a concern for bulk image-processing workloads.</p>
+class="math inline">\(d_k/f_k\)</span> decomposition. There are some
+practical considerations I did not cover here. The algorithm requires
+zip/unzip operations at the boundary of each block, which are cheap but
+not free. The doubled block size also means twice the latency before the
+first output of each block is available — though this is rarely a
+concern for bulk image-processing workloads. Register pressure, the
+exact shuffle instructions generated by LLVM, and alignment of the block
+size to cache lines all factor into the real-world tradeoff between
+these approaches.</p>
 </body>
 </html>

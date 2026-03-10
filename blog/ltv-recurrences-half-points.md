@@ -4,97 +4,124 @@ author: Yihong Zhang
 date: Mar 9, 2026
 ---
 
-In the [previous post](ltv-recurrences.html), I described two algorithms for vectorizing linear time-varying (LTV) recurrences: the classical matrix prefix scan and a new $d_k/f_k$ decomposition. The background section on matrix prefix scans noted that a work multiplier of roughly $1 + 6\log k \approx 19$ for $k=16$ makes the approach marginal in practice — but also that an optimization was being left on the table. This post fills in that gap.
+In the [previous post](ltv-recurrences.html), I described two algorithms for vectorizing linear time-varying (LTV) recurrences: the classical matrix prefix scan and a new $d_k/f_k$ decomposition. The background section on matrix prefix scans noted that a work multiplier of roughly $1 + 6\log k \approx 19$ for $k=16$ makes the approach likely impractical — but also that an optimization was being left on the table. This post fills in that gap.
 
 # The Key Observation
 
 Recall from the previous post that the matrix prefix scan computes, for each output position $x$, the combined matrix $M_{16}(x) = M(x)\cdot M(x-1)\cdots M(x-15)$. Applying it to the boundary gives:
 
-$$M_{16}(x) \begin{pmatrix} f(x-16) \\ f(x-17) \\ 1 \end{pmatrix} = \begin{pmatrix} f(x) \\ f(x-1) \\ 1 \end{pmatrix}$$
+$$ \begin{pmatrix} f(x) \\ f(x-1) \\ 1 \end{pmatrix} = M_{16}(x) \begin{pmatrix} f(x-16) \\ f(x-17) \\ 1 \end{pmatrix}$$
 
-This means $M_{16}(x)$ simultaneously encodes two consecutive outputs: $f(x)$ in its first row, and $f(x-1)$ in its second row. In the standard algorithm, we throw away the second row.
+This means $M_{16}(x)$ simultaneously encodes two consecutive outputs: $f(x)$ in its first row, and $f(x-1)$ in its second row. The previous algorithm discards the second row and uses only the first to compute $f(x)$.
 
-We can do better. Instead of computing $M_{16}(x)$ for each of the $k = 16$ positions in a block (getting 16 outputs), we compute $M_{32}(x)$ for every *other* position in a block of 32 (getting 32 outputs). Specifically:
+We can do better. Instead of computing $M_{16}(x)$ for each of the $k = 16$ positions in a block, we compute every *other* position of $M_{32}(x)$. As in the previous post, each $k$-lane vector still holds $k = 16$ outputs, but we are covering a twice as large window (32 vs 16). Specifically, since
 
-$$M_{32}(x) \begin{pmatrix} f(x-32) \\ f(x-33) \\ 1 \end{pmatrix} = \begin{pmatrix} f(x) \\ f(x-1) \\ 1 \end{pmatrix}$$
+$$ \begin{pmatrix} f(x) \\ f(x-1) \\ 1 \end{pmatrix} = M_{32}(x) \begin{pmatrix} f(x-32) \\ f(x-33) \\ 1 \end{pmatrix}, $$
 
-So $M_{32}(x)$ gives us $f(x)$ from its first row and $f(x-1)$ from its second row. Computing $M_{32}(x)$ for even positions $x = 2, 4, \ldots, 2k$ (with $k = 16$) recovers all 32 outputs $f(1), f(2), \ldots, f(32)$.
-
-The key insight is that we only need to compute these matrices at *half* the positions — hence the name.
+$M_{32}(x)$ gives us $f(x)$ from its first row and $f(x-1)$ from its second row. Computing $M_{32}(x)$ for odd positions $x+1, x+3, x+5, \ldots, x+2k-1$ (with $k = 16$) recovers all 32 outputs $f(x), f(x+1), \ldots, f(x+31)$.
 
 # The Algorithm
+
+The computation is somewhat more involved than before, since each layer now processes a different number of matrix elements. Here we give a sketch of how the algorithm works.
 
 We process the output in blocks of $2k$. The computation at each block proceeds in three phases.
 
 **Phase 1: Compute $M_2$ at even positions.**
 
-Define $M_2'(x) = M_2(2x) = M(2x)\cdot M(2x-1)$. For each even position $2x$ in the block, this is the product of two consecutive matrices. Working out the matrix product:
+Define $M_2'(x) = M_2(2x+1) = M(2x-1)\cdot M(2x)$. For each even position $2x$ in the block, this is the product of two consecutive matrices. Working out the matrix product:
 
-$$M_2'(x) = \begin{pmatrix} a(2x)\cdot a(2x-1) + b(2x) & a(2x)\cdot b(2x-1) & a(2x)\cdot g(2x-1) + g(2x) \\ a(2x-1) & b(2x-1) & g(2x-1) \\ 0 & 0 & 1 \end{pmatrix}$$
+$$M_2'(x) = \begin{pmatrix} a(2x+1)\cdot a(2x) + b(2x+1) & a(2x+1)\cdot b(2x) & a(2x+1)\cdot g(2x) + g(2x+1) \\ a(2x) & b(2x) & g(2x) \\ 0 & 0 & 1 \end{pmatrix}$$
 
-The second row of $M_2'(x)$ is just $[a(2x-1),\, b(2x-1),\, g(2x-1)]$ — the input values at the odd position, which we already hold. So forming $M_2'(x)$ costs only **3 multiplications** per lane (for the first row).
+To compute these $k$ values of $M_2'$ using $k$-wide SIMD, we load two vectors of length $k$ for each of $a$, $b$, $g$ (covering 32 elements total), then unzip them so that each vector only holds values from even or odd positions.
 
-To compute these $k$ values of $M_2'$ using $k$-wide SIMD, we load two vectors of length $k$ for each of $a$, $b$, $g$ (covering 32 elements total), then interleave/zip them so that even and odd elements pair up within the same lanes.
+The second row of $M_2'(x)$ is just $[a(2x),\, b(2x),\, g(2x)]$ — the input values at the odd position, which are already available from the input. So like the previous algorithm, at the base layer we only need to compute three new arrays.
 
 **Phase 2: Parallel prefix scan over $M_2'$.**
 
-Next, define $M_4'(x) = M_4(2x) = M_2'(x)\cdot M_2'(x-1)$, and similarly:
+Next, define $M_4'(x) = M_4(2x+1) = M_2'(x)\cdot M_2'(x-1)$, $M_8'(x) = M_4'(x)\cdot M_4'(x-2)$, and similarly for other $M'$s all the way to $M'_{2k}$, which is $M'_{32}$ if we assume AVX-512 with floats.
 
-$$M_8'(x) = M_4'(x)\cdot M_4'(x-2), \quad M_{16}'(x) = M_8'(x)\cdot M_8'(x-4), \quad M_{32}'(x) = M_{16}'(x)\cdot M_{16}'(x-8)$$
-
-Each step doubles the window, so $\log_2 k = 4$ layers suffice to compute $M_{32}'(x) = M_{32}(2x)$ at all $k = 16$ positions. Each layer combines pairs of $3\times 3$ matrices (restricted to the two nontrivial rows, 6 values), costing **6 multiplications** per lane.
+To compute $M'_{2k}$ requires $\log k$ layers besides the base layer in Phase 1. So $M_{32}'(x)$ requires $\log 16=4$ layers, each layer combining pairs of $3\times 3$ matrices (restricted to the two nontrivial rows and six values).
 
 **Phase 3: Extract both rows.**
 
-Finally, for each position $x = 1, \ldots, k$:
+Finally, we can compute the even and odd positions of the local $[x, x+2k-1]$ window:
 
-$$M_{32}'(x) \begin{pmatrix} f(2x-32) \\ f(2x-33) \\ 1 \end{pmatrix} = \begin{pmatrix} f(2x) \\ f(2x-1) \\ 1 \end{pmatrix}$$
+$$\begin{pmatrix} f(2x+1) \\ f(2x) \\ 1 \end{pmatrix} = M_{32}'(x) \begin{pmatrix} f(2x-31) \\ f(2x-32) \\ 1 \end{pmatrix}$$
 
-- Row 1 of $M_{32}'(x)$ dotted with $[f(2x-32),\, f(2x-33),\, 1]$ → $f(2x)$ (even output)
-- Row 2 of $M_{32}'(x)$ dotted with $[f(2x-32),\, f(2x-33),\, 1]$ → $f(2x-1)$ (odd output)
+The dot product of row 1 of $M_{32}'(x)$ and $[f(2x-31),\, f(2x-32),\, 1]$ gives $f(2x)$, and similarly the dot product with row 2 of $M_{32}'(x)$ gives $f(2x-1)$.
 
-where $f(2x-32)$ and $f(2x-33)$ are the boundary values carried in from the previous block. We then unzip the even and odd outputs into two consecutive $k$-element vectors and store.
+To execute this in vectorized fashion, we first load vectors $[f(2(x+i)-32) \mid i\in0,\ldots,k-1]$ and $[f(2(x-i)-31) \mid i\in0,\ldots,k-1]$ from the last local window's output.
+They can be loaded from the memory and then interleaved using the same unzipping instruction as in Phase 1, or better, using the output vector from the last local window computation, which is already un-interleaved.
+
+Then, we separately compute $[f(2(x+i)+1) \mid i\in0,\ldots,k-1]$ and $[f(2(x+i))\mid i\in0,\ldots,k-1]$ using  the first row and the second row of $M_{32}'(x)$ and the loaded $f$ vectors.
+This gives all the odd and even entries for the current local window, each of which is stored in a $k$-lane vector.
+
+Finally, we zip the odd and even vectors into two consecutive $k$-lane vectors and store to the memory.
 
 **Pseudocode.**
 
+The following pseudocode computes the full $f$ array, processing one block of $2k$ outputs at a time. Auxiliary arrays `M2`, `M4`, `M8`, `M16`, `M32` hold two-row $2\times3$ matrices for the $k$ even positions in the current block. `mat_mul(A, B)` multiplies two such matrices (6 multiply-accumulates).
+
 ```python
-def half_points_scan(a, b, g, f_prev1, f_prev2):
+def half_points_scan(a, b, g, f):
     """
-    Computes f[0..2k-1] given boundary f[-1]=f_prev1, f[-2]=f_prev2.
-    All variables are k-element vectors (k = SIMD width).
-    a/b/g each have 2k input values, loaded as two k-vectors.
+    Computes f[0..N-1] for f[x] = a[x]*f[x-1] + b[x]*f[x-2] + g[x],
+    with boundary values f[-1] and f[-2] given.
+    N must be a multiple of 2k = 32  (k = 16 SIMD lanes).
     """
-    # Interleave: a_even[j] = a[2j], a_odd[j] = a[2j-1]
-    a_even, a_odd = zip(a[0::2], a[1::2])
-    b_even, b_odd = zip(b[0::2], b[1::2])
-    g_even, g_odd = zip(g[0::2], g[1::2])
+    N = len(a)
+    k = 16
 
-    # Phase 1: compute M2'(x) = M2(2x), first row only
-    # Row 1: [a_even*a_odd + b_even, a_even*b_odd, a_even*g_odd + g_even]
-    # Row 2: [a_odd, b_odd, g_odd]  (free from input)
-    r1 = a_even * a_odd + b_even
-    r2 = a_even * b_odd
-    r3 = a_even * g_odd + g_even
-    # s1, s2, s3 = a_odd, b_odd, g_odd  (Row 2, no computation)
+    M2  = zeros((2, 3, N//2))
+    M4  = zeros((2, 3, N//2))
+    M8  = zeros((2, 3, N//2))
+    M16 = zeros((2, 3, N//2))
+    M32 = zeros((2, 3, N//2))
 
-    # Phase 2: log2(k) layers of parallel prefix scan
-    # At layer l, stride = 2^(l-1): M_{2^(l+1)}'[j] = M_{2^l}'[j] * M_{2^l}'[j-stride]
-    for stride in [1, 2, 4, ..., k//2]:
-        r1, r2, r3, a_odd, b_odd, g_odd = matrix_combine(
-            (r1, r2, r3), (a_odd, b_odd, g_odd),   # M'[j]
-            shift((r1, r2, r3), stride),             # M'[j-stride], row 1
-            shift((a_odd, b_odd, g_odd), stride),    # M'[j-stride], row 2
+    for base in range(0, N//2, k):
+        def load_interleaved(arr, base):
+            v0 = arr[2*base:2*base+k]
+            v1 = arr[2*base+k:2*base+2*k]
+            return unzip(v0, v1)
+
+        a_even, a_odd = load_interleaved(a, base)
+        b_even, b_odd = load_interleaved(b, base)
+        g_even, g_odd = load_interleaved(g, base)
+
+        # Phase 1
+        M2[0:2][0:3][base:base+k] = (
+            (a_odd*a_even + b_odd,  a_odd*b_even,  a_odd*g_even + g_odd),
+            (a_even,                b_even,         g_even             ),
         )
 
-    # Phase 3: apply both rows to boundary [f_prev1, f_prev2, 1]
-    f_even = r1 * f_prev1 + r2 * f_prev2 + r3           # Row 1 -> f(2x)
-    f_odd  = a_odd * f_prev1 + b_odd * f_prev2 + g_odd  # Row 2 -> f(2x-1)
+        # Phase 2
+        def combine(M_left, M_right):
+            return (
+                (
+                    M_left[0][0]*M_right[0][0] + M_left[0][1]*M_right[1][0],
+                    M_left[0][0]*M_right[0][1] + M_left[0][1]*M_right[1][1],
+                    M_left[0][0]*M_right[0][2] + M_left[0][1]*M_right[1][2] + M_left[0][2],
+                ),(
+                    M_left[1][0]*M_right[0][0] + M_left[1][1]*M_right[1][0],
+                    M_left[1][0]*M_right[0][1] + M_left[1][1]*M_right[1][1],
+                    M_left[1][0]*M_right[0][2] + M_left[1][1]*M_right[1][2] + M_left[1][2],
+                )
+            )
 
-    # Unzip interleaved outputs into two consecutive vectors
-    return unzip(f_even, f_odd)   # returns f[0..2k-1] in order
+        M4[0:2][0:3][base:base+k] = combine(M2[0:2][0:3][base:base+k], M2[0:2][0:3][base-1:base-1+k])
+        M8[0:2][0:3][base:base+k] = combine(M4[0:2][0:3][base:base+k], M4[0:2][0:3][base-2:base-2+k])
+        M16[0:2][0:3][base:base+k] = combine(M8[0:2][0:3][base:base+k], M8[0:2][0:3][base-4:base-4+k])
+        M32[0:2][0:3][base:base+k] = combine(M16[0:2][0:3][base:base+k], M16[0:2][0:3][base-8:base-8+k])
+
+        # Phase 3
+        f_prev0, f_prev1 = load_interleaved(f, base-k)
+        f_odd = M32[0][0][base:base+k]*f_prev1 + M32[0][1][base:base+k]*f_prev0 + M32[0][2][base:base+k]
+        f_even  = M32[1][0][base:base+k]*f_prev1 + M32[1][1][base:base+k]*f_prev0 + M32[1][2][base:base+k]
+
+        f_first, f_second = zip(f_even, f_odd)
+        f[2*base:2*base+k] = f_first
+        f[2*base+k:2*base+2*k] = f_second
 ```
-
-where `matrix_combine(A, B)` computes the two-row matrix product $A \cdot B$ (6 multiply-accumulates per entry), and `shift(v, stride)` shifts a vector by `stride` lanes, drawing boundary values from the previous block.
 
 # Work Analysis
 
@@ -104,7 +131,7 @@ The total work per block of $2k$ outputs, measured in multiply-accumulate operat
 |------|--------------|
 | Phase 1: $M_2'$ (first row only) | 3 |
 | Phase 2: $\log_2 k$ scan layers (6 per layer) | $6\log k$ |
-| Phase 3: two row dot products | 2 |
+| Phase 3: one dot product per row of $M_{32}'$ | 2 |
 | **Total** | $5 + 6\log k$ |
 
 For $k = 16$: $5 + 6 \cdot 4 = 29$ operations for $2k = 32$ outputs, a **work multiplier of $29/32 \approx 0.91$ per output element**.
@@ -117,9 +144,7 @@ Comparing to the two approaches from the previous post, which each produce $k = 
 | **Half-points scan (this post)** | **$29/32 \approx 0.91$** |
 | $d_k/f_k$ decomposition | $14/16 \approx 0.875$ |
 
-The half-points scan is cheaper per output than the matrix scan by about $1.3\times$, and comes close to the $d_k/f_k$ decomposition, though the decomposition remains slightly ahead.
-
-The improvement over the plain matrix scan comes from amortizing the $O(\log k)$ overhead over $2k$ outputs instead of $k$, and from the first layer costing only 3 operations (not 6) because the second row of $M_2'$ is free.
+The half-points scan is cheaper per output than the matrix scan and comes close to the $d_k/f_k$ decomposition, though the decomposition remains slightly better. However, this assumes floats with AVX-512. In terms of register pressure, the half-points scan requires $6$ arrays per layer to produce $2k$ outputs ($3/16$ arrays per output), while the $d_k/f_k$ decomposition requires $4$ arrays per layer to produce $k$ outputs ($1/4$ arrays per output). The half-points scan is therefore more register-efficient per output element, which can matter in practice.
 
 # Why This Doesn't Apply to the $d_k/f_k$ Decomposition
 
@@ -129,4 +154,5 @@ The matrix form avoids this by carrying both $f(x)$ and $f(x-1)$ in the same mat
 
 # Closing Thoughts
 
-The half-points trick brings the matrix prefix scan's work per output below 1× scalar, making it competitive with the $d_k/f_k$ decomposition. One practical consideration: the algorithm processes blocks of $2k$ elements and requires zip/unzip (interleave/deinterleave) operations, which are cheap but not free on most architectures. The block size is also twice as large, which doubles the latency before the first output of each block is available — though this is generally not a concern for bulk image-processing workloads.
+The half-points trick brings the matrix prefix scan's work per output below 1× scalar, making it competitive with the $d_k/f_k$ decomposition.
+There are some practical considerations I did not cover here. The algorithm requires zip/unzip operations at the boundary of each block, which are cheap but not free. The doubled block size also means twice the latency before the first output of each block is available — though this is rarely a concern for bulk image-processing workloads. Register pressure, the exact shuffle instructions generated by LLVM, and alignment of the block size to cache lines all factor into the real-world tradeoff between these approaches.
